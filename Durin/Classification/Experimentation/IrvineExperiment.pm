@@ -50,14 +50,7 @@ sub constructTaskList {
   return $tasks;
 }
 
-#sub run
-#{
-#  my ($self) = @_;
-#  
-#  foreach my $task (@{$self->getTasks()})
-#    {
-#      $task->run();
-#    }
-#}
+
+
 
 1;

@@ -21,8 +21,8 @@ sub init {
   $self->SUPER::init(%properties);
   
   print "Initializing artificial experiment\n";
-  my $ev_c = Durin::Classification::Experimentation::ArtificialTask::EvaluationCharacteristics->new($self->getEvaluationCharacteristics());
-  $self->setEvaluationCharacteristics($ev_c);
+ # my $ev_c = Durin::Classification::Experimentation::ArtificialTask::EvaluationCharacteristics->new($self->getEvaluationCharacteristics());
+#  $self->setEvaluationCharacteristics($ev_c);
   
   # Create the model generator and get the list of model kinds
   

@@ -8,7 +8,7 @@ use warnings;
 package Durin::Classification::Experimentation::Experiment3::EvaluationCharacteristics;
 use Class::MethodMaker 
   new_hash_with_init => 'new',
-  get_set => [-java => qw/ Runs  Evaluator Folds Proportions DiscIntervals DiscMethod/];
+  get_set => [-java => qw/ Type Runs  Evaluator Folds Proportions DiscIntervals DiscMethod TestingSampleSize LearningSampleSizes/];
 
 sub init {
   my ($self,%properties) = @_;

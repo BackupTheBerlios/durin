@@ -32,9 +32,9 @@ sub getStubbornness {
   return Durin::TBMATAN::BaseTBMATAN::HardMinded;
 }
 
-sub getLambda {
-  return 6*6*6;
-}
+#sub getLambda {
+#  return 6*6*6;
+#}
 
 sub run
 {
@@ -44,22 +44,37 @@ sub run
 
   my $input = $self->getInput();
   my $table = $input->{TABLE};
+  my $schema = $table->getMetadata()->getSchema();
+  my $lambda = $schema->calculateLambda();
   
   #print "Starting counting\n";
-  my $bc = Durin::ProbClassification::ProbApprox::Counter->new();
-  {
-    my $input = {};
-    $input->{TABLE} = $table;
-    $input->{ORDER} = 2;
-    $bc->setInput($input);
+ # my $bc = Durin::ProbClassification::ProbApprox::Counter->new();
+#  {
+#    my $input = {};
+#    $input->{TABLE} = $table;
+#    $input->{ORDER} = 2;
+#    $bc->setInput($input);
+#  }
+#  $bc->run();
+  if (!defined $input->{COUNTING_TABLE}) {
+    my $bc = Durin::ProbClassification::ProbApprox::Counter->new();
+    {
+      my $input = {};
+      $input->{TABLE} = $table;
+      $input->{ORDER} = 2;
+      $bc->setInput($input);
+    }
+    $bc->run();
+    $self->{COUNTING_TABLE} = $bc->getOutput(); 
+  } else {
+    print "Sharing counting table\n";
+    $self->{COUNTING_TABLE} = $input->{COUNTING_TABLE};
   }
-  $bc->run();
-  
   #print "Done with counting\n";
   
   #print "Calculating betas\n";
   
-  my $num_atts = $input->{TABLE}->getSchema()->getNumAttributes()-1;
+  my $num_atts = $schema->getNumAttributes()-1;
   my $betas = ones $num_atts,$num_atts;
   #$betas = $betas * exp(3.4*$bc->getOutput()->getCount);
   
@@ -68,44 +83,22 @@ sub run
   my $stubbornness = $self->getStubbornness();
   #print "$jar\n";
   $SSTBMATAN->setStructureStubbornness($stubbornness);
-  $SSTBMATAN->setSchema($table->getMetadata()->getSchema());
+  $SSTBMATAN->setSchema($schema);
   $SSTBMATAN->setBetaMatrix($betas);
   $SSTBMATAN->setName($self->getName());
   #$TBMATAN->setEquivalentSampleSizeAndInitialize(
   #$self->CalculateEquivalentSampleSize(
   #$table->getMetadata()->getSchema())/100);
-  $SSTBMATAN->setEquivalentSampleSizeAndInitialize($self->getLambda());
-  $SSTBMATAN->setCountTableAndInitialize($bc->getOutput);
+  $SSTBMATAN->setEquivalentSampleSizeAndInitialize($lamdba);
+  $SSTBMATAN->setCountTableAndInitialize($self->{COUNTING_TABLE});
   
   $self->setOutput($SSTBMATAN);
-}
-
-# Inspired in the indifferent naive bayes results
-sub CalculateEquivalentSampleSize {
-  my ($self,$schema) = @_;
-  
-  my $class_attno = $schema->getClassPos();
-  my $class_att = $schema->getAttributeByPos($class_attno);
-  my $class_card = $class_att->getType()->getCardinality();
-  my $num_atts = $schema->getNumAttributes();
-
-  my $sum = 1;
-  my $i = 0;
-  while ($i < $num_atts) {
-    if ($i != $class_attno)
-      {
-	$sum += $schema->getAttributeByPos($i)->getType->getCardinality;
-      }
-    $i++;
-  }
-  $sum = $sum - ($num_atts - 1);
-  return $sum * $class_card;
 }
 
 sub getDetails()
   {
     my ($class) = @_;
-    return {"Softening constant" => $class->getLambda(),
+    return {"Softening constant" => "adjusted from dataset",
 	    "Stubborness" => $class->getStubbornness()};
   }
 1;

@@ -27,9 +27,9 @@ sub clone_delta
  #   $self->setMetadata($source->getMetadata()->clone());
 }
 
-sub getLambda {
-  return 10;
-}
+#sub getLambda {
+#  return 10;
+#}
 
 sub run
 {
@@ -39,35 +39,51 @@ sub run
 
   my $input = $self->getInput();
   my $table = $input->{TABLE};
+  my $schema = $table->getMetadata()->getSchema();
+  my $lambda = $schema->calculateLambda();
   
   #print "Starting counting\n";
-  my $bc = Durin::ProbClassification::ProbApprox::Counter->new();
-  {
-    my $input = {};
-    $input->{TABLE} = $table;
-    $input->{ORDER} = 2;
-    $bc->setInput($input);
+  if (!defined $input->{COUNTING_TABLE}) {
+    my $bc = Durin::ProbClassification::ProbApprox::Counter->new();
+    {
+      my $input = {};
+      $input->{TABLE} = $table;
+      $input->{ORDER} = 2;
+      $bc->setInput($input);
+    }
+    $bc->run();
+    $self->{COUNTING_TABLE} = $bc->getOutput(); 
+  } else {
+    print "Sharing counting table\n";
+    $self->{COUNTING_TABLE} = $input->{COUNTING_TABLE};
   }
-  $bc->run();
+  # my $bc = Durin::ProbClassification::ProbApprox::Counter->new();
+  #  {
+#    my $input = {};
+#    $input->{TABLE} = $table;
+#    $input->{ORDER} = 2;
+  #    $bc->setInput($input);
+  #  }
+  #  $bc->run();
   
   #print "Done with counting\n";
   
   #print "Calculating betas\n";
   
-  my $num_atts = $input->{TABLE}->getSchema()->getNumAttributes()-1;
+  my $num_atts = $schema->getNumAttributes()-1;
   my $betas = ones $num_atts,$num_atts;
   #$betas = $betas * exp(3.4*$bc->getOutput()->getCount);
   
   my $TBMATAN = Durin::TBMATAN::TBMATAN->new();
   
-  $TBMATAN->setSchema($table->getMetadata()->getSchema());
+  $TBMATAN->setSchema($schema);
   $TBMATAN->setBetaMatrix($betas);
   $TBMATAN->setName($self->getName());
   #$TBMATAN->setEquivalentSampleSizeAndInitialize(
   #$self->CalculateEquivalentSampleSize(
   #$table->getMetadata()->getSchema())/100);
-  $TBMATAN->setEquivalentSampleSizeAndInitialize($self->getLambda());
-  $TBMATAN->setCountTableAndInitialize($bc->getOutput);
+  $TBMATAN->setEquivalentSampleSizeAndInitialize($lambda);
+  $TBMATAN->setCountTableAndInitialize($self->{COUNTING_TABLE});
   $self->setOutput($TBMATAN);
 }
 
@@ -97,6 +113,6 @@ sub getDetails()
   {
     my ($class) = @_;
     
-    return {"TBMATAN softening constant" => $class->getLambda()};
+    return {"TBMATAN softening constant" => "adjusted by dataset"};
   }
 1;
