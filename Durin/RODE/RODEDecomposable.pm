@@ -31,7 +31,7 @@ sub new_delta
   # HardMinded means softening the betas to make them all over 10E-3.
   # Constant means no change in betas.
   $self->setStructureStubbornness(NoStubbornness);
-  $self->setParameterizedStubbornnessFactor(0.99);
+  $self->setParameterizedStubbornnessFactor(0.95);
 }
 
 sub clone_delta
@@ -76,9 +76,10 @@ sub refineAlphas {
     }
   }
   
+  print "original log_ros: ".join(",",@$log_ro_u)."\n";
+
   $self->softenLogRos($log_ro_u);
-  
- 
+
   my $alphas = $self->getAlphas();
   print "prior alphas:".join(",",@$alphas)."\n";
   print "log_ros: ".join(",",@$log_ro_u)."\n";
@@ -114,7 +115,7 @@ sub computeLogRo {
       my $n_uc = $ct->getCountXClass($class_val_iter,$node_u,$u_val);
       #print STDERR  "LO\n";
 
-      my $log_first_factor = ($numClassValues - 3) * (Math::Gsl::Sf::lngamma($nquote_uc) - Math::Gsl::Sf::lngamma($nquote_uc + $n_uc)); 
+      my $log_first_factor = ($num_atts - 3) * (Math::Gsl::Sf::lngamma($nquote_uc) - Math::Gsl::Sf::lngamma($nquote_uc + $n_uc)); 
       $log_ro_u += $log_first_factor;
       for(my $node_v = 0 ; $node_v < $num_atts; $node_v++) {
 	if (($node_v != $class_attno) && ($node_v != $node_u)) { 
@@ -145,11 +146,12 @@ sub softenLogRos {
     my $N = $ct->getCount();
     my $f = $self->getParameterizedStubbornnessFactor();
     print "Parameterized stubbornness: $f\n";
-    my $log_max_dif = $N * log $f;
+    my $log_max_dif = abs($N * log $f);
+    print "LogMaxDif = $log_max_dif\n";
     #my $schema = $self->getSchema();
     my ($min,$max) = @{$self->calculateMinMax($log_ro_u)};
-    my $StMin = 0;
-    my $StMax = $log_max_dif;
+    my $StMin = -$log_max_dif;
+    my $StMax = 0;
     if (($max-$min) < $log_max_dif) {
       # Do never exagerate beliefs. If the difference 
       # is not so marked keep it as it is and just move 
@@ -161,7 +163,9 @@ sub softenLogRos {
     if (($max-$min) > 0.0000000001) {
       $a = ($StMax-$StMin)/($max-$min);
       $b = $StMin-$a*$min;
+      print "a = $a, b = $b\n";
     } else {
+	print "Almost no diff\n";
       $a = $StMin/$max;
       $b = 0;
     }
