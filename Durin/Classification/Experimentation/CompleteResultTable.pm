@@ -92,6 +92,34 @@ sub getDatasets
     return $self->{DATASETSLIST};
   }
 
+# Returns a list of ModelApplications
+sub getResultsByDatasetModelAndProportion {
+  my ($self,$dataset,$model,$proportion) = @_;
+  
+  my $modelApplicationList = [];
+  my $vect = $self->{RESULTSCLASSIFIEDS}->{$dataset}->{$model}->{$proportion};
+  #print join(",",keys %$vect)."\n";
+  
+  my @IdNums = (keys %$vect);
+  #print "It has been run ".($#IdNums+1)." times\n";
+  #print "Number of runs: ",$#IdNums + 1,"\n";
+  foreach my $idNum (@IdNums)
+    {
+      # Here we treat CV results.
+      my $run = $vect->{$idNum};
+      #print join(",",keys %$run)."\n";
+      
+      my @numFolds = (keys %$run);
+      #print "Run $idNum has ".($#numFolds+1)." folds \n";
+      #print "Number of folds = ",$#numFolds + 1,"\n";
+      foreach my $foldNum (@numFolds)
+	{
+	  push @$modelApplicationList,$run->{$foldNum};
+	}
+    }
+  return $modelApplicationList;
+}
+
 sub compressRuns {
   my ($self) = @_;
 

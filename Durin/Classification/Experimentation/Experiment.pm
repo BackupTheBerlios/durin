@@ -4,7 +4,7 @@
 package Durin::Classification::Experimentation::Experiment;
 
 use base Durin::Components::Process;
-use Class::MethodMaker get_set => [-java => qw/ Name DataDir ResultDir DurinDir Tasks Folds Runs Proportions DiscMethod DiscIntervals Inducers Dataset/];
+use Class::MethodMaker get_set => [-java => qw/ Name DataDir ResultDir DurinDir Tasks Folds Runs Proportions DiscMethod DiscIntervals Inducers Dataset LaTexTablePrefix/];
 
 use strict;
 use warnings;
