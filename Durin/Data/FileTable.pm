@@ -120,7 +120,7 @@ sub getNextRow($)
 
     # this is temporal, in the future should be better structured.
     my $line = $self->{FILE_HANDLE}->getline();
-    return [split(/,/,Utilities::StringUtilities::removeEnter($line))];
+    return [split(/,/, Durin::Utilities::StringUtilities::removeEnter($line))];
 }
 
 sub start($)

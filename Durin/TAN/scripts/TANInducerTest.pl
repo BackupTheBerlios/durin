@@ -2,7 +2,7 @@
 use Durin::FlexibleIO::System;
 use Durin::Data::MemoryTable;
 use IO::File;
-use Durin::TAN::TANInducer;
+use Durin::TAN::FGGTANInducer;
 
 my $inFileName = $ARGV[0]; 
 $file = new IO::File;
@@ -13,8 +13,12 @@ $file->close();
 
 print "CTS loaded\n";
 
-my $TANI = Durin::TAN::TANInducer->new();
-$TANI->setInput($table);
+my $TANI = Durin::TAN::FGGTANInducer->new();
+{
+    my $input = {};
+    $input->{TABLE} = $table;
+    $TANI->setInput($input);
+}
 $TANI->run();
 my $TAN = $TANI->getOutput();
 my $Tree = $TAN->getTree();
