@@ -206,8 +206,11 @@ sub summarize {
 
   if (!$self->getSummarized()) {
     $self->setAUC($self->computeAUC());
+    print "AUC:".$self->getAUC()."\n";
     $self->setLogP($self->computeLogP());
-    $self->setErrorRate($self->computeErrorRate());
+    print "LogP:".$self->getLogP()."\n";
+    $self->setErrorRate($self->computeErrorRate()); 
+    print "ER:".$self->getErrorRate()."\n";
     $self->setSummarized(1);
     $self->freeInstances();
   }

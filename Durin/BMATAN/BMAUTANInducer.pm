@@ -35,7 +35,7 @@ sub run($) {
   
   my $input = $self->getInput();
   
-  $input->{LAMBDA} = 10;
+  $input->{LAMBDA} = 6*6*6;
   $input->{GC}->{MUTUAL_INFO_MEASURE} = Durin::TAN::GraphConstructor::Decomposable;
   $input->{K} = $self->getNumTrees();
   

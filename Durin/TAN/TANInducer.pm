@@ -91,12 +91,12 @@ sub run($)
   $kruskal->run();
   my $UTree = $kruskal->getOutput()->{TREE};
   
- #  print "The undirected spanning tree is:\n";
-#  my @edges = @{$UTree->getEdges()};
-#  foreach my $p (@edges)
-#    {
-#    print ${@$p}[0],",",${@$p}[1], "\n";
-#  }
+   print "The undirected spanning tree is:\n";
+  my @edges = @{$UTree->getEdges()};
+  foreach my $p (@edges)
+    {
+    print ${@$p}[0],",",${@$p}[1], "\n";
+  }
   
   my $Tree = $UTree->makeDirected();
   

@@ -175,6 +175,7 @@ sub summarize {
     foreach my $PMAPair (@$PMAList) {
       my $model = $PMAPair->[0];
       my $PMA = $PMAPair->[1];
+      print "$model results\n";
       $PMA->summarize();
     }
   }

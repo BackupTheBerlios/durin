@@ -34,7 +34,7 @@ sub clone_delta
 }
 
 sub getLambda {
-  return 10;
+  return 6*6*6;
 }
 
 
@@ -75,11 +75,13 @@ sub run($)
 		  if ($infoMeasure == MaximumLikelihood) {
 		    #print "MaxL\n";
 		    $info = $self->calculateInf($j,$k,$class_att,$schema,$PA);
+		     print "Maximum Likelihood Info($j,$k): $info\n";
 		  } elsif ($infoMeasure == Decomposable) {
 		    $info = $self->calculateDecomposableInf($j,$k,$class_att,$schema,$ct);
+		    print "Decomposable Info($j,$k): $info\n";
 		  }
 		  # $info2 = $self->calculateSmoothedInf($j,$k,$class_att,$schema,$arrayofTablesRef);
-		  # print "Info($j,$k): without smoothing p's: $info with smoothing:$info2\n";
+		 
 		  $Graph->addEdge($j,$k,$info);
 	      }
 	  }

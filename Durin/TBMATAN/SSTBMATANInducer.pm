@@ -33,7 +33,7 @@ sub getStubbornness {
 }
 
 sub getLambda {
-  return 10;
+  return 6*6*6;
 }
 
 sub run
