@@ -131,6 +131,17 @@ sub testModels {
   }
 }
 
+sub getFixedCharacteristics {
+  my ($self) = @_;
+
+  my $fixed_characteristics = $self->SUPER::getFixedCharacteristics();
+  my $options = Durin::ModelGeneration::ModelGenerator->getModelKindOptions($self->getModelKind());
+  foreach my $key (keys %$options) {
+    push @$fixed_characteristics, [$key,$options->{$key}];
+  }
+  return $fixed_characteristics;
+}
+
 #sub loadResultsFromFiles {
 #  my ($self) = @_;
 

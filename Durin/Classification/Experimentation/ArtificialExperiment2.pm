@@ -51,6 +51,11 @@ sub constructTaskList {
   return $tasks;
 }
 
-
+#Delegated
+sub getFixedCharacteristics {
+  my ($self) = @_;
+  
+  $self->getTasks()->[0]->getFixedCharacteristics();
+}
 
 1;

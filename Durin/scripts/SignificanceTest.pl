@@ -8,6 +8,7 @@ use Durin::Classification::Experimentation::ExperimentFactory;
 
 use IO::File;
 use Statistics::Distributions;
+use File::Spec::Functions;
 
 use strict;
 use warnings;
@@ -30,6 +31,7 @@ if ($#ARGV == 1) {
 
 my $exp_chr = do $ExpFileName;
 my $exp = Durin::Classification::Experimentation::ExperimentFactory->createExperiment($exp_chr);
+
 #$exp->run(); 
 my $AveragesTable = Durin::Classification::Experimentation::CompleteResultTable->new();
 $exp->loadSummary($AveragesTable);
@@ -53,14 +55,14 @@ my $AUCFunc = sub {
 };
 
 print "Comparing Error Rate\n******************\n";
-compareAllModelsInAllProportions($errorRateFunc,$AveragesTable);
+compareAllModelsInAllProportions("ER",$errorRateFunc,$AveragesTable);
 print "Comparing LogScore\n******************\n";
-compareAllModelsInAllProportions($logPFunc,$AveragesTable);
+compareAllModelsInAllProportions("LogP",$logPFunc,$AveragesTable);
 print "Comparing AUC\n******************\n";
-compareAllModelsInAllProportions($AUCFunc,$AveragesTable);
+compareAllModelsInAllProportions("AUC",$AUCFunc,$AveragesTable);
 
 sub compareAllModelsInAllProportions {
-  my ($comparisonFunc,$AveragesTable) = @_;
+  my ($measureName,$comparisonFunc,$AveragesTable) = @_;
 
   my $models = $AveragesTable->getModels();
   my $proportionList = $AveragesTable->getProportions();
@@ -72,7 +74,7 @@ sub compareAllModelsInAllProportions {
       $visitedModels->{$m1} = 1;
       foreach my $m2 (@$models) { 
 	if (!$visitedModels->{$m2}) {
-	  compareModels($exp,$AveragesTable,$m1,$m2,$proportion,$comparisonFunc);
+	  compareModels($exp,$AveragesTable,$m1,$m2,$proportion,$comparisonFunc,$measureName);
 	}
       }
     }
@@ -80,18 +82,38 @@ sub compareAllModelsInAllProportions {
 }
 
 sub compareModels {
-  my ($exp,$AveragesTable,$m1,$m2,$proportion,$comparisonFunc) = @_;
+  my ($exp,$AveragesTable,$m1,$m2,$proportion,$comparisonFunc,$measureName) = @_;
   
   my $m2BetterThanm1 = directionallyCompareModels($exp,$AveragesTable,$m1,$m2,$proportion,$comparisonFunc);
   my $m1BetterThanm2 = directionallyCompareModels($exp,$AveragesTable,$m2,$m1,$proportion,$comparisonFunc);
   
+  writeFiles($exp,$m1,$m2,$proportion,$measureName,$m1BetterThanm2,$m2BetterThanm1);
+  
   if ($m1BetterThanm2>$m2BetterThanm1) {
-    print "$m1 > $m2: $m1BetterThanm2 - $m2 > $m1: $m2BetterThanm1\n";
+    print "$m1 > $m2: $m1BetterThanm2 - $m2BetterThanm1\n";
   } elsif ($m1BetterThanm2<=$m2BetterThanm1) {
     print "$m2 > $m1: $m2BetterThanm1 - $m1BetterThanm2\n";
   }
 }
 
+sub writeFiles {
+  my ($exp,$m1,$m2,$proportion,$measureName,$m1BetterThanm2,$m2BetterThanm1) = @_;
+  my $significanceDir = $exp->getOutputCharacteristics()->getSignificanceDir();
+  my $expName = $exp->getName();
+ 
+  my $baseFileName = catfile(catfile(catfile($significanceDir, $expName),"sig"),$percentage);
+  my $fileName1 = catfile($baseFileName,"$m1-$m2-$measureName-$proportion.sig");
+  my $fileName2 = catfile($baseFileName,"$m2-$m1-$measureName-$proportion.sig");
+  my $file1 = new IO::File; 
+  print "$fileName1\n";
+  $file1->open(">$fileName1") or die $!;
+  print $file1 "$m1BetterThanm2 -  $m2BetterThanm1";
+  $file1->close();
+  my $file2 = new IO::File; 
+  $file2->open(">$fileName2") or die $!;
+  print $file2 "$m2BetterThanm1 -  $m1BetterThanm2";
+  $file2->close();
+}
 
 sub directionallyCompareModels {
   my ($exp,$AveragesTable,$m1,$m2,$proportion,$comparisonFunc,$summaries) = @_;

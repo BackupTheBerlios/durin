@@ -157,6 +157,16 @@ sub loadSummary {
   return $AveragesTable;
 }
 
+sub dumpSummariesToSQLite {
+  my ($self) = @_;
+  
+  my $table = $self->createSQLiteTable();
+  foreach my $task (@{$self->getTasks()}) {
+    $task->dumpSummaryToSQLite($table);
+  }
+}
+
+
 # End
 
 1;

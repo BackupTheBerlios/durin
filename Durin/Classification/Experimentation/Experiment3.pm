@@ -26,7 +26,7 @@ sub init {
 package Durin::Classification::Experimentation::Experiment3::OutputCharacteristics;
 use Class::MethodMaker 
   new_hash_with_init => 'new',
-  get_set => [-java => qw/ LatexTablePrefix/];
+  get_set => [-java => qw/ LatexTablePrefix SignificanceDir GraphicsDir/];
 
 sub init {
   my ($self,%properties) = @_;
@@ -42,6 +42,8 @@ use Class::MethodMaker
 use File::Spec::Functions;
 use Data::Dumper;
 use File::Path;
+use Matrix::MultiAttribute;
+use File::Temp qw/ tempfile/;
 
 sub init {
   my ($self,%properties) = @_;
@@ -129,8 +131,72 @@ sub loadSummary {
   if (!-e $fileName) {
     print "Task ".$self->getName()." has not yet been calculated\n";
   } else {
+    print "Loading $fileName\n";
     $AveragesTable->loadSummary($fileName,$self->getName());
   }
 }
+
+sub getFixedCharacteristics {
+  my ($self) = @_;
+
+  return [["task",$self->getName()],
+	  ["disc_intervals",$self->getEvaluationCharacteristics->getDiscIntervals()],
+	  ["disc_method",$self->getEvaluationCharacteristics->getDiscMethod()],
+	  ["testing_sample_size",$self->getEvaluationCharacteristics->getTestingSampleSize()]];
+}
+
+sub dumpSummaryToSQLite { 
+  my ($self,$table) = @_;
+  
+  # Create new table of averages
+
+  my $AveragesTable = Durin::Classification::Experimentation::ResultTable->new();
+  
+  # Load summary for this task
+
+  $self->loadSummary($AveragesTable);
+  #$AveragesTable->loadValuesAndAverages();
+  # Dump info to temporary file
+  
+  my $tmp_file= new File::Temp(); 
+  print "Dumping results to SQLite file ".$tmp_file->filename."\n";
+  my $pair_list = $self->getFixedCharacteristics();
+  $AveragesTable->dumpToSQLiteFile($tmp_file,$pair_list);
+  $tmp_file->close();
+
+  # load the data into the SQLLite table
+  $table->load($tmp_file->filename);
+}
+
+sub createSQLiteTable {
+  my ($self) = @_;
+  
+  my $table_factory = new Matrix::MultiAttribute::Factory(catfile($self->getBaseFileName(),"sqlite"));
+  #my $tester = Durin::Classification::Experimentation::ModelTesterFactory->create($evaluationCharacteristics);
+  my $measures = Durin::Classification::Experimentation::ResultTable->getMeasures();
+  my $field_list = [];
+  #["task","disc_intervals","disc_method","testing_sample_size"];
+  foreach my $field_pair (@{$self->getFixedCharacteristics()}) {
+    my $field_list = push @$field_list,$field_pair->[0];
+  }
+  push @$field_list, ("run","fold","proportion","inducer");
+  push @$field_list, @$measures;
+  #foreach my $measure (@$measures) {
+  #  push @$field_list,$measure;
+  #}
+  print "I am going to create the table\n";
+  my $table = $table_factory->create($self->getName(),$field_list);
+  return $table;
+}
+
+sub getSQLiteTable {
+  my ($self) = @_;
+  
+  my $table_factory = new Matrix::MultiAttribute::Factory(catfile($self->getBaseFileName(),"sqlite"));
+  #my $tester = Durin::Classification::Experimentation::ModelTesterFactory->create($evaluationCharacteristics);
+  my $table = $table_factory->open($self->getName());
+  return $table;
+}
+
 
 1;

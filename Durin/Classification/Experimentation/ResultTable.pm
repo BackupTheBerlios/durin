@@ -239,7 +239,8 @@ sub loadValuesAndAverages {
 	  my $PMA = $PMAPair->[1];
 	  #$PMA->summarize();
 	  #$AveragesTable->{$model}->{$proportion}->{OKS} += $PMA->getNumOKs();
-	  #$AveragesTable->{$model}->{$proportion}->{WRONGS} += $PMA->getNumWrongs();	
+	  #$AveragesTable->{$model}->{$proportion}->{WRONGS} += $PMA->getNumWrongs();
+	  #print "$model-$proportion\n";
 	  $AveragesTable->{$model}->{$proportion}->{ERRORRATE} += $PMA->getErrorRate();	
 	  $AveragesTable->{$model}->{$proportion}->{LOGP} += $PMA->getLogP();	
 	  $AveragesTable->{$model}->{$proportion}->{AUC} += $PMA->getAUC();
@@ -347,6 +348,7 @@ sub loadSummary {
   
   # read the headers (the field names)
   my $line = $file->getline();
+  chomp $line;
   my @decompLine = split(/,/,$line);
   if (!($decompLine[0] eq "Fold")) {
     die "File $fileName has not the format required\n";
@@ -362,6 +364,7 @@ sub loadSummary {
   #my $resultTable = Durin::Classification::Experimentation::ResultTable->new();
   do {
     $line = $file->getline();
+    chomp $line;
     my @array = split(/,/,$line);
     $i = 0;
     my $runId = $array[0];
@@ -374,7 +377,7 @@ sub loadSummary {
       my $LogP = $array[$i * 3 + 3];
       my $AUC = $array[$i * 3 + 4];
       
-      #print "Next One: $modelName $runId $OKs $Wrongs $PLog\n";
+      #print "Next One: $modelName $runId $ER $AUC $LogP\n";
       #getc;
       my $PMA = Durin::ProbClassification::ProbModelApplication->new();
       $PMA->setErrorRate($ER);
@@ -393,7 +396,7 @@ sub loadSummary {
       }
       #Check if the model is in the actual model list
       #if ($self->checkModel($modelName)) {
-	$self->addResult($taskName,$idNum,$foldNum,$proportion,$modelName,$PMA);
+      $self->addResult("$idNum.$foldNum",$proportion,$modelName,$PMA);
       #      }
       $i++; 
     }
@@ -427,6 +430,49 @@ sub loadSummary {
 #    }
 #  }
 
+sub dumpToSQLiteFile {
+  my ($self,$file,$attributes_list) = @_;
+  
+  # write the contents
+  
+  my $line_fixed = "";
+  foreach my $pair (@$attributes_list) {
+    $line_fixed = $line_fixed.writeValue($pair->[1]).",";
+  }
+  
+  foreach my $result (@{$self->{RESULTLIST}}) {
+    my ($runId,$trainProportion,$modelName,$modelApplication) = @$result;
+    my ($run,$fold) = split(/\./,$runId);
+    my $wrun = writeValue($run);
+    my $wfold = writeValue($fold);
+    my $line  = $line_fixed."$wrun,$wfold";
+    my $wproportion = writeValue($trainProportion);
+    $line  = $line.",$wproportion";
+    my $wmodel = writeValue($modelName);
+    $line = $line.",$wmodel";
+    #print "$line\n";
+    $line= $line.",".writeValue($modelApplication->getErrorRate());
+    $line= $line.",".writeValue($modelApplication->getLogP());
+    $line= $line.",".writeValue($modelApplication->getAUC())."\n";
+    
+    #foreach my $measure (@$measures) {
+    #  $line = $line.",".writeValue($valuesTable->{$runId}->{$proportion}->{$model}->{$measure});
+    #}
+    print $file $line;
+    #print $line;
+  }
+}
 
+sub writeValue {
+  my ($value) = @_;
+  if (!defined $value) {
+    return "\\N"; 
+  } else {
+    return $value;
+  }
+}
 
+sub getMeasures {
+  return ["ERRORRATE","LOGP","AUC"];
+}
 1;

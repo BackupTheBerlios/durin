@@ -35,7 +35,7 @@ sub clone_delta
   }
 
 
-sub addResult
+sub addResult2
   {
     my ($self,$dataset,$idNum,$foldNum,$trainProportion,$modelName,$modelApplication) = @_;
     
@@ -438,5 +438,69 @@ sub getAvAUCDatasets
    
     return $pdl;
   }
+
+# Load the summary information from a simple file
+
+sub loadSummary {  
+  my ($self,$fileName,$taskName) = @_;
+  
+  my $file = new IO::File;
+  $file->open("<$fileName") or die "Unable to open $fileName\n";
+  
+  # read the headers (the field names)
+  my $line = $file->getline();
+  my @decompLine = split(/,/,$line);
+  if (!($decompLine[0] eq "Fold")) {
+    die "File $fileName has not the format required\n";
+  }
+  
+  my $i = 2;
+  my $modelList = ();
+  while ($i < $#decompLine) {
+    push @$modelList,(substr($decompLine[$i],2));
+    $i += 3;
+  }
+  
+  #my $resultTable = Durin::Classification::Experimentation::ResultTable->new();
+  do {
+    $line = $file->getline();
+    my @array = split(/,/,$line);
+    $i = 0;
+    my $runId = $array[0];
+    my $proportion = $array[1];
+    #print "Proportion: $proportion\n";
+    foreach my $modelName (@$modelList) {
+      #my $OKs = $array[$i * 4 + 2];
+      #my $Wrongs = $array[$i * 4 + 3];
+      my $ER = $array[$i * 3 + 2];
+      my $LogP = $array[$i * 3 + 3];
+      my $AUC = $array[$i * 3 + 4];
+      
+      #print "Next One: $modelName $runId $ER $AUC $LogP\n";
+      #getc;
+      my $PMA = Durin::ProbClassification::ProbModelApplication->new();
+      $PMA->setErrorRate($ER);
+      $PMA->setLogP($LogP);
+      $PMA->setAUC($AUC);
+      
+      # Check for CV results
+      
+      my ($idNum,$foldNum);
+      if ($runId =~ /(.*)\.(.*)/) {
+	$idNum = $1;
+	$foldNum = $2;
+      } else {
+	$idNum = $runId;
+	$foldNum = 0;
+      }
+      #Check if the model is in the actual model list
+      #if ($self->checkModel($modelName)) {
+      $self->addResult2($taskName,$idNum,$foldNum,$proportion,$modelName,$PMA);
+      #      }
+      $i++; 
+    }
+  } until ($file->eof());
+  $file->close();
+}
 
 1;

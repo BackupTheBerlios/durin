@@ -155,6 +155,12 @@ sub setModelKind {
   }
 }
 
+sub getModelKindOptions {
+  my ($class,$modelKind) = @_;
+
+  return $modelKind->{Options};
+}
+ 
 sub getModelKinds {
   my ($self) = @_;
   
