@@ -46,7 +46,13 @@ sub run($)
   
   # Get the sample  over which the Bayes error rate is going to be approximated
   #if (defined $input->{SAMPLE}) {
-    $self->{SAMPLE} = $input->{SAMPLE};
+  $self->{SAMPLE} = $input->{SAMPLE};
+
+  if (defined $input->{RANDOM_SAMPLE}){
+    $self->{RANDOM_SAMPLE} = $input->{RANDOM_SAMPLE};
+  } else {
+    $self->{RANDOM_SAMPLE} = 0;
+  }
   #} else {
     # Get the sample size over which the Bayes error rate is going to be approximated
   #  if (defined $input->{SAMPLE_SIZE}) {
@@ -62,17 +68,25 @@ sub run($)
   $self->{SAMPLE}->open();
   $self->{SAMPLE}->applyFunction(sub {
 				   my ($row) = @_;
-				   
+				   #print "Classifying: ".join(',',@$row)."\n";
 				   my $predictedClass = $self->{INDUCED_MODEL}->classify($row);
-				   my $realDistrib = $self->{REAL_MODEL}->predict($row)->[0];
-				   my $expectedError = 1 -  $realDistrib->{$predictedClass};
+				   my $predictionArray = $self->{REAL_MODEL}->predict($row);
+				   #my ($condDistrib,$class,$distrib,$total) = $self->{REAL_MODEL}->predict($row);
+				   my $expectedError;
+				   if ($self->{RANDOM_SAMPLE}) {
+				     $expectedError = 1 -  $predictionArray->[0]->{$predictedClass};
+				   } else {
+				     $expectedError = $predictionArray->[3] *
+				       (1 -  $predictionArray->[0]->{$predictedClass});
+				   }
 				   #print "Predicted: $predictedClass Error expected:$expectedError\n";
-				   
 				   $count++;
 				   $expectedErrorRate += $expectedError;
 				 });
-  $expectedErrorRate /= $count;
+  if ($self->{RANDOM_SAMPLE}) {
+    $expectedErrorRate /= $count;
+  }
   $self->{SAMPLE}->close();
-
+  
   $self->setOutput({ERROR_RATE => $expectedErrorRate});
 }

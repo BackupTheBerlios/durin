@@ -151,18 +151,19 @@ sub predict
 	  }
 	$sum += $Prob{$class_val}; 
       }
+    my %condProb;
     if ($sum != 0)
       {
 	foreach $class_val (@class_values)
 	  {
-	    $Prob{$class_val} = ($Prob{$class_val} / $sum); 
+	    $condProb{$class_val} = ($Prob{$class_val} / $sum); 
 	  }
       }
     else
       {
 	foreach $class_val (@class_values)
 	  {
-	    $Prob{$class_val} = 1 / ($#class_values + 1); 
+	    $condProb{$class_val} = 1 / ($#class_values + 1); 
 	  }
       }
     #foreach $class_val (@class_values)
@@ -170,7 +171,7 @@ sub predict
     #	print "P($class_val) = ",$Prob{$class_val},","; 
     #      }
     #print "\n";
-    return ([\%Prob,$max]);
+    return ([\%condProb,$max,\%Prob,$sum]);
 }
 
 sub classify

@@ -146,7 +146,66 @@ sub convertToValues ($$) {
   }
   return $row;
 }
-    
+   
+sub generateCompleteDataset {
+  my ($self)  = @_;
+  
+  my $dataset = Durin::Data::MemoryTable->new();
+  my $metadataDataset = Durin::Metadata::Table->new();
+  $metadataDataset->setSchema($self);
+  $metadataDataset->setName("tmp");
+  $dataset->setMetadata($metadataDataset);
+  
+  my $attTypes = [];
+  my $actualValueIndexes = [];
+  my $row = [];
+  foreach my $att (@{$self->getAttributeList()}) {
+    my $attType = $att->getType();
+    push @$attTypes,$attType;
+    push @$actualValueIndexes,0;
+    push @$row,$attType->getValue(0);
+  }
+  
+  $dataset->open();
+  do { 
+    print "Generated ".join(',',@$row)."\n";
+    $dataset->addRow($row);
+    my @tmp =  @$row;
+    $row = \@tmp;
+    $self->increaseAndGenerateObservation($actualValueIndexes,$attTypes,$row);
+  } while ($self->stillMoreObservations($actualValueIndexes));
+  $dataset->close();
+  
+  return $dataset;
+} 
+
+sub increaseAndGenerateObservation {
+  my ($self,$actualValueIndexes,$attTypes,$row)  = @_;
+  
+  my $actualAttPos = $self->getNumAttributes()-1;
+  my $carry = 1;
+  while ($carry && ($actualAttPos >= 0)) {
+    my $actualValueIndex = $actualValueIndexes->[$actualAttPos];
+    if ($actualValueIndex == $attTypes->[$actualAttPos]->getCardinality()-1) {
+      $actualValueIndex = 0;
+    } else {
+      $actualValueIndex++;
+      $carry = 0;
+    }
+    $actualValueIndexes->[$actualAttPos] = $actualValueIndex;
+    $row->[$actualAttPos] =  $attTypes->[$actualAttPos]->getValue($actualValueIndex);
+    $actualAttPos--;
+  }
+  if ($carry) {
+    $actualValueIndexes->[0] = -1;
+  }
+}
+
+sub stillMoreObservations {
+  my ($self,$actualValueIndexes)  = @_;
+  return ($actualValueIndexes->[0] != -1);
+}
+
 sub makestring($)
 {
     my $self = shift;

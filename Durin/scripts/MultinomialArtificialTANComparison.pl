@@ -9,59 +9,132 @@ use Durin::Multinomial::MultinomialModelGenerator;
 use Durin::TAN::FrequencyCoherentTANInducer;
 use Durin::TAN::FrequencyLaplaceTANInducer;
 use Durin::TAN::CoherentLaplaceTANInducer;
+use Durin::TAN::CoherentFGGTANInducer;
 use Durin::TAN::FGGTANInducer;
 use Durin::TAN::CoherentCoherentTANInducer;
 use Durin::TBMATAN::SSTBMATANInducer;
 use Durin::TBMATAN::TBMATANInducer;
 use Durin::ProbClassification::BayesErrorRateCalculator;
 
-print "Started model generation\n";
-my $generator = Durin::Multinomial::MultinomialModelGenerator->new();
-$generator->setInput({INDEPENDENCE_PERCENTAGE => 0,
-		      NUMBER_OF_ATTRIBUTES_GENERATOR => sub {return 7;}});
-$generator->run();
-my $model = $generator->getOutput()->[0];
-print "Model generated\n";
-print "Starting dataset generation\n";
+my $runs = 5;
+my $results = generateModelAndTest($runs);
+my $averagesResultList = $results->[0];
+my $averageResultHash = calculateAverages($averagesResultList);
+printResults($averageResultHash);
+printDetailedResults($results->[1]);
+print "Number: ".scalar(@{$results->[1]});
 
-my $dataset = $model->generateDataset(50);
-my $testingSet = $model->generateDataset(500);
-print "Datasets generated\n";
+sub generateModelAndTest {
+  my ($runs) = @_;
+ 
+  my $resultList = [];
+  my $totalResultList = [];
+  for (my $run = 0 ; $run < $runs ; $run++) {
+    print "Started model generation for run $run\n";
+    #my $generator = Durin::Multinomial::MultinomialModelGenerator->new();
+    my $generator = Durin::TAN::RandomTANGenerator->new();
+    $generator->setInput({INDEPENDENCE_PERCENTAGE => 0,
+			  NUMBER_OF_ATTRIBUTES_GENERATOR => sub {return 7;}});
+    $generator->run();
+    my $model = $generator->getOutput()->[0];
+    print "Model generated\n";
+    
+    my $sizes = [10,10,10,10,10]; 
+    my $testingSet = $model->getSchema()->generateCompleteDatasetWithoutClass();
+    my $runResultList = generateAndTestDatasets($model,$sizes,$testingSet);
+    my $runResultAverages = calculateAverages($runResultList);
+    push @$totalResultList,@$runResultList;
+    push @$resultList,$runResultAverages;
+  }
+  return [$resultList,$totalResultList];
+}
 
-print "Started learning\n";
+sub printDetailedResults {
+  my ($resultList) = @_;
+  
+  my @classifiers = (keys %{$resultList->[0]});
+  my $resultsByClassifier = {};
+  foreach my $classifier (@classifiers) {
+    $resultsByClassifier->{$classifier} = [];
+  }
+  foreach my $result (@$resultList) {
+    foreach my $classifier (@classifiers) {
+      print "A";
+      push @{$resultsByClassifier->{$classifier}},$result->{$classifier};
+    }
+  }
+  foreach my $classifier (keys %$resultsByClassifier) {
+    print "$classifier: ".join(',',@{$resultsByClassifier->{$classifier}})."\n";
+  }
+}
 
-my $inducerList = [Durin::TAN::FrequencyCoherentTANInducer->new(),
-		   Durin::TAN::CoherentCoherentTANInducer->new(),
-		   Durin::TAN::FGGTANInducer->new(),
-		   Durin::TAN::FrequencyLaplaceTANInducer->new(),
-		   Durin::TAN::CoherentLaplaceTANInducer->new()
-		   #,Durin::TBMATAN::SSTBMATANInducer->new()
-		  ];
+sub printResults {
+  my ($resultHash) = @_;
+  
+  foreach my $classifier (keys %$resultHash) {
+    print "$classifier average: ".$resultHash->{$classifier}."\n";
+  }
+}
 
-my $modelList = learnModels($inducerList,$dataset);
+sub calculateAverages {
+  my ($resultList) = @_;
+  
+  my @classifiers = (keys %{$resultList->[0]});
+  my $totals = {};
+  foreach my $classifier (@classifiers) {
+    $totals->{$classifier} = 0;
+  }
+  
+  foreach my $result (@$resultList) {
+    foreach my $classifier (@classifiers) {
+      $totals->{$classifier} += $result->{$classifier};
+    }
+  }
+  foreach my $classifier (@classifiers) {
+    $totals->{$classifier} /= scalar @$resultList;
+  }
+  return $totals;
+}
 
-#my $SSTBMATANI = Durin::TBMATAN::SSTBMATANInducer->new();
-#$SSTBMATANI->setInput({TABLE => $dataset, COUNTING_TABLE=>$countingTable});
-#$SSTBMATANI->run();
-#my $SSTBMATAN = $SSTBMATANI->getOutput();
-#$tree = $TANFGG->getTree();
-#print "TAN FGG tree:\n";
-#print $tree->makestring;
+sub generateAndTestDatasets {
+  my ($model,$sizes,$testingSet) = @_;
+  
+  my $resultList = [];
+  foreach my $size (@$sizes) {
+    my $resultHash = generateAndTestDataset($model,$size,$testingSet);
+    push @$resultList,$resultHash;
+  }
+  return $resultList;
+}
 
-print "Finished learning.\n";
-print "Estimating error rates\n";
+sub generateAndTestDataset {
+  my ($model,$size,$testingSet) = @_;
+  
+  print "Starting dataset generation\n";
 
-print "Number of classes: ".$dataset->getSchema()->getClass()->getType()->getCardinality()."\n";
-estimateErrorRates($modelList,$testingSet,$model);
+  my $learningSet = $model->generateDataset($size);
+  
+  print "Dataset generated\n";
+  
+  print "Started learning\n";
+  
+  my $inducerList = [Durin::TAN::FrequencyCoherentTANInducer->new(),
+		     Durin::TAN::CoherentCoherentTANInducer->new(),
+		     Durin::TAN::FGGTANInducer->new(),
+		     Durin::TAN::CoherentFGGTANInducer->new(),
+		     Durin::TAN::FrequencyLaplaceTANInducer->new(),
+		     Durin::TAN::CoherentLaplaceTANInducer->new()#,
+		     #Durin::TBMATAN::SSTBMATANInducer->new()
+		    ];
+  
+  my $modelList = learnModels($inducerList,$learningSet);
+  print "Finished learning.\n";
+  print "Estimating error rates\n";
+  
+  print "Number of classes: ".$learningSet->getSchema()->getClass()->getType()->getCardinality()."\n";
 
-
-#$BayesErrorRateCalculator->setInput({SAMPLE => $testingSet,
-#				     REAL_MODEL => $TAN,
-#				     INDUCED_MODEL => $SSTBMATAN});
-#$BayesErrorRateCalculator->run();
-#my $SSTBMATANBayesRate = $BayesErrorRateCalculator->getOutput()->{ERROR_RATE};
-#print "SSTBMATAN Error rate: $SSTBMATANBayesRate\n";
-
+  my $resultHash = estimateErrorRates($modelList,$testingSet,$model,0);
+}
 
 sub learnModels {
   my ($inducerList,$dataset) = @_;
@@ -86,12 +159,15 @@ sub learnModels {
 }
 
 sub estimateErrorRates {
-  my ($models,$testingSet,$TAN) = @_;
+  my ($models,$testingSet,$TAN,$randomSample) = @_;
   
+  my $resultHash = {};
   my $BayesErrorRateCalculator = Durin::ProbClassification::BayesErrorRateCalculator->new();
   $BayesErrorRateCalculator->setInput({SAMPLE => $testingSet,
 				       REAL_MODEL => $TAN,
-				       INDUCED_MODEL => $TAN});
+				       INDUCED_MODEL => $TAN,
+				       RANDOM_SAMPLE => $randomSample
+				      });
   $BayesErrorRateCalculator->run();
   my $BayesRate = $BayesErrorRateCalculator->getOutput()->{ERROR_RATE};
   print "Estimated Bayes Error Rate for this model is: $BayesRate\n";
@@ -99,11 +175,14 @@ sub estimateErrorRates {
   foreach my $model (@$models) {
     $BayesErrorRateCalculator->setInput({SAMPLE => $testingSet,
 					 REAL_MODEL => $TAN,
-					 INDUCED_MODEL => $model});
+					 INDUCED_MODEL => $model,
+					 RANDOM_SAMPLE => $randomSample});
     $BayesErrorRateCalculator->run();
     my $estimatedErrorRate = $BayesErrorRateCalculator->getOutput()->{ERROR_RATE};
     print $model->getName()." estimated error rate: $estimatedErrorRate\n";
+    $resultHash->{$model->getName()} = $estimatedErrorRate;
   }
+  return $resultHash;
 }
 
 # End

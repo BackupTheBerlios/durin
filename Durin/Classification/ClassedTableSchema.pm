@@ -50,6 +50,40 @@ sub getClass($) {
   return $self->getAttributeByPos($self->getClassPos());
 }
 
+sub generateCompleteDatasetWithoutClass {
+  my ($self)  = @_;
+  
+  my $dataset = Durin::Data::MemoryTable->new();
+  my $metadataDataset = Durin::Metadata::Table->new();
+  $metadataDataset->setSchema($self);
+  $metadataDataset->setName("tmp");
+  $dataset->setMetadata($metadataDataset);
+  
+  my $attTypes = [];
+  my $actualValueIndexes = [];
+  my $row = [];
+  foreach my $att (@{$self->getAttributeList()}) {
+    my $attType = $att->getType();
+    push @$attTypes,$attType;
+    push @$actualValueIndexes,0;
+    push @$row,$attType->getValue(0);
+  }
+  my $classPos = $self->getClassPos();
+  $dataset->open();
+  do {
+    if ($actualValueIndexes->[$classPos] == 0){
+      #print "Generated ".join(',',@$row)."\n";
+      $dataset->addRow($row);
+      my @tmp =  @$row;
+      $row = \@tmp;
+    }
+    $self->increaseAndGenerateObservation($actualValueIndexes,$attTypes,$row);
+  } while ($self->stillMoreObservations($actualValueIndexes));
+  $dataset->close();
+  
+  return $dataset;
+} 
+
 sub makestring($)
 {
     my $self = shift;

@@ -27,7 +27,7 @@ sub new_delta {
   
   $self->{NUMBER_OF_MODELS} = 1; # By default generate 1 model.
   $self->{NUMBER_OF_ATTRIBUTES_GENERATOR}= sub {return 7;};
-  $self->{NUMBER_OF_VALUES_GENERATOR}= sub {return POSIX::ceil(rand 2)+1};
+  $self->{NUMBER_OF_VALUES_GENERATOR}= sub {return POSIX::ceil(rand 1)+1};
 }
 
 sub clone_delta { 

@@ -27,7 +27,6 @@ sub clone_delta
     #   $self->setMetadata($source->getMetadata()->clone());
 }
 
-
 sub getP {
   my ($self,$row)  = @_;
 
@@ -48,11 +47,12 @@ sub predict {
   my $maxClass;
   my $thisP;
   my $distrib = {};
+  my $conditionalDistrib  = {};
   my $total = 0;
   for my $val (@{$classAtt->getType()->getValues()}) {
     $row_to_classify->[$classPos] = $val;
     $thisP = $self->getP($row_to_classify);
-    $distrib->{$val} = $thisP;
+    $conditionalDistrib->{$val} = $thisP;
     if ($thisP >= $maxP) {
       $maxP = $thisP;
       $maxClass = $val;
@@ -60,19 +60,17 @@ sub predict {
     $total += $thisP;
   }
   for my $val (@{$classAtt->getType()->getValues()}) {
-    $distrib->{$val} /= $total;
+    $distrib->{$val} = $conditionalDistrib->{$val}/$total;
   }
   
-  return [$distrib,$maxClass];
+  return [$distrib,$maxClass,$conditionalDistrib,$total];
 }
 
 sub classify
   {
     my ($self,$row_to_classify) = @_;
     
-    my ($distrib,$class) = @{$self->predict($row_to_classify)};
-    
-    return $class;
+    return $self->predict($row_to_classify)->[1];
   }
 
 sub generateObservation {
