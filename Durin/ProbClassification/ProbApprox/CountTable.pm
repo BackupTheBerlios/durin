@@ -369,3 +369,23 @@ sub getClassIndex
     
     return $self->{CLASS_ATT_NUMBER};
   }
+
+sub getXClassTable {
+  my ($self,$x) = @_ ;
+  return $self->{COUNTXCLASS}->[$x];
+}
+
+sub getXYClassTable {
+  my ($self,$x,$y) = @_;
+
+    if ($x==$y) {
+      die "Durin::CountTable::getCountXYClass \$x equal \$y\n";
+    }
+    if ($x < $y) {
+      my $tmp = $x;
+      $x = $y;
+      $y = $tmp;
+    }
+    
+  return $self->{COUNTXYCLASS}->[$x][$y];
+}
