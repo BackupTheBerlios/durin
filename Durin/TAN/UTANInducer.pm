@@ -29,20 +29,51 @@ sub getCountingTable {
   return $self->{COUNTING_TABLE};
 }
 
+sub calculateLambda {
+  my ($self,$schema) = @_;
+  
+  my $lambda = 2*2*2;
+  
+  my $class_attno = $schema->getClassPos();
+  my $class_att = $schema->getAttributeByPos($class_attno);
+  my $num_atts = $schema->getNumAttributes();
+  
+  my $num_classes = scalar  @{$class_att->getType()->getValues()};
+  my ($j,$k,$info);
+  
+  foreach $j (0..$num_atts-1) {
+    if ($j!=$class_attno) {
+      my $num_j_values = scalar @{$schema->getAttributeByPos($j)->getType()->getValues()};
+      foreach $k (0..$j-1) {
+	if ($k!=$class_attno) {
+	  my $num_k_values = scalar @{$schema->getAttributeByPos($k)->getType()->getValues()};
+	  my $product = $num_k_values*$num_j_values*$num_classes;
+	  $lambda = $product if $product > $lambda;
+	  #$info = &$infoFunc($j,$k);
+	  #$Graph->addEdge($j,$k,$info);
+	}
+      }
+    }
+  }
+  return $lambda;
+}
+
+
 sub run($) {
   my ($self) = @_;
   
   my $input = $self->getInput();
   
-  if (!defined $input->{LAMBDA}) {
-    $input->{LAMBDA} = 10;
-    print "Assuming Lambda = ".$input->{LAMBDA}."\n";
-  }
-  
-  my $lambda = $input->{LAMBDA};
+  #if (!defined $input->{LAMBDA}) {
+ 
   my $table = $input->{TABLE};
   my $schema = $table->getMetadata()->getSchema();
-
+  my $lambda = $self->calculateLambda($schema);
+  #$input->{LAMBDA};$input->{LAMBDA} = 10;
+  print "Assuming Lambda = ".$lambda."\n";
+  #}
+  
+ 
   if (defined $input->{GC}->{MUTUAL_INFO_MEASURE}) {
     $self->{GC}->{MUTUAL_INFO_MEASURE} = $input->{GC}->{MUTUAL_INFO_MEASURE};
   } else {
