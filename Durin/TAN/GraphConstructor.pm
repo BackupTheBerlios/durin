@@ -34,7 +34,7 @@ sub clone_delta
 }
 
 sub getLambda {
-  return 1;
+  return 10;
 }
 
 
@@ -138,27 +138,38 @@ sub calculateDecomposableInf {
   my $total = 0.0;
   my ($nquote,$n);
   
-  foreach $class_val (@class_values) {	
+  foreach $class_val (@class_values) {
     foreach $j_val (@j_values) {
       #$nquote = $prior->getCountXClass($class_val,$j,$j_val); 
       $nquote = $self->getNQuoteUC($j);
       $n = $data->getCountXClass($class_val,$j,$j_val);
-      $total += Math::Gsl::Sf::lngamma($nquote);
-      $total -= Math::Gsl::Sf::lngamma($nquote + $n);
+      if ($n != 0) {
+	#print "C = $class_val -- J - $j,$j_val: $n\n";
+	$total += Math::Gsl::Sf::lngamma($nquote);
+	$total -= Math::Gsl::Sf::lngamma($nquote + $n);
+      }
       foreach $k_val (@k_values) {
 	#$nquote = $prior->getCountXYClass($class_val,$j,$j_val,$k,$k_val);
 	$nquote = $self->getNQuoteUVC($j,$k);
+	my $nsecurity =  $data->getCountXYClass($class_val,$k,$k_val,$j,$j_val);
 	$n = $data->getCountXYClass($class_val,$j,$j_val,$k,$k_val);
-	$total += Math::Gsl::Sf::lngamma($nquote + $n);
-	$total -= Math::Gsl::Sf::lngamma($nquote);
+	if ($nsecurity != $n) {die "Erro QTC\n";}
+	if ($n != 0) {
+	  #print "C = $class_val -- J - $j,$j_val -- K - $k,$k_val: $n\n";
+	  $total += Math::Gsl::Sf::lngamma($nquote + $n);
+	  $total -= Math::Gsl::Sf::lngamma($nquote);
+	}
       }
     } 
     foreach $k_val (@k_values) {
-      #$nquote = $prior->getCountXClass($class_val,$j,$j_val); 
+      #$nquote = $prior->getCountXClass($class_val,$k,$k_val); 
       $nquote = $self->getNQuoteUC($k);
       $n = $data->getCountXClass($class_val,$k,$k_val);
-      $total += Math::Gsl::Sf::lngamma($nquote);
-      $total -= Math::Gsl::Sf::lngamma($nquote + $n);
+      if ($n != 0) {
+	#print "C = $class_val -- K - $k,$k_val: $n\n";
+	$total += Math::Gsl::Sf::lngamma($nquote);
+	$total -= Math::Gsl::Sf::lngamma($nquote + $n);
+      }
     }
   }
   #print "Info ($j,$k) = $infoTotal\n";

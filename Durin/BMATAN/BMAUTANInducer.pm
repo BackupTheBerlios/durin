@@ -45,6 +45,10 @@ sub run($) {
   my $schema = $table->getMetadata()->getSchema();
   
   my $kkruskal;
+
+  if (defined $input->{GC}->{MUTUAL_INFO_MEASURE}) {
+    $self->{GC}->{MUTUAL_INFO_MEASURE} = $input->{GC}->{MUTUAL_INFO_MEASURE};
+  }
   
   if (exists $input->{MTREEGEN}) {
     $kkruskal = $input->{MTREEGEN};

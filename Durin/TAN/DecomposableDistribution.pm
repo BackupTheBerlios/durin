@@ -34,7 +34,7 @@ sub createPrior {
 }
 
 sub getLambda {
-  return 1;
+  return 10;
 }
 
 sub calculateDecomposableInf {
