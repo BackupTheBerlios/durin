@@ -244,7 +244,7 @@ sub N_uv  {
   my $class_val_index = $self->getIndexes()->[$class_attno]->{$class_val};
   my $u_val_index = $self->getIndexes()->[$u]->{$u_val};
   my $v_val_index = $self->getIndexes()->[$v]->{$v_val};
-  print STDERR  "D\n";
+  print STDERR  "D $u $v $u_val $u_val_index $v_val $v_val_index $class_val $class_val_index\n";
   my $temp = $self->getN_uv()->[$u][$v]->at($u_val_index,$v_val_index,$class_val_index);  
   print STDERR "E\n";
   #print $temp;
