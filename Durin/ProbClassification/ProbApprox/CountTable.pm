@@ -386,6 +386,5 @@ sub getXYClassTable {
       $x = $y;
       $y = $tmp;
     }
-    
   return $self->{COUNTXYCLASS}->[$x][$y];
 }
