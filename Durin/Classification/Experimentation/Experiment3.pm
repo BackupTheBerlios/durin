@@ -83,8 +83,9 @@ sub add_info {
 	  #print "A\n";
 	  add_info($self->{$key},%{$hash{$key}});
 	} elsif (UNIVERSAL::isa($hash{$key},"ARRAY")){
-	  #print "B\n";
-	  $self->{$key} = \@{$hash{$key}};
+	  print "Copiando lista\n";
+	  my @list = @{$hash{$key}};
+	  $self->{$key} = \@list;
 	} else {
 	  #print "Type: ".ref($self->{$key})."\n";
 	  $self->{$key} = $hash{$key};
