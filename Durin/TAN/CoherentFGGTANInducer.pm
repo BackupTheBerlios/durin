@@ -36,7 +36,7 @@ sub run
     my $input = $self->{INPUT};
     $input->{TABLE} = $self->getInput()->{TABLE};
     #print $input->{TABLE}->getMetadata();
-    $input->{GC}->{PROBAPPROX} = Durin::ProbClassification::ProbApprox::PAFrequency->new();
+    $input->{GC}->{PROBAPPROX} = Durin::ProbClassification::ProbApprox::PACoherent->new();
     $input->{TAN}->{PROBAPPROX} = Durin::ProbClassification::ProbApprox::PAFG->new();
     $inducer->setInput($input);
   }
