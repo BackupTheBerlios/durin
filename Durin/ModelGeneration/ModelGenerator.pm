@@ -26,26 +26,6 @@ use Durin::Classification::ClassedTableSchema;
 #use Durin::Metadata::Attribute;
 use Durin::Metadata::ATCreator;
 
-#{
-#  package Durin::ModelGeneration::ModelGenerator::AttributeGenerator;
-  
-#  use base Durin::Basic::NamedObject
-
-#  sub create {
-#    my ($class,$characteristics) = @_;
-    
-    
-#    #my $name = $characteristics->{METHOD_NAME};
-#    #if ("Fixed" eq $name) {
-    
-      
-#  }
-  
-  
-#}
-
-
-
 use strict;
 use warnings;
 
@@ -85,31 +65,31 @@ sub create {
 sub initSchemaGenerator {
   my ($self,$characteristics) = @_;
   
-  my ($numAttsGen, $numValsGen);
-  {
-    my $attGenCharacteristics = $characteristics->{ATTRIBUTE_GENERATOR};
-    my $valGenCharacteristics = $characteristics->{VALUE_GENERATOR};
-    $numAttsGen = sub {
-      if ("Fixed" eq $attGenCharacteristics->{METHOD_NAME}) {
-	return $attGenCharacteristics->{NUM_ATTRIBUTES};
-      } elsif ("Random" eq $attGenCharacteristics->{METHOD_NAME}) {
-	return int(rand($attGenCharacteristics->{NUM_ATTRIBUTES}-1))+2;
-      }
-    };
-    $numValsGen = sub {
-      if ("Fixed" eq $valGenCharacteristics->{METHOD_NAME}) {
-	return $valGenCharacteristics->{NUM_VALUES};
-      } elsif ("Random" eq $valGenCharacteristics->{METHOD_NAME}) {
-	return int(rand($valGenCharacteristics->{NUM_VALUES}-1))+2;
-      }
-    };
-  }
-  for (my $i = 0 ; $i < 10 ; $i++) {
-    print "Atts: ".&$numAttsGen()."\n";
-    print "Vals: ".&$numValsGen()."\n";
-  }
-  $characteristics->{NUMBER_OF_ATTRIBUTES_GENERATOR} = $numAttsGen;
-  $characteristics->{NUMBER_OF_VALUES_GENERATOR} = $numValsGen;
+ # my ($numAttsGen, $numValsGen);
+#  {
+#    my $attGenCharacteristics = $characteristics->{ATTRIBUTE_GENERATOR};
+#    my $valGenCharacteristics = $characteristics->{VALUE_GENERATOR};
+#    $numAttsGen = sub {
+#      if ("Fixed" eq $attGenCharacteristics->{METHOD_NAME}) {
+#	return $attGenCharacteristics->{NUM_ATTRIBUTES};
+#      } elsif ("Random" eq $attGenCharacteristics->{METHOD_NAME}) {
+#	return int(rand($attGenCharacteristics->{NUM_ATTRIBUTES}-1))+2;
+#      }
+#    };
+#    $numValsGen = sub {
+#      if ("Fixed" eq $valGenCharacteristics->{METHOD_NAME}) {
+#	return $valGenCharacteristics->{NUM_VALUES};
+#      } elsif ("Random" eq $valGenCharacteristics->{METHOD_NAME}) {
+#	return int(rand($valGenCharacteristics->{NUM_VALUES}-1))+2;
+#      }
+#    };
+#  }
+#  for (my $i = 0 ; $i < 10 ; $i++) {
+#    print "Atts: ".&$numAttsGen()."\n";
+#    print "Vals: ".&$numValsGen()."\n";
+#  }
+#  $characteristics->{NUMBER_OF_ATTRIBUTES_GENERATOR} = $numAttsGen;
+#  $characteristics->{NUMBER_OF_VALUES_GENERATOR} = $numValsGen;
 }
 
 sub init($$) {
@@ -132,18 +112,16 @@ sub init($$) {
   if (defined $input->{NUMBER_OF_VALUES_GENERATOR}) {
     $self->{NUMBER_OF_VALUES_GENERATOR} = $input->{NUMBER_OF_VALUES_GENERATOR};
   }
-  
 }
 
 
-sub run($)
-	{
-	  my ($self) = @_;
-	  
-	  my $input = $self->getInput();
+sub run($) {
+  my ($self) = @_;
   
-	  $self->init($input);
-	  
+  my $input = $self->getInput();
+  
+  $self->init($input);
+  
   my $modelList = [];
   my $model;
   foreach my $i (1..$self->{NUMBER_OF_MODELS}) {
@@ -151,10 +129,9 @@ sub run($)
     $model = $self->generateModel();
     push @$modelList,$model;
   }
-  
   $self->setOutput($modelList);
 }
-
+	
 # Returns a hash with model generator details
 sub getDetails($) {
   my ($class) = @_;
@@ -162,29 +139,80 @@ sub getDetails($) {
   my $details = {}; 
   return $details;
 }
-	       
+       
 sub generateModel($) {
   my ($self) = @_;
   
   die "Durin::ModelGeneration::ModelGenerator::generateModel is pure virtual\n";
 }
 		  
-		  # Generates the model schema (the attributes & its values)
+sub setModelKind {
+  my ($self,$modelKind) = @_;
+  
+  $self->{OPTIONS} = $self->getInput()->{OPTIONS};
+  foreach my $option (keys %{$modelKind->{OPTIONS}}) {
+    $self->{OPTIONS}->{$option} = $modelKind->{OPTIONS}->{$option};
+  }
+}
+
+sub getModelKinds {
+  my ($self) = @_;
+  
+  my $options = $self->getInput()->{OPTIONS};
+  my $kinds = [{OPTIONS =>{},
+		NAME => "results"}];
+  
+  foreach my $opt_name (keys %$options) {  
+    my $newKinds = [];
+    foreach my $kind (@$kinds) {
+      foreach my $opt_value (@{$options->{$opt_name}}) {
+	my $newKind;
+	my %newOptions = %{$kind->{OPTIONS}};
+	$newOptions{$opt_name} = $opt_value;
+	my $newName = $kind->{NAME}.".".$opt_name."=".$opt_value;
+	print "Model kind: $newName\n";
+	$newKind = {OPTIONS => \%newOptions,
+		    NAME => $newName};
+	push @$newKinds,$newKind;
+      }
+    }
+    $kinds = $newKinds;
+  }
+  
+ # foreach my $nNodes (@{$options->{nNodes}}) {
+#    foreach my $maxIW (@{$options->{maxIW}}) {
+#      foreach my $nVal (@{$options->{nVal}}) {
+#	my $kind = {OPTIONS => {nNodes => $nNodes,
+#				maxIW => $maxIW,
+#				nVal => $nVal},
+#		    NAME =>	"$nNodes.$maxIW.$nVal"
+#		   };
+#	push @$kinds,$kind;
+#      }
+#    }
+#  }
+  return $kinds;
+}
+
+
+     # Generates the model schema (the attributes & its values)
 
 sub generateSchema {
   my ($self) = @_;
 
-  my $attGen = $self->{NUMBER_OF_ATTRIBUTES_GENERATOR};
-  my $valGen = $self->{NUMBER_OF_VALUES_GENERATOR};
+  #my $attGen = $self->{NUMBER_OF_ATTRIBUTES_GENERATOR};
+  #my $valGen = $self->{NUMBER_OF_VALUES_GENERATOR};
   my ($att,$attType,$attVals,$attValList);
-  my $numAtts = &$attGen();
+  #my $numAtts = &$attGen();
+  my $numAtts = $self->{OPTIONS}->{nNodes};
   my $schema = Durin::Classification::ClassedTableSchema->new();
   foreach my $i (1..$numAtts) {
     $att = Durin::Metadata::Attribute->new(); 
     $att->setName($i);
     $attType = Durin::Metadata::ATCreator->create("Categorical");
     
-    $attVals = &$valGen();
+    #$attVals = &$valGen();
+    $attVals = $self->{OPTIONS}->{nVal};
     $attValList = $self->generateValList($attVals);
     $attType->setRest(join(':',@$attValList));
     $att->setType($attType);

@@ -40,6 +40,7 @@ sub run  {
   my $modelGenerationCharateristics = $self->getModelGenerationCharacteristics();
   my $learningSampleSizes = $self->getLearningSampleSizes();
   my $evaluationCharacteristics = $self->getEvaluationCharacteristics();
+  #my $inducedWidths = $self->getInducedWidths();
   
   # Create the model generator
   
@@ -58,15 +59,18 @@ sub run  {
   
   my $resultTable = Durin::Classification::Experimentation::ResultTable->new();
   
-  for (my $run = 0; $run < $runs ; $run++) {
-    $self->executeRun($run,$modelGenerator,$inducerList,$learningSampleSizes,$tester,$resultTable);
+  # For each kind of model specified in the $modelGenerationCharacteristics
+  my $modelKinds = $modelGenerator->getModelKinds();
+  for my $modelKind (@$modelKinds) {
+    for (my $run = 0; $run < $runs ; $run++) {
+      $self->executeRun($run,$modelGenerator,$modelKind,$inducerList,$learningSampleSizes,$tester,$resultTable);
+    }
+    # do something with the result table.
+    $resultTable->loadValuesAndAverages();
+    $resultTable->writeSummary("$resultDir"."$expName/".$modelKind->{NAME}.".out");
+    #$resultTable->summarizeBayes();
+    #$resultTable->
   }
-  
-  # do something with the result table.
-  $resultTable->loadValuesAndAverages();
-  $resultTable->writeSummary("$resultDir"."$expName/summary.out");
-  #$resultTable->summarizeBayes();
-  #$resultTable->
 }
   
 sub constructInducerList {
@@ -83,10 +87,10 @@ sub constructInducerList {
 
 
 sub executeRun {
-  my ($self,$runId,$modelGenerator,$inducerList,$learningSampleSizes,$tester,$resultTable) = @_;
+  my ($self,$runId,$modelGenerator,$modelKind,$inducerList,$learningSampleSizes,$tester,$resultTable) = @_;
   
   # Generate model
-  
+  $modelGenerator->setModelKind($modelKind);
   $modelGenerator->run();
   my $model = $modelGenerator->getOutput()->[0];
   print "Model generated\n";
@@ -138,6 +142,5 @@ sub testModels {
 }
 
 # End
-
 
 1;

@@ -1,7 +1,7 @@
 package Durin::Classification::Experimentation::ModelTester;
 
 use base Durin::Components::Process;
-use Class::MethodMaker get_set => [-java => qw/ RealModel/];
+use Class::MethodMaker get_set => [-java => qw/ RealModel EvaluationCharacteristics/];
 
 use strict;
 use warnings;
@@ -32,6 +32,7 @@ sub create {
   } elsif ("Sample" eq $name) {
     $tester = Durin::Classification::Experimentation::BayesModelTester->new();
   }
+  $tester->setEvaluationCharacteristics($evaluationCharacteristics);
   $tester->init($evaluationCharacteristics);
   return $tester;
 }

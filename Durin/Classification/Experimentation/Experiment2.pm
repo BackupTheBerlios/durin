@@ -245,13 +245,19 @@ sub getDatasetsByInducer {
       my $inducers = $self->getInducers();
       if ($t->getInducers())
 	{
+	  #print "This task has special inducers\n";
 	  $inducers = $t->getInducers();
+	  #print "[".join(",",@$inducers)."]\n";
 	}
 
-      my $isInTask = grep $_ eq $inducer, @$inducers;
+      my $isInTask = grep $_ eq $inducer , @$inducers;
       if ($isInTask) {
+	#print "And inducer is in it\n";
 	push @$datasetList,$t->getDataset();
+      } else {
+	#print "Inducer is not in it\n";
       }
+	
     }
   return $datasetList;
 }

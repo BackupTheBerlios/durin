@@ -191,7 +191,7 @@ sub compressRunsByProportion
 		      {
 			#print "Position: $foldNumIndex\n";
 			#print "ER:".$run->{$foldNum}->getErrorRate()."\n";
-			set $runERList,$foldNumIndex,$run->{$foldNum}->getErrorRate()*100;
+			set $runERList,$foldNumIndex,$run->{$foldNum}->getErrorRate()*1;
 			set $runLogPList,$foldNumIndex,$run->{$foldNum}->getLogP();
 			set $runAUCList,$foldNumIndex,$run->{$foldNum}->getAUC();
 			$foldNumIndex++;

@@ -88,9 +88,13 @@ sub summarize {
 
 sub setRealModel {
   my ($self,$model)= @_;
-
-  $self->clear();
+  
   $self->SUPER::setRealModel($model);
+  $self->clear();
+  my $size  = $self->getEvaluationCharacteristics()->{TESTING_SAMPLE_SIZE};
+  if (Sample eq $self->getType()) {
+    $self->setSample($model->generateDataset($size));    
+  }
 }
 
 1;
