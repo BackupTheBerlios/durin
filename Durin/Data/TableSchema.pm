@@ -277,7 +277,7 @@ sub makestring($)
 sub calculateLambda {
   my ($self) = @_;
   
-  my $lambda = 2*2*2*2;
+  my $lambda = 2*2*2;
   
   my $class_attno = $self->getClassPos();
   my $class_att = $self->getAttributeByPos($class_attno);
