@@ -33,16 +33,20 @@ sub run($) {
   my ($self) = @_;
   
   my $input = $self->getInput();
-
-  $input->{LAMBDA} = 6*6*6;
-  $input->{GC}->{MUTUAL_INFO_MEASURE} = Durin::TAN::GraphConstructor::Decomposable;
-
+  
+  if (!defined $input->{LAMBDA}) {
+    $input->{LAMBDA} = 6*6*6;
+    print "Assuming Lambda = ".$input->{LAMBDA}."\n";
+  }
+  
   my $lambda = $input->{LAMBDA};
   my $table = $input->{TABLE};
   my $schema = $table->getMetadata()->getSchema();
 
   if (defined $input->{GC}->{MUTUAL_INFO_MEASURE}) {
     $self->{GC}->{MUTUAL_INFO_MEASURE} = $input->{GC}->{MUTUAL_INFO_MEASURE};
+  } else {
+    $self->{GC}->{MUTUAL_INFO_MEASURE} = Durin::TAN::GraphConstructor::Decomposable;
   }
   
   # If we do not receive the counting table, we calculate it
@@ -61,6 +65,11 @@ sub run($) {
     print "Sharing counting table\n";
     $self->{COUNTING_TABLE} = $input->{COUNTING_TABLE};
   }
+ 
+  # Calculate the parameters of the resulting decomposable distribution
+  
+  my $distrib = Durin::TAN::DecomposableDistribution->createPrior($schema,$lambda);
+  $distrib->setCountingTable($self->getCountingTable());
   
   my $gcons = Durin::TAN::GraphConstructor->new();
   {
@@ -68,6 +77,7 @@ sub run($) {
     #$Input->{PROBAPPROX} = $PAGC;
     $Input->{SCHEMA} = $schema;
     $Input->{COUNTING_TABLE} = $self->{COUNTING_TABLE};
+    $Input->{DECOMPOSABLE_DISTRIBUTION} = $distrib;
     if (defined $self->{GC}->{MUTUAL_INFO_MEASURE}) {
       $Input->{MUTUAL_INFO_MEASURE} = $self->{GC}->{MUTUAL_INFO_MEASURE};
     }
@@ -84,12 +94,6 @@ sub run($) {
   }
   $kruskal->run();
   my $UTree = $kruskal->getOutput()->{TREE};
-  
-  # Calculate the parameters of the resulting decomposable distribution
-
-  my $distrib = Durin::TAN::DecomposableDistribution->createPrior($schema,$lambda);
-  $distrib->setCountingTable($self->getCountingTable());
-  
   my $UTAN = Durin::TAN::UTAN->new();
   #print " Durin::TAN::TANInducer there should be a clone here\n";
   $UTAN->setSchema($schema);
@@ -97,7 +101,7 @@ sub run($) {
   $UTAN->setTree($UTree);
   $UTAN->setName($self->getName());
   $self->setOutput($UTAN);
-  print "Finished learningTAN\n";
+  print "Finished learning MAPTAN\n";
 }
 
 1;

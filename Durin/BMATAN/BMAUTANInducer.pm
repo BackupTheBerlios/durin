@@ -71,12 +71,18 @@ sub run($) {
     $self->{COUNTING_TABLE} = $input->{COUNTING_TABLE};
   }
   
+  # Calculate the parameters of the resulting decomposable distribution
+  
+  my $distrib = Durin::TAN::DecomposableDistribution->createPrior($schema,$lambda);
+  $distrib->setCountingTable($self->{COUNTING_TABLE});
+   
   my $gcons = Durin::TAN::GraphConstructor->new();
   {
     my ($Input);
     #$Input->{PROBAPPROX} = $PAGC;
     $Input->{SCHEMA} = $schema;
     $Input->{COUNTING_TABLE} = $self->{COUNTING_TABLE};
+    $Input->{DECOMPOSABLE_DISTRIBUTION} = $distrib;
     if (defined $self->{GC}->{MUTUAL_INFO_MEASURE}) {
       $Input->{MUTUAL_INFO_MEASURE} = $self->{GC}->{MUTUAL_INFO_MEASURE};
     }
@@ -105,11 +111,7 @@ sub run($) {
       }
     }
   
-  # Calculate the parameters of the resulting decomposable distribution
-  
-  my $distrib = Durin::TAN::DecomposableDistribution->createPrior($schema,$lambda);
-  $distrib->setCountingTable($self->{COUNTING_TABLE});
-  
+ 
   # Find the minimum weight in the set
   my $maxWeight = -10000000000000000000000;
   foreach my $UTree (@$Trees) {

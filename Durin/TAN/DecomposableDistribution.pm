@@ -33,12 +33,12 @@ sub createPrior {
   return $newDecomposable;
 }
 
-sub getLambda {
-  return 10;
-}
+#sub getLambda {
+#  return 10;
+#}
 
 sub calculateDecomposableInf {
-  my ($self,$j,$k,$class_att,$schema,$data) = @_;
+  my ($self,$j,$k,$class_att,$schema) = @_;
   
   my ($class_val,@class_values,@j_values,$j_val,@k_values,$k_val);
   my ($Pxyz,$Pz,$Pxz,$Pyz,$quotient,$temp,$infoTotal,$infoPartial);
@@ -49,7 +49,7 @@ sub calculateDecomposableInf {
   
   my $total = 0.0;
   my ($nquote,$n);
-  
+  my $data = $self->getCountingTable();
   foreach $class_val (@class_values) {	
     foreach $j_val (@j_values) {
       #$nquote = $prior->getCountXClass($class_val,$j,$j_val); 
@@ -74,6 +74,44 @@ sub calculateDecomposableInf {
     }
   }
   #print "Info ($j,$k) = $infoTotal\n";
+  return $total;
+}
+
+sub calculateDecomposableCardinalityConsciousInf {
+  my ($self,$j,$k,$class_att,$schema) = @_;
+  my $data = $self->getCountingTable();
+  my $logW = $self->calculateDecomposableInf($j,$k,$class_att,$schema);
+  my $mu = $self->totallyIndependentInf($j,$k,$class_att,$schema);
+  return $logW-$mu;
+}
+
+sub totallyIndependentInf {
+  my ($self,$j,$k,$class_att,$schema) = @_;
+  
+  my ($class_val,@class_values,@j_values,$j_val,@k_values,$k_val);
+  
+  @class_values = @{$class_att->getType()->getValues()};
+  @j_values = @{$schema->getAttributeByPos($j)->getType()->getValues()};
+  @k_values = @{$schema->getAttributeByPos($k)->getType()->getValues()};
+  
+  my $num_j_values = scalar @j_values;
+  my $num_k_values = scalar @k_values;
+  my $num_classes = scalar @class_values;
+  my $total = 0.0;
+  my ($nQuoteAsterisc_j,$nQuoteAsterisc_k,$n,$nuvc,$info_min);
+  my $data = $self->getCountingTable();
+  my $nquote = $self->getEquivalentSampleSize();
+  $n = ($data->getCount()+$nquote) / $num_classes; 
+  $nquote = $nquote/$num_classes;
+  #foreach $class_val (@class_values) {
+  $total -= Math::Gsl::Sf::lngamma($n/$num_j_values) * $num_j_values * $num_classes;
+  $total += Math::Gsl::Sf::lngamma($nquote/$num_j_values) * $num_j_values * $num_classes;
+  $total -= Math::Gsl::Sf::lngamma($n/$num_k_values) * $num_k_values* $num_classes;
+  $total += Math::Gsl::Sf::lngamma($nquote/$num_k_values) * $num_k_values* $num_classes;
+  $total += Math::Gsl::Sf::lngamma($n/($num_j_values*$num_k_values)) * $num_j_values * $num_k_values* $num_classes;
+  $total -= Math::Gsl::Sf::lngamma($nquote/($num_j_values*$num_k_values)) * $num_j_values * $num_k_values* $num_classes;
+  #}
+  print "totally :$total\n";
   return $total;
 }
 
