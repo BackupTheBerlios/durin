@@ -81,6 +81,7 @@ sub run
     no strict;
     foreach my $array (@valuesArray)
       {
+	  print "I=$i\n";
 	my @list = sort {$a <=> $b;} @$array;
 	$valuesArray[$i] = \@list;
 	$i++;

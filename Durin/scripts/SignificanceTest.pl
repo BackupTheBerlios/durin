@@ -124,7 +124,7 @@ sub compareModelsInDatasetAndProportion {
   my $results2 = $AveragesTable->getResultsByDatasetModelAndProportion($dataset,$m2,$proportion);
   my $ERdifference = [];
   my $i = 0 ;
-  print "m1=$m1\nm2=$m2\n";
+  #print "m1=$m1\nm2=$m2\n";
   foreach my $result1 (@$results1) {
     #print "Result1: $result1\n";
     #print "result2 = ".$results2->[$i]." \n";
@@ -138,7 +138,7 @@ sub compareModelsInDatasetAndProportion {
   #print "n:$n  U: $UValue c:$U99\n";
   my $result = 0;
   if ($UValue>$U99) {
-    print "$dataset: $m2 sign. better than $m1 at $percentage%\n";
+    #print "$dataset: $m2 sign. better than $m1 at $percentage%\n";
     $result = 1;
   } else {
     #print "No sign. difference\n";

@@ -111,7 +111,7 @@ sub run($) {
   $distrib->setCountingTable($self->{COUNTING_TABLE});
   
   # Find the minimum weight in the set
-  my $maxWeight = 0;
+  my $maxWeight = -10000000000000000000000;
   foreach my $UTree (@$Trees) {
       my $thisWeight = $UTree->getWeight();
       if ($maxWeight < $thisWeight) {

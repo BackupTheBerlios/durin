@@ -21,13 +21,16 @@ while (!$inFile->eof())
   {
     print $outFile ($line."\n");
     $line = $inFile->getline();
+    print $line." --- kko\n";
     $line = Durin::Utilities::StringUtilities::removeCtrlMEnter($line);
   }
-my @array = split(/,/,$line);
-if ($#array>1)
-  {
-    print $outFile ($line."\n");
-  }
-
+if (defined($line))
+{
+    my @array = split(/,/,$line);
+    if ($#array>1)
+    {
+	print $outFile ($line."\n");
+    }
+}
 $inFile->close();
 $outFile->close();

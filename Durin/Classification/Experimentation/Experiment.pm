@@ -19,7 +19,7 @@ sub new_delta
 sub clone_delta
   {  
     # my ($class,$self,$source) = @_;
-    
+      
     die "Durin::Classification::Experimentation::Experiment::clone not implemented\n";
   }
 
@@ -296,14 +296,27 @@ sub ProcessResultFile {
 	$idNum = $1;
 	$foldNum = $2;
       } else {
-	$idNum = $runId;
+	  $idNum = $runId;
 	$foldNum = 0;
       }
-      $AveragesTable->addResult($dataset,$idNum,$foldNum,$proportion,$modelName,$PMA);
+      #Check if the model is in the actual model list
+      if ($self->checkModel($modelName)) {
+	  $AveragesTable->addResult($dataset,$idNum,$foldNum,$proportion,$modelName,$PMA);
+      }
       $i++; 
-    }
-  } until ($file->eof());
+  }
+} until ($file->eof());
   $file->close();
+}
+
+sub checkModel {
+    my($self,$modelName) = @_;
+
+    my $contained = 0;
+    foreach my $name (@{$self->getInducers()}) {
+	$contained = $contained || ($name eq $modelName);
+    }
+    return $contained;
 }
 
 1;

@@ -150,7 +150,6 @@ sub setSchema
 		      }
 		  }
 	      }
-	    
 	  }
       }
   }
@@ -187,6 +186,9 @@ sub addObservation
 	if ($j!=$class_attno)
 	  {
 	    $j_val = $$row[$j];
+	    if (!defined($self->{INDEXES}->[$j]->{$j_val})){
+	      die "Undefined value: Att: $j Value:$j_val\n";
+	    }
 	    $j_val_index = $self->{INDEXES}->[$j]->{$j_val};
 	    
 	    my $pdlx = $self->{COUNTX}->[$j];
