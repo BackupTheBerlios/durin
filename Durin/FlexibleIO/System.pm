@@ -12,6 +12,9 @@ sub BEGIN
     {
       print "\tLoading $module\n";
       eval "require $module";
+      if ($@) {
+	print "Troubles loading $module:\n$@\n";
+      }
       import $module;
       $IOHandler = new $module ();
       Durin::FlexibleIO::IORegistry->register(${$module."::IO_CLASS"},${$module."::IO_FORMAT"},$IOHandler);

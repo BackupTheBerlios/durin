@@ -1,6 +1,7 @@
 package Durin::Classification::System;
 
 use Durin::Classification::Registry;
+#use Durin::NB::MAPNBInducer;
 
 sub BEGIN
 {
@@ -11,6 +12,9 @@ sub BEGIN
     {
       print "\tLoading $module\n";
       eval "require $module";
+      if ($@) {
+	print "Troubles loading $module:\n$@\n";
+      }
       import $module;
       my $mdl = new $module;
       my $name = getName $mdl;

@@ -84,6 +84,24 @@ Contain the preprocessing processes. We can find a simple framework for dealing 
 
 Contains useful short scripts that can be used as utilities as well as as examples of usage of the framework.
 
+=head1 PREREQUISITES
+
+You should install:
+
+=item expat
+
+XML parser 
+http://www.jclark.com/xml/expat.html
+
+=item XML::DOM
+
+=item XML::Generator
+
+=item PDL 
+
+ The Perl Data Language 
+http://pdl.perl.org/
+
 =head1 USAGE
 
 TBD
