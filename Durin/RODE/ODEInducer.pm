@@ -15,7 +15,6 @@ use Durin::RODE::RODEDecomposable;
 sub new_delta
 {
 #    my ($class,$self) = @_;
-    
 
     #   $self->{METADATA} = undef; 
 }
@@ -27,6 +26,14 @@ sub clone_delta
  #   $self->setMetadata($source->getMetadata()->clone());
 }
 
+sub getStubbornness {
+  return Durin::RODE::RODEDecomposable::ParameterizedStubbornness;
+}
+
+sub getParameterizedStubbornnessFactor {
+  return 0.95;
+}
+
 sub run
 {
   my ($self) = @_;
@@ -36,7 +43,7 @@ sub run
   my $input = $self->getInput();
   my $table = $input->{TABLE};
   my $schema = $table->getMetadata()->getSchema();
-  my $lambda = $schema->calculateLambda()/10;
+  my $lambda = $schema->calculateLambda();
   print "Assuming Lambda = ".$lambda."\n";
   if (!defined $input->{COUNTING_TABLE}) {
     my $bc = Durin::ProbClassification::ProbApprox::Counter->new();
@@ -64,8 +71,11 @@ sub run
 
   my $RODEDecomposable = Durin::RODE::RODEDecomposable->new();
   my $stubbornness = $self->getStubbornness();
-
+  my $stubbornnessFactor = $self->getParameterizedStubbornnessFactor();
+  
   $RODEDecomposable->setStructureStubbornness($stubbornness);
+  $RODEDecomposable->setParameterizedStubbornnessFactor($stubbornnessFactor);
+  
   #$RODEDecomposable->setStructureStubbornness($stubbornness);
   
   $RODEDecomposable->setSchema($schema);

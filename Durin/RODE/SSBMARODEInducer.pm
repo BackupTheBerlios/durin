@@ -1,6 +1,6 @@
 # BMA Restricted One Dependence Estimator Inducer
 
-package Durin::RODE::BMARODEInducer;
+package Durin::RODE::SSBMARODEInducer;
 
 use Durin::Classification::Inducer;
 
@@ -16,7 +16,7 @@ sub new_delta
 {
     my ($class,$self) = @_;
     
-    $self->setName("BMARODE");
+    $self->setName("SSBMARODE");
     #   $self->{METADATA} = undef; 
 }
 
@@ -28,7 +28,11 @@ sub clone_delta
 }
 
 sub getStubbornness {
-  return Durin::RODE::RODEDecomposable::NoStubbornness;
+  return Durin::RODE::RODEDecomposable::ParameterizedStubbornness;
+}
+
+sub getParameterizedStubbornnessFactor {
+  return 0.95;
 }
 
 1;

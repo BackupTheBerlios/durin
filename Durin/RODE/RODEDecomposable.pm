@@ -17,7 +17,7 @@ use strict;
 use warnings;
 
 use constant NoStubbornness => "NoStubbornness"; # This is normal Bayesian Model Averaging
-use constant ParameterizedStubbornness => "Parameterized"; # This is Bayesian Model Averaging, but with a factor limiting how much can an observation change a probability.
+use constant ParameterizedStubbornness => "Parameterized"; # This is Bayesian Model Averaging, but with a factor limiting how much can an observation change astructure probability.
 use constant AbsolutelyStubborn => "AbsolutelyStubborn"; # No refinement is made on prior assumptions (no structure learning)
 
 
@@ -26,10 +26,7 @@ sub new_delta
   my ($class,$self) = @_;
   
   $self->setCountTable(undef);
-  # Structure stubbornness can be one of NoStubbornness,HardMinded,Constant
-  # No stubbornness means TBMATAN.
-  # HardMinded means softening the betas to make them all over 10E-3.
-  # Constant means no change in betas.
+  
   $self->setStructureStubbornness(NoStubbornness);
   $self->setParameterizedStubbornnessFactor(0.95);
 }
