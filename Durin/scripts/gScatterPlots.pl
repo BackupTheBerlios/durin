@@ -38,29 +38,28 @@ my $table = $exp->getSQLiteTable();
 #$scatterer->setScatteringAttribute("maxIW");
 
 
-#scatter($exp,
-#	$table,
-#	"AUC",
-#	["maxIW"],
-#	"inducer",
-#	["proportion","nNodes","nVal"],
-#	["run","fold"]);
+scatter($exp,
+	$table,
+	"AUC",
+	["maxIW"],
+	"inducer",
+	["proportion","nNodes","nVal"],
+	["run","fold"]);
+scatter($exp,
+	$table,
+	"AUC",
+	["nVal"],
+	"inducer",
+	["proportion","nNodes","maxIW"],
+	["run","fold"]);
 
-#scatter($exp,
-#	$table,
-#	"AUC",
-#	["nVal"],
-#	"inducer",
-#	["proportion","nNodes","maxIW"],
-#	["run","fold"]);
-
-#scatter($exp,
-#	$table,
-#	"AUC",
-#	["nNodes"],
-#	"inducer",
-#	["proportion","nVal","maxIW"],
-#	["run","fold"]);
+scatter($exp,
+	$table,
+	"AUC",
+	["nNodes"],
+	"inducer",
+	["proportion","nVal","maxIW"],
+	["run","fold"]);
 
 scatter($exp,
 	$table,
