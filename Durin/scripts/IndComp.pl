@@ -3,6 +3,9 @@
 # usage: 
 # IndComp.pl <script_file>
 
+use strict;
+use warnings;
+
 # Systems
 
 use Durin::FlexibleIO::System;
@@ -18,6 +21,7 @@ use Durin::Classification::Experimentation::CVLearningCurve2;
 use Durin::Utilities::MathUtilities;
 use Durin::ProbClassification::ProbModelApplier;
 use Durin::Classification::Experimentation::ResultTable;
+use Durin::Classification::CompositeInducer;
 
 # Perl modules
 
@@ -41,35 +45,35 @@ $inducerOptions->{"NB"} = {};
 $inducerOptions->{"TAN+MS"} = {};
 my $totalsOutFileName = "";
 my @proportionList = ();
+my $shareCountTable = 1;
 
 # The concrete characteristics of the experiment are stored into the input file.
-
 my $InputFile = $ARGV[0];
 eval `cat $InputFile`;
 
-$file = new IO::File;
+my $file = new IO::File;
 $file->open("<$inFileName") or die "Unable to open input file: $inFileName\n";
 
 my $table_total = Durin::Data::FileTable->read($file);
 $file->close();
 
-my $inducerList = [];
+my $compositeInducer = Durin::Classification::CompositeInducer->new();
 foreach my $inducerName (@$inducerNamesList)
   {
-    push @$inducerList,Durin::Classification::Registry->getInducer($inducerName);
+    $compositeInducer->addInducer(Durin::Classification::Registry->getInducer($inducerName));
   }
-
-
-printExperimentalConditions($percentage,$table_total,$numRepeats,$numFolds,$discOptions,$proportionList,$inducerList);
 
 if (scalar (@proportionList) == 0)
   {
     print "Initializing proportions\n";
-    for ($i=1; $i <= $numSplits; $i++)
+    for (my $i = 1; $i <= $numSplits; $i++)
       { 
 	push @proportionList,($i/$numSplits);
       }
   }
+
+printExperimentalConditions($percentage,$table_total,$numRepeats,$numFolds,$discOptions,\@proportionList,$shareCountTable,$compositeInducer);
+
 
 my $resultTable = Durin::Classification::Experimentation::ResultTable->new();
 my $CVLC2 = Durin::Classification::Experimentation::CVLearningCurve2->new();
@@ -77,7 +81,7 @@ my $CVLC2 = Durin::Classification::Experimentation::CVLearningCurve2->new();
 my $thisRepetition;
 for ($thisRepetition = 0; $thisRepetition < $numRepeats ; $thisRepetition++)
   {
-    doRun($thisRepetition,$percentage,$table_total,$numFolds,$resultTable,$discOptions,$proportionList,$inducerList);
+    doRun($thisRepetition,$percentage,$table_total,$numFolds,$resultTable,$discOptions,\@proportionList,$shareCountTable,$compositeInducer);
   }
 
 # Write the output file
@@ -91,7 +95,7 @@ my $AveragesTable;
 print $file "Fold,Proportion";
 my $modelList = $resultTable->getModels();
 my $proportionList = $resultTable->getProportions();
-foreach $model (@$modelList)
+foreach my $model (@$modelList)
   {
     print $file (",OK".$model,",WR".$model,",ER".$model,",LP".$model);
     foreach my $proportion (@$proportionList)
@@ -117,7 +121,7 @@ foreach my $propResult (@{$resultTable->getResultsByModel()})
     my $proportion = $propResult->[1];	
     print $file ($fold,",",$proportion);
     my $PMAList = $propResult->[2];
-    foreach $PMAPair (@$PMAList)
+    foreach my $PMAPair (@$PMAList)
       {
 	my $model = $PMAPair->[0];
 	my $PMA = $PMAPair->[1];
@@ -188,7 +192,7 @@ foreach my $proportion (@$proportionList)
 $file->close();
 
 sub doRun {
-  my ($thisRepetition,$percentage,$table_total,$numFolds,$resultTable,$discOptions,$proportionList,$inducerList) = @_;
+  my ($thisRepetition,$percentage,$table_total,$numFolds,$resultTable,$discOptions,$proportionList,$shareCountTable,$compositeInducer) = @_;
   
   my $table;
   $table = $table_total;
@@ -205,34 +209,35 @@ sub doRun {
       $table = $output->{TRAIN};
     }
   my $input;
-    $input->{TABLE} = $table;
-    $input->{FOLDS} = $numFolds;
-    $input->{RESULTTABLE} = $resultTable;
-    $input->{DISCRETIZE} = $table->getMetadata()->getSchema()->hasNumericAttributes();
-    $input->{RUNID} = $thisRepetition;
-    if ($input->{DISCRETIZE})
-      {
-	$input->{DISCINPUT} = $discOptions;
-      }
-    my $LCInput;
-    $LCInput->{PROPORTIONLIST} = \@proportionList;
-    $LCInput->{INDUCERLIST} = $inducerList;
-    $LCInput->{APPLIER} = Durin::ProbClassification::ProbModelApplier->new();
-    $input->{LC} = $LCInput;
-    $CVLC2->setInput($input);
-    $CVLC2->run();
+  $input->{TABLE} = $table;
+  $input->{FOLDS} = $numFolds;
+  $input->{RESULTTABLE} = $resultTable;
+  $input->{DISCRETIZE} = $table->getMetadata()->getSchema()->hasNumericAttributes();
+  $input->{RUNID} = $thisRepetition;
+  if ($input->{DISCRETIZE}) {
+    $input->{DISCINPUT} = $discOptions;
   }
+  
+  my $LCInput;
+  $LCInput->{SHARE_COUNT_TABLE} = $shareCountTable;
+  $LCInput->{PROPORTIONLIST} = \@proportionList;
+  $LCInput->{COMPOSITE_INDUCER} = $compositeInducer;
+  $LCInput->{APPLIER} = Durin::ProbClassification::ProbModelApplier->new();
+  $input->{LC} = $LCInput;
+  $CVLC2->setInput($input);
+  $CVLC2->run();
+}
 
 
 sub printExperimentalConditions {
-  my ($percentage,$table_total,$numRepeats,$numFolds,$discOptions,$proportionList,$inducerList) = @_;
+  my ($percentage,$table_total,$numRepeats,$numFolds,$discOptions,$proportionList,$shareCountTable,$compositeInducer) = @_;
   
   print "\nRunning inducer comparison using cross validation with learning curve\n";
   print "-------------------------------------------\n";
   print "Dataset: ".$table_total->getName()."\n";
   print "Inducers compared: \n";
   #,join(",",@$inducerNamesList)."\n";
-  foreach my $inducer (@$inducerList) {
+  foreach my $inducer (@{$compositeInducer->getInducerList()}) {
     print $inducer->getName()."\n";
     my $details = $inducer->getDetails();
     foreach my $key (keys %$details) {
@@ -247,7 +252,7 @@ sub printExperimentalConditions {
   }
   print "Number of cross validation runs: $numRepeats\n";
   print "Number of cross validation folds: $numFolds\n";
-  print "List of proportions for learning curve: ",join(",",@proportionList)."\n";
+  print "List of proportions for learning curve: ",join(",",@$proportionList)."\n";
   if (defined $discOptions->{DISCMETHOD}) {
     print "Discretization method: ".$discOptions->{DISCMETHOD}."\n";
     if (defined $discOptions->{NUMINTERVALS}) {
@@ -259,5 +264,8 @@ sub printExperimentalConditions {
   print "Totals output file name: $totalsOutFileName\n";
   my $schema_string = $table_total->getMetadata()->makestring();
   print "Dataset structure: $schema_string\n";
+  if ($shareCountTable) {
+    print "Sharing count tables for speed\n";
+  }
   print "--------------------------------------\n";
 }

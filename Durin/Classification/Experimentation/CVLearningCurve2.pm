@@ -35,8 +35,6 @@ sub run
   my $table = $input->{TABLE};
   my $numFolds = $input->{FOLDS};
   # print "CV Folds: $numFolds\n";
-  #my $inducerList = $input->{INDUCERLIST};
-  #my $applier = $input->{APPLIER};
   my $runId = $input->{RUNID};
   print "\n\nStarting run: $runId\n";
  
@@ -223,7 +221,6 @@ sub discretize {
 sub learningCurve {
   my ($self,$input,$runId,$table,$uniqueId,$problems,$fold)= @_;
 
-  
   my $train =  $problems->[$fold]->[0];
   my $test = $problems->[$fold]->[1];
   my $LC = Durin::Classification::Experimentation::LearningCurve->new();

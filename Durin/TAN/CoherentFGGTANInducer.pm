@@ -16,7 +16,7 @@ sub new_delta
     my ($class,$self) = @_;
     
     $self->{INDUCER} = Durin::TAN::TANInducer->new();
-    $self->setName("TAN+MS+FG");
+    $self->setName("TAN+MS+FGG");
     #   $self->{METADATA} = undef; 
 }
 

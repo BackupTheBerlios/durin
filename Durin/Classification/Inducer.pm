@@ -21,6 +21,16 @@ sub clone_delta
  #   $self->setMetadata($source->getMetadata()->clone());
 }
 
+sub getCountingTable {
+  my ($self) = @_;
+
+  if (defined $self->{INDUCER}) {
+    return $self->{INDUCER}->getCountingTable();
+  } else {
+    return undef;
+  }
+}
+
 sub run($)
 {
   die "Pure virtual Durin::Classification::Inducer::run\n";

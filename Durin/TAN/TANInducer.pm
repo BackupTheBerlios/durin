@@ -59,6 +59,7 @@ sub run($)
     $bc->run();
     $self->{COUNTING_TABLE} = $bc->getOutput(); 
   } else {
+    print "Sharing counting table\n";
     $self->{COUNTING_TABLE} = $input->{COUNTING_TABLE};
   }
   

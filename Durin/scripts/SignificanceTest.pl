@@ -18,7 +18,7 @@ if ($#ARGV < 0)
     die "Usage: SignificanceTest.pl experiment.exp [percentage]\n";
   }
 
-$ExpFileName = $ARGV[$inFile];
+my $ExpFileName = $ARGV[$inFile];
 my $percentage = 5;
 if ($#ARGV == 1) {
   $percentage = $ARGV[1];
@@ -48,7 +48,7 @@ print "Comparing LogScore\n******************\n";
 compareAllModelsInAllProportions($logPFunc,$AveragesTable);
 
 sub compareAllModelsInAllProportions {
-  my ($self,$comparisonFunc,$AveragesTable) = @_;
+  my ($comparisonFunc,$AveragesTable) = @_;
 
   my $models = $AveragesTable->getModels();
   my $proportionList = $AveragesTable->getProportions();
@@ -87,7 +87,7 @@ sub directionallyCompareModels {
   # Calculate the datasets in which both models have been run
   my $datasets1and2 = calculateDatasetIntersection($exp,$m1,$m2);
   my $counter = 0;
-  foreach $dataset (@$datasets1and2) {
+  foreach my $dataset (@$datasets1and2) {
     #      print "$dataset\n";
     $counter += compareModelsInDatasetAndProportion($exp,$AveragesTable,$m1,$m2,$dataset,$proportion,$comparisonFunc);
   }
@@ -104,7 +104,7 @@ sub calculateDatasetIntersection{
   #print "Datasets for inducer $modelB -> [".join(',',@$datasetsB)."]\n";
 
   my $datasetsAandB = [];
-  %count = ();
+  my %count = ();
   foreach my $element (@$datasetsA, @$datasetsB) { $count{$element}++ }
   foreach my $element (keys %count) {
     if ($count{$element} > 1) {
