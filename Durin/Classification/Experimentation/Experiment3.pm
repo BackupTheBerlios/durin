@@ -182,7 +182,7 @@ sub createSQLiteTable {
   }
   my @non_measures = @$charac;
   my @others = ("run","fold","proportion","inducer");
-  push @$non_measures, @others;
+  push @non_measures, @others;
   my @field_list = @non_measures;
   push @field_list, @$measures;
   #foreach my $measure (@$measures) {
@@ -193,7 +193,7 @@ sub createSQLiteTable {
   print "Creating indexes\n";
   $table->create_index(\@non_measures);
   $table->create_index(\@others);
-  $table->create_index(\@charac);
+  $table->create_index($charac);
     
   return $table;
 }
