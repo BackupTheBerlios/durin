@@ -26,7 +26,7 @@ sub init {
 package Durin::Classification::Experimentation::Experiment3::OutputCharacteristics;
 use Class::MethodMaker 
   new_hash_with_init => 'new',
-  get_set => [-java => qw/ LatexTablePrefix SignificanceDir GraphicsDir/];
+  get_set => [-java => qw/ LatexTablePrefix SignificanceDir GraphicsDir RepetitionAttributeList MeasureList ScatterAttribute  RunningAttributeList/];
 
 sub init {
   my ($self,%properties) = @_;

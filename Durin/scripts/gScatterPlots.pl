@@ -33,41 +33,79 @@ my $exp_chr = do $ExpFileName;
 my $exp = Durin::Classification::Experimentation::ExperimentFactory->createExperiment($exp_chr);
 
 my $table = $exp->getSQLiteTable();
+
+my $runningAttributeList = $exp->getOutputCharacteristics()->getRunningAttributeList();
+my $measureList = $exp->getOutputCharacteristics()->getMeasureList();
+my $scatterAttribute = $exp->getOutputCharacteristics()->getScatterAttribute();
+my $repetitionAttributeList = $exp->getOutputCharacteristics()->getRepetitionAttributeList();
+
+multiple_scatter($exp,
+		 $table,
+		 $measureList,
+		 $runningAttributeList,
+		 $scatterAttribute,
+		 $repetitionAttributeList);
+
+
+sub multiple_scatter {
+  my ($exp,
+      $table,
+      $measureList,
+      $runnigAttributeList,
+      $scatterAttribute,
+      $repetitionAttributeList) = @_;
+  
+ 
+  foreach my $measure (@$measureList) {
+    for (my $i = 0 ; $i < scalar(@$runningAttributeList) ; $i++) {
+      my @ral = @$runningAttributeList[0..($i-1)];
+      push @ral,@$runningAttributeList[($i+1)..(scalar(@$runningAttributeList)-1)];
+      my $runningAttribute = $runningAttributeList->[$i];
+      scatter($exp,
+	      $table,
+	      $measure,
+	      [$runningAttribute],
+	      $scatterAttribute,
+	      \@ral,
+	      $repetitionAttributeList);
+    }
+  }
+}
 #my $scatterer = new Durin::Plot::Scatterer($exp);
 #$scatterer->setMeasure("AUC");
 #$scatterer->setScatteringAttribute("maxIW");
 
 
-scatter($exp,
-	$table,
-	"AUC",
-	["maxIW"],
-	"inducer",
-	["proportion","nNodes","nVal"],
-	["run","fold"]);
-scatter($exp,
-	$table,
-	"AUC",
-	["nVal"],
-	"inducer",
-	["proportion","nNodes","maxIW"],
-	["run","fold"]);
+#scatter($exp,
+#	$table,
+#	"AUC",
+#	["maxIW"],
+#	"inducer",
+#	["proportion","nNodes","nVal"],
+#	["run","fold"]);
+#scatter($exp,
+#	$table,
+#	"AUC",
+#	["nVal"],
+#	"inducer",
+#	["proportion","nNodes","maxIW"],
+#	["run","fold"]);
 
-scatter($exp,
-	$table,
-	"AUC",
-	["nNodes"],
-	"inducer",
-	["proportion","nVal","maxIW"],
-	["run","fold"]);
+#scatter($exp,
+#	$table,
+#	"AUC",
+#	["nNodes"],
+#	"inducer",
+#	["proportion","nVal","maxIW"],
+#	["run","fold"]);
 
-scatter($exp,
-	$table,
-	"AUC",
-	["proportion"],
-	"inducer",
-	["nNodes","nVal","maxIW"],
-	["run","fold"]);
+#scatter($exp,
+#	$table,
+#	"AUC",
+#	["proportion"],
+#	"inducer",
+#	["nNodes","nVal","maxIW"],
+#	["run","fold"]);
 
 #package Scatterer;
 
