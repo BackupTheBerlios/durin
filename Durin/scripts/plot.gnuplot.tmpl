@@ -1,9 +1,10 @@
-set size 2,2
+set size {$x_size},{$y_size}
 set terminal postscript eps 38
-set output 'plot.eps'
-set xrange [0:50]
-set yrange [0:50]
+set output '{$output}'
+set xrange [{$x_range_min}:{$x_range_max}]
+set yrange [{$y_range_min}:{$y_range_max}]
 set nokey
-plot 'plottable' pointtype 1 pointsize 5, x notitle
+plot '-' pointtype 1 pointsize 5, x notitle
+{$data}
 #title "Comparison of churras with merinas" 
 #pause 5
