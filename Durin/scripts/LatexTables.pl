@@ -21,15 +21,17 @@ do $ExpFileName;
 
 my $AveragesTable = $exp->loadResultsFromFiles();
 $AveragesTable->compressRuns();
-PrintTables($AveragesTable);
+PrintTables($exp,$AveragesTable);
 print "Done\n";
 
 sub PrintTables {
-  my ($AveragesTable) = @_;
+  my ($exp,$AveragesTable) = @_;
+  my $prefix = $exp->getLaTexTablePrefix();
   my $proportions=$AveragesTable->getProportions();
+  
   foreach my $proportion (@$proportions) {
-    PrintLaTexTable($AveragesTable,"ER","ERTable-$proportion.tex",$proportion);
-    PrintLaTexTable($AveragesTable,"LogP","LogPTable-$proportion.tex",$proportion);
+    PrintLaTexTable($AveragesTable,"ER","ERTable-$proportion.tex",$proportion,$prefix);
+    PrintLaTexTable($AveragesTable,"LogP","LogPTable-$proportion.tex",$proportion,$prefix);
   }
 }
 
@@ -38,7 +40,7 @@ sub PrintTables {
 
 
 sub PrintLaTexTable {
-  my ($AveragesTable,$measure,$file_name,$proportion) = @_;
+  my ($AveragesTable,$measure,$file_name,$proportion,$LaTexTablePrefix) = @_;
   
   my $file = new IO::File;
   $file->open(">$file_name") or die "Unable to open $file_name\n";
@@ -85,7 +87,7 @@ sub PrintLaTexTable {
   #%\vspace{-0.4cm}
   my $prop100 = 100*$proportion;
   print $file "\\caption{Averages and standard deviations of ".GetMeasureName($measure)." using $prop100\\% of the learning data}\n";
-  print $file "\\protect\\label{".$measure."Table-$proportion}\n";
+  print $file "\\protect\\label{".$LaTexTablePrefix.$measure."Table-$proportion}\n";
   #\caption{Average accuracies and their standard deviations}
   #\protect\label{AverageAccuracies}
   print $file "\\end{table}\n";
