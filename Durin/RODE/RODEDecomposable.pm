@@ -68,7 +68,7 @@ sub refineAlphas {
       my $tmp = $self->computeLogRo($node_u);
       push @$log_ro_u,$tmp;
       if($tmp > $max_log_ro_u) {
-	max_log_ro_u = $tmp;
+	$max_log_ro_u = $tmp;
       }
     } else {
       push @$log_ro_u,0;
@@ -126,15 +126,6 @@ sub computeLogRo {
   }
   return $log_ro_u;
 }
-
-sub initializeWuvMatrix {
- 
-  
-  #  print "Done with WuvMatrix initialization\n";
-  $self->setWuvMatrix($WuvMatrix);
-}
-
-
 
 
 sub setEquivalentSampleSizeAndInitialize {
@@ -257,7 +248,8 @@ sub refineNs {
   my $schema = $self->getSchema();
   my $num_atts = $schema->getNumAttributes();
   my $ct = $self->getCountingTable();
-  
+  my $class_attno = $self->getClassAttIndex();
+
   for(my $node_u = 0 ; $node_u < $num_atts ; $node_u++) {
     if ($node_u != $class_attno)  { 
       self->getN_u()->[$node_u] += $ct->getXClassTable($node_u);
@@ -284,11 +276,11 @@ sub predict {
   
   my ($schema,$class_attno,$class_att,@class_values,$class_val,%Prob,);
 
-  $schema = $self->getSchema();
-  $class_attno = $schema->getClassPos();
-  $class_att = $schema->getAttributeByPos($class_attno);
-  @class_values = @{$class_att->getType()->getValues()};
-
+  my $schema = $self->getSchema();
+  my $class_attno = $schema->getClassPos();
+  my $class_att = $schema->getAttributeByPos($class_attno);
+  my @class_values = @{$class_att->getType()->getValues()};
+  my $num_atts = $schema->getNumAttributes();
   foreach $class_val (@class_values) {
     $Prob{$class_val} = 0.0;
     for(my $node_u = 0 ; $node_u < $num_atts ; $node_u++) {
@@ -336,7 +328,11 @@ sub predict {
 
 sub computeProbConcreteModel {
   my ($self,$node_u,$row_to_classify,$class_val) = @_;
-  
+
+  my $schema = $self->getSchema();
+  my $class_attno = $schema->getClassPos();
+  my $num_atts = $schema->getNumAttributes();
+
   my $u_val = $row_to_classify->[$node_u];
   my $N_uc = $self->N_u($node_u,u_val,$class_val);
   my $prob = $N_uc;
