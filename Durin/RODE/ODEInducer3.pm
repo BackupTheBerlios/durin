@@ -10,7 +10,7 @@ use PDL;
 use strict;
 use warnings;
 
-use Durin::RODE::RODEDecomposable2;
+use Durin::RODE::RODEDecomposable3;
 
 sub new_delta
 {
@@ -28,11 +28,11 @@ sub clone_delta
   }
 
 sub getStubbornness {
-  return Durin::RODE::RODEDecomposable::ParameterizedStubbornness;
+  return Durin::RODE::RODEDecomposable3::ParameterizedStubbornness;
 }
 
 sub getParameterizedStubbornnessFactor {
-  return 0.95;
+    return 0.99;
 }
 
 sub run
@@ -68,11 +68,11 @@ sub run
   my $alphas = [];
   my $class_attno = $schema->getClassPos();
   foreach my $node_u (0..$num_atts-1) {
-    if ($node_u != $class_attno) {
-      push @$alphas, 1;
-    } else {
-      push @$alphas, 10;
-    }
+      if ($node_u != $class_attno) {
+	  push @$alphas, 1;
+      } else {
+	  push @$alphas, $num_atts-1;
+      }
   }
 
   my $RODEDecomposable = Durin::RODE::RODEDecomposable3->new();

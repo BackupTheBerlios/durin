@@ -115,7 +115,7 @@ sub computeLogRoNaive {
   my $ct = $self->getCountTable();
   
   my $N = $ct->getCount();
-  my $N_quote_c = $self->getN_Quote_c($node_u);
+  my $N_quote_c = $self->getN_Quote_c();
   
   $log_ro_u -= $self->lngammadif($N_quote_c,$N);
   
@@ -129,7 +129,7 @@ sub computeLogRoNaive {
 	$log_ro_u -= $self->lngammadif($N_quote_c_uc,$N_c);
 	my $att_u = $schema->getAttributeByPos($node_u);
 	my @u_values = @{$att_u->getType()->getValues()};
-	foreach my $v_val (@v_values) {
+	foreach my $u_val (@u_values) {
 	  my $N_quote_uc_uc = $self->getN_Quote_uc_uc($u_val,$class_val_iter,$node_u);
 	  my $N_uc = $ct->getCountXClass($class_val_iter,$node_u,$u_val);
 	  $log_ro_u += $self->lngammadif($N_quote_uc_uc,$N_uc);
@@ -405,9 +405,9 @@ sub computeProbNaiveModel {
   for(my $node_u = 0 ; $node_u < $num_atts; $node_u++) {
     if ($node_u != $class_attno) { 
       my $u_val = $row_to_classify->[$node_u];
-      my $N_quote_c_uc = $self->getN_Quote_c_uc($class_val_iter,$node_u); 
-      my $N_quote_uc_uc = $self->getN_Quote_uc_uc($u_val,$class_val_iter,$node_u);      
-      my $N_uc = $ct->getCountXClass($class_val_iter,$node_u,$u_val);
+      my $N_quote_c_uc = $self->getN_Quote_c_uc($class_val,$node_u); 
+      my $N_quote_uc_uc = $self->getN_Quote_uc_uc($u_val,$class_val,$node_u);      
+      my $N_uc = $ct->getCountXClass($class_val,$node_u,$u_val);
       
       my $factor = ($N_uc + $N_quote_uc_uc) / ($N_c + $N_quote_c_uc); 
       $prob *= $factor;
