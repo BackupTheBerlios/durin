@@ -131,8 +131,9 @@ sub summarize {
   my $dataset = $self->getDataset();
   my $resultDir = $self->getResultDir();
   my $expName = $self->getName();
+
   my $resultFile = $self->getBaseFileName();
-  
+
   my $resultTable = Durin::Classification::Experimentation::ResultTable->new();
   print "Reading data from dataset $dataset\n";
   $resultTable->readFromFile($resultFile);
