@@ -174,13 +174,16 @@ sub createSQLiteTable {
   my $table_factory = new Matrix::MultiAttribute::Factory(catfile($self->getBaseFileName(),"sqlite"));
   #my $tester = Durin::Classification::Experimentation::ModelTesterFactory->create($evaluationCharacteristics);
   my $measures = Durin::Classification::Experimentation::ResultTable->getMeasures();
-  my $non_measures = [];
+  
+  my $charac = [];
   #["task","disc_intervals","disc_method","testing_sample_size"];
   foreach my $field_pair (@{$self->getFixedCharacteristics()}) {
-    push @$non_measures,$field_pair->[0];
+    push @$charac,$field_pair->[0];
   }
-  push @$non_measures, ("run","fold","proportion","inducer");
-  my @field_list = @$non_measures;
+  my @non_measures = @$charac;
+  my @others = ("run","fold","proportion","inducer");
+  push @$non_measures, @others;
+  my @field_list = @non_measures;
   push @field_list, @$measures;
   #foreach my $measure (@$measures) {
   #  push @$field_list,$measure;
@@ -188,8 +191,10 @@ sub createSQLiteTable {
   print "I am going to create the table\n";
   my $table = $table_factory->create($self->getName(),\@field_list);
   print "Creating indexes\n";
-  $table->create_index($non_measures);
-  
+  $table->create_index(\@non_measures);
+  $table->create_index(\@others);
+  $table->create_index(\@charac);
+    
   return $table;
 }
 
