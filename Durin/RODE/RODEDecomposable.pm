@@ -3,7 +3,7 @@ package Durin::RODE::RODEDecomposable;
 use base "Durin::Classification::Model";
 
 use Class::MethodMaker
-  get_set => [ -java => qw/CountTable Alphas EquivalentSampleSize N N_u N_uv Indexes ClassAttIndex StructureStubbornness/];
+  get_set => [ -java => qw/CountTable Alphas EquivalentSampleSize N N_u N_uv Indexes ClassAttIndex StructureStubbornness ParameterizedStubbornnessFactor/];
 
 
 use Durin::Utilities::MathUtilities;
@@ -16,9 +16,9 @@ use ntl;
 use strict;
 use warnings;
 
-use constant NoStubbornness => "1";
-use constant HardMinded => "2";
-use constant Constant => "3";
+use constant NoStubbornness => "NoStubbornness"; # This is normal Bayesian Model Averaging
+use constant ParameterizedStubbornness => "Parameterized"; # This is Bayesian Model Averaging, but with a factor limiting how much can an observation change a probability.
+use constant AbsolutelyStubborn => "AbsolutelyStubborn"; # No refinement is made on prior assumptions (no structure learning)
 
 
 sub new_delta
@@ -31,6 +31,7 @@ sub new_delta
   # HardMinded means softening the betas to make them all over 10E-3.
   # Constant means no change in betas.
   $self->setStructureStubbornness(NoStubbornness);
+  $self->setParameterizedStubbornnessFactor(0.99);
 }
 
 sub clone_delta
@@ -75,16 +76,19 @@ sub refineAlphas {
     }
   }
   
-  #if ($self->getStructureStubbornness() eq HardMinded) {
-  #  $log_ro_u = $self->softenRos($log_ro_u);
-  #}
+  $self->softenLogRos($log_ro_u);
   
+ 
   my $alphas = $self->getAlphas();
+  print "prior alphas:".join(",",@$alphas)."\n";
+  print "log_ros: ".join(",",@$log_ro_u)."\n";
+  
   for(my $node_u = 0 ; $node_u < $schema->getNumAttributes() ; $node_u++) {
     if ($node_u != $class_attno) {
       $alphas->[$node_u] = $alphas->[$node_u] * exp($log_ro_u->[$node_u]);
     }
   }
+  print "posterior alphas:".join(",",@$alphas)."\n";
 }
 
 sub computeLogRo {
@@ -129,7 +133,77 @@ sub computeLogRo {
   return $log_ro_u;
 }
 
+sub softenLogRos {
+  my ($self,$log_ro_u) = @_;
+  
+  my $schema = $self->getSchema();
+  my $class_attno = $schema->getClassPos();
+  print "My stubbornness is".$self->getStructureStubbornness()."\n";
+  if ($self->getStructureStubbornness() eq ParameterizedStubbornness) { 
+    my $ct = $self->getCountTable();
+    #my $schema = $self->getSchema();
+    my $N = $ct->getCount();
+    my $f = $self->getParameterizedStubbornnessFactor();
+    print "Parameterized stubbornness: $f\n";
+    my $log_max_dif = $N * log $f;
+    #my $schema = $self->getSchema();
+    my ($min,$max) = @{$self->calculateMinMax($log_ro_u)};
+    my $StMin = 0;
+    my $StMax = $log_max_dif;
+    if (($max-$min) < $log_max_dif) {
+      # Do never exagerate beliefs. If the difference 
+      # is not so marked keep it as it is and just move 
+      # it to be around 0 ($a will be 1).
+      $StMax = $StMin+($max-$min);
+    }
+    print "Max-Min = $max, $min\n";
+    my ($a,$b);
+    if (($max-$min) > 0.0000000001) {
+      $a = ($StMax-$StMin)/($max-$min);
+      $b = $StMin-$a*$min;
+    } else {
+      $a = $StMin/$max;
+      $b = 0;
+    }
+    
+    foreach my $node_u (0..(scalar(@$log_ro_u)-1)) {
+      if ($node_u != $class_attno) {
+	#print "We enter with $lnWuv\n";
+	$log_ro_u->[$node_u] = $a*($log_ro_u->[$node_u])+$b; 
+	#print "And we get out with $lnWuv\n";
+      }
+    }
+  }
+  elsif ($self->getStructureStubbornness() eq AbsolutelyStubborn) {
+    print "Absolutely stubborn\n";
+    foreach my $i (0..(scalar(@$log_ro_u)-1)) {
+      $log_ro_u->[$i] = 0;
+    }
+  } elsif ($self->getStructureStubbornness() eq NoStubbornness){
+    print "No stubbornness\n";
+  }
+}
+  
+sub calculateMinMax {
+  my ($self,$log_ro_u) = @_;
 
+  my $min = undef;
+  my $max = undef;
+  my $schema = $self->getSchema();
+  my $class_attno = $schema->getClassPos();
+  foreach my $node_u (0..(scalar(@$log_ro_u)-1)) {
+    if ($node_u != $class_attno) {
+      my $lnWuv = $log_ro_u->[$node_u];
+      if ((!defined $min) || ($min > $lnWuv)) {
+	$min = $lnWuv;
+      }
+      if ((!defined $max) || ($max < $lnWuv)) {
+	$max = $lnWuv;
+      }
+    }
+  }
+  return [$min,$max];
+}
 sub setEquivalentSampleSizeAndInitialize {
   my ($self,$size) = @_;  
   
@@ -290,11 +364,12 @@ sub predict {
   my $class_att = $schema->getAttributeByPos($class_attno);
   my @class_values = @{$class_att->getType()->getValues()};
   my $num_atts = $schema->getNumAttributes();
+  my $alphas = $self->getAlphas();
   foreach my $class_val (@class_values) {
     $Prob{$class_val} = 0.0;
     for(my $node_u = 0 ; $node_u < $num_atts ; $node_u++) {
       if ($node_u != $class_attno)  {
-	$Prob{$class_val} += $self->computeProbConcreteModel($node_u,$row_to_classify,$class_val);
+	$Prob{$class_val} += $alphas->[$node_u] * $self->computeProbConcreteModel($node_u,$row_to_classify,$class_val);
       }
     }
     #$self->CalculateValueProportionalToPClass($row_to_classify,$class_val)->sclr;
