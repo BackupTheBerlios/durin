@@ -89,7 +89,7 @@ sub run
   #$TBMATAN->setEquivalentSampleSizeAndInitialize(
   #$self->CalculateEquivalentSampleSize(
   #$table->getMetadata()->getSchema())/100);
-  $SSTBMATAN->setEquivalentSampleSizeAndInitialize($lamdba);
+  $SSTBMATAN->setEquivalentSampleSizeAndInitialize($lambda);
   $SSTBMATAN->setCountTableAndInitialize($self->{COUNTING_TABLE});
   
   $self->setOutput($SSTBMATAN);
