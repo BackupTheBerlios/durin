@@ -48,7 +48,7 @@ print "Comparing LogScore\n******************\n";
 compareAllModelsInAllProportions($logPFunc,$AveragesTable);
 
 sub compareAllModelsInAllProportions {
-  my ($self,$comparisonFunc,$AveragesTable) = @_;
+  my ($comparisonFunc,$AveragesTable) = @_;
 
   my $models = $AveragesTable->getModels();
   my $proportionList = $AveragesTable->getProportions();
@@ -76,7 +76,7 @@ sub compareModels {
   if ($m1BetterThanm2>$m2BetterThanm1) {
     print "$m1 > $m2: $m1BetterThanm2 - $m2 > $m1: $m2BetterThanm1\n";
   } elsif ($m1BetterThanm2<$m2BetterThanm1) {
-    print "$m2 > $m1: $m2BetterThanm1 - $m1 > $m2: $m1BetterThanm2\n";
+    print "$m2 > $m1: $m2BetterThanm1 - $m1BetterThanm2\n";
   }
 }
 
