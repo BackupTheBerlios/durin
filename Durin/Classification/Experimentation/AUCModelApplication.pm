@@ -15,6 +15,7 @@ sub new_delta
     my ($class,$self) = @_;
     
     $self->{INSTANCE_LIST} = [];
+    $self->{INSTANCE_PROBABILITY_LIST} = [];
 }
 
 sub clone_delta
@@ -30,6 +31,14 @@ sub addInstance
     
     #print "Adding $realClass,".join(",",@$distrib).",$class\n";
     push @{$self->{INSTANCE_LIST}},[$realClass,$distrib,$class];
+  }
+
+sub addInstanceBayes
+  {
+    my ($self,$realClass,$realProbDistrib,$sum,$distrib,$class) = @_;
+    
+    $self->addInstance($realClass,$distrib,$class);
+    push @{$self->{INSTANCE_PROBABILITY_LIST}},[$realProbDistrib,$sum];
   }
 
 sub write {
@@ -72,18 +81,26 @@ sub computeAUC {
 sub computeAUCClassPair {
   my ($self, $possitiveClass, $negativeClass) = @_;
  
-  
+  #print "Possitive = $possitiveClass\n";
+  #foreach my $inst (@{$self->{INSTANCE_LIST}})
+  #   {
+  #     print $inst->[0].",".join(",",@{$inst->[1]})."\n";
+  #   }
   my @pairList = grep {(($_->[0] == $possitiveClass) || ($_->[0] == $negativeClass))} @{$self->{INSTANCE_LIST}};
+  # foreach my $inst (@pairList)
+  #   {
+  #     print $inst->[0].",".join(",",@{$inst->[1]})."\n";
+  #   }
   my @sortedList = sort {$b->[1]->[$possitiveClass] <=> $a->[1]->[$possitiveClass]} @pairList;
- # foreach my $inst (@{$self->{INSTANCE_LIST}})
-#    {
-#      print $inst->[0].",".join(",",@{$inst->[1]})."\n";
-#    }
-#  print "And sorted\n";
-#  foreach my $inst (@sortedList)
-#    {
-#       print $inst->[0].",".join(",",@{$inst->[1]})."\n";
-#    }
+  #  foreach my $inst (@{$self->{INSTANCE_LIST}})
+  #    {
+  #      print $inst->[0].",".join(",",@{$inst->[1]})."\n";
+  #    }
+  #  print "And sorted\n";
+  #  foreach my $inst (@sortedList)
+  #    {
+  #       print $inst->[0].",".join(",",@{$inst->[1]})."\n";
+  #    }
   
   my $fp = 0;
   my $tp = 0;
@@ -107,7 +124,11 @@ sub computeAUCClassPair {
     }
   }
   $a = $a + $self->trap_area($fp,$fpprev,$tp,$tpprev);
-  $a = $a/($tp*$fp);
+  if (($tp==0) || ($fp ==0)) {
+    $a = 1;
+  } else {
+    $a = $a/($tp*$fp);
+  }
   return $a;
 }
 
@@ -180,4 +201,143 @@ sub summarize {
   $self->setAUC($self->computeAUC());
   $self->setLogP($self->computeLogP());
   $self->setErrorRate($self->computeErrorRate());
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sub computeAUCBayes {
+  my ($self) = @_;
+
+  my $AUC = 0;
+ 
+  my $numClasses = $self->getNumClasses();
+  #print "NumClasses: $numClasses\n";
+  for (my $i = 0; $i < $numClasses ; $i++) {
+    for (my $j = 0; $j < $numClasses ; $j++) {
+      if ($i != $j) {
+	print "Computing AUC($i, $j)\n";
+	my $thisAUC = $self->computeAUCClassPairBayes($i,$j);
+	print "AUC($i, $j) = $thisAUC\n";
+	$AUC += $thisAUC;
+      }
+    }
+  }
+  $AUC = $AUC /($numClasses*($numClasses-1));
+  return $AUC;
+}
+
+sub computeAUCClassPairBayes {
+  my ($self, $possitiveClass, $negativeClass) = @_;
+ 
+  my @fullList = ();
+  for (my $i = 0 ; $i < scalar @{$self->{INSTANCE_LIST}} ; $i++) {
+    my @elem = @{$self->{INSTANCE_LIST}->[$i]};
+    push @elem, @{$self->{INSTANCE_PROBABILITY_LIST}->[$i]};
+    push @fullList, \@elem;
+  }
+  my @pairList = grep {(($_->[0] == $possitiveClass) || ($_->[0] == $negativeClass))} @fullList;
+  my @sortedList = sort {$b->[1]->[$possitiveClass] <=> $a->[1]->[$possitiveClass]} @pairList;
+  
+  my $fp = 0;
+  my $tp = 0;
+  my $fpprev = 0;
+  my $tpprev = 0;
+  my $a = 0;
+  my $fprev = -100000000000;
+  foreach my $instance (@sortedList) {
+    my $f_i = $instance->[1]->[$possitiveClass];
+    if ($f_i != $fprev) {
+      $a = $a + $self->trap_area($fp,$fpprev,$tp,$tpprev); 
+      $fprev = $f_i;
+      
+      $fpprev = $fp;
+      $tpprev = $tp;
+    }
+    if ($instance->[0] == $possitiveClass) {
+      $tp += $instance->[4]; # Add the probability of the instance instead of one
+    } else {
+      $fp += $instance->[4]; 
+    }
+  }
+  $a = $a + $self->trap_area($fp,$fpprev,$tp,$tpprev);
+  if (($tp==0) || ($fp ==0)) {
+    # We have to get into more detail here!!!!!!!
+    $a = 1;
+  } else {
+    $a = $a/($tp*$fp);
+  }
+  return $a;
+}
+
+sub computeLogPBayes {
+  my ($self) = @_;
+  
+  my $LogP = 0;
+  my $i = 0;
+  my $pInstance;
+  foreach my $inst (@{$self->{INSTANCE_LIST}})
+    {
+      my $PClass = $inst->[1]->[$inst->[0]];
+      if ($PClass <= 0)
+	{
+	  print "A probability evaluated to 0 or even less. Just another illogical prediction\n";
+	  $LogP += 15000000; # Just something big
+	}
+      else
+	{
+	  $pInstance = $self->{INSTANCE_PROBABILITY_LIST}->[$i]->[1];
+	  $LogP -= $pInstance * Durin::Utilities::MathUtilities::log10($PClass);
+	}
+      $i++;
+    }
+  return $LogP;
+}
+
+sub computeErrorRateBayes {
+  my ($self) = @_;
+  
+  my $expectedError = 0;
+  my $expectedErrorRate = 0;
+  my $predictedClass;
+  my $realProbabilityOfPredictedClass;
+  my $i = 0;
+  my $pInstance;
+  foreach my $inst (@{$self->{INSTANCE_LIST}})
+    {
+      $pInstance = $self->{INSTANCE_PROBABILITY_LIST}->[$i]->[1];
+      $predictedClass = $inst->[2];
+      $realProbabilityOfPredictedClass = $self->{INSTANCE_PROBABILITY_LIST}->[$i]->[0]->[$predictedClass];
+      $expectedError = $pInstance * (1 - $realProbabilityOfPredictedClass);
+      $i++;
+      print "Predicted: $predictedClass Error expected:$expectedError\n";
+      $expectedErrorRate += $expectedError;
+    }
+  return $expectedErrorRate;
+}
+
+sub summarizeBayes {
+  my ($self) = @_;
+  
+  $self->setAUC($self->computeAUCBayes());
+  $self->setLogP($self->computeLogPBayes());
+  $self->setErrorRate($self->computeErrorRateBayes());
 }

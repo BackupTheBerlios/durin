@@ -102,8 +102,14 @@ sub softenBetas {
     $StMax = $StMin+($max-$min);
   }
   print "Max-Min = $max, $min\n";
-  my $a = ($StMax-$StMin)/($max-$min);
-  my $b = $StMin-$a*$min;
+  my ($a,$b);
+  if (($max-$min) > 0.0000000001) {
+    $a = ($StMax-$StMin)/($max-$min);
+    $b = $StMin-$a*$min;
+  } else {
+    $a = $StMin/$max;
+    $b = 0;
+  }
   #print "Max: $max, Min: $min, StMax:$StMax, StMin:$StMin, a:$a, b;$b\n";
   my $class_attno = $schema->getClassPos();
   for(my $node_u = 0 ; $node_u < $schema->getNumAttributes() ; $node_u++) {

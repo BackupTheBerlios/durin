@@ -167,9 +167,45 @@ sub readFromFile {
 sub summarize {
   my ($self) = @_;
 
+  foreach my $propResult (@{$self->getResultsByModel()}) {
+    my $fold = $propResult->[0];
+    my $proportion = $propResult->[1];	
+    my $PMAList = $propResult->[2];
+    
+    foreach my $PMAPair (@$PMAList) {
+      my $model = $PMAPair->[0];
+      my $PMA = $PMAPair->[1];
+      $PMA->summarize();
+    }
+  }
+  $self->loadValuesAndAverages();
+}
+
+sub summarizeBayes {
+  my ($self) = @_;
+
+  foreach my $propResult (@{$self->getResultsByModel()}) {
+    my $fold = $propResult->[0];
+    my $proportion = $propResult->[1];	
+    my $PMAList = $propResult->[2];
+    
+    foreach my $PMAPair (@$PMAList) {
+      my $model = $PMAPair->[0];
+      my $PMA = $PMAPair->[1];
+      $PMA->summarizeBayes();
+    }
+  }
+  $self->loadValuesAndAverages();
+}
+
+sub loadValuesAndAverages {
+  my ($self) = @_;
+  
   my ($AveragesTable,$valuesTable);
+ 
   my $modelList = $self->getModels();
   my $proportionList = $self->getProportions();
+
   foreach my $model (@$modelList)
     {
       foreach my $proportion (@$proportionList)
@@ -200,7 +236,7 @@ sub summarize {
 	{
 	  my $model = $PMAPair->[0];
 	  my $PMA = $PMAPair->[1];
-	  $PMA->summarize();
+	  #$PMA->summarize();
 	  #$AveragesTable->{$model}->{$proportion}->{OKS} += $PMA->getNumOKs();
 	  #$AveragesTable->{$model}->{$proportion}->{WRONGS} += $PMA->getNumWrongs();	
 	  $AveragesTable->{$model}->{$proportion}->{ERRORRATE} += $PMA->getErrorRate();	
@@ -221,6 +257,8 @@ sub summarize {
   $self->{AVERAGES_TABLE} = $AveragesTable;
   $self->{VALUES_TABLE} = $valuesTable
 }
+
+
 
 # Drops the summary information in a single file
 

@@ -1,10 +1,9 @@
 package Durin::Classification::Experimentation::ModelApplier;
 
-use Durin::Components::Process;
-
-@ISA = (Durin::Components::Process);
+use base Durin::Components::Process;
 
 use strict;
+use warnings;
 
 sub new_delta
 {
@@ -15,10 +14,20 @@ sub new_delta
 
 sub clone_delta
 { 
-    my ($class,$self,$source) = @_;
-    
- #   $self->setMetadata($source->getMetadata()->clone());
+  my ($class,$self,$source) = @_;
+  
+  #   $self->setMetadata($source->getMetadata()->clone());
 }
+
+#sub create {
+#  my ($self,$evaluationCharacteristics) = @_;
+  
+#  my $name = $self->{METHOD_NAME};
+#  my $applier;
+#  if ("AUC" eq $name) {
+#    $applier = Durin::Classification::Experimentation::AUCModelApplier->new();
+#  } 
+#}
 
 sub run($)
 {

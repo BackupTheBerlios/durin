@@ -122,12 +122,7 @@ sub performTesting {
   my ($self, $test, $runId, $trainProportion, $applier, $model, $resultTable) = @_;
 
   my $startTime = [Time::HiRes::gettimeofday];
-  {
-    my $input = {};
-    $input->{TABLE} = $test;
-    $input->{MODEL} = $model;
-    $applier->setInput($input);
-  }
+  $applier->setInput({TABLE => $test, MODEL => $model});
   $applier->run();
   $resultTable->addResult($runId,$trainProportion,$model->getName(),$applier->getOutput());
   my $endClassificationTime = [Time::HiRes::gettimeofday];

@@ -29,6 +29,17 @@ sub run
     my $Input = $self->getInput();
     my $table = $Input->{TABLE};
     my $model = $Input->{MODEL};
+    # We are asked for a Bayesian evaluation. We should be given a model
+    my $Bayes = 0;
+    my $realModel = undef;
+    if (defined $Input->{BAYES}) {
+      $Bayes = $Input->{BAYES};
+      if (defined $Input->{REAL_MODEL}) {
+	$realModel = $Input->{REAL_MODEL}
+      } else {
+	die "Asked for Bayes evaluation but no model is provided\n";
+      }
+    }
     my $schema = $table->getMetadata()->getSchema();
     my $class_attno = $schema->getClassPos();
     my $AUCMA = Durin::Classification::Experimentation::AUCModelApplication->new();
@@ -47,13 +58,18 @@ sub run
 			    #print "Real class:",$realClass,"\n";
 			    my $realClassIndx = $classType->getValuePosition($realClass);
 			    my $predictedClassIndx = $classType->getValuePosition($class);
-			    my $probList = $self->makeListFromHash($classValues,$distrib);
-			    $AUCMA->addInstance($realClassIndx,$probList,$predictedClassIndx);
-			  }
-			 );
+			    my $probList = $self->makeListFromHash($classValues,$distrib); 
+			    if ($Bayes) { 
+			      my ($relativeDistrib,$maxClass,$absoluteDistrib,$sum) = @{$realModel->predict($row)}; 
+			      my $realProbList = $self->makeListFromHash($classValues,$absoluteDistrib); 
+			      $AUCMA->addInstanceBayes($realClassIndx,$realProbList,$sum,$probList,$predictedClassIndx);
+			    } else {
+			      $AUCMA->addInstance($realClassIndx,$probList,$predictedClassIndx);
+			    }
+			  });
     $table->close();
-    my $AUC = $AUCMA->computeAUC();
-    print "AUC = $AUC\n";
+    #my $AUC = $AUCMA->computeAUC();
+    #print "AUC = $AUC\n";
     #print "Error rate: ",$PMA->getErrorRate(),", LogP: ",$PMA->getLogP(),"\n";
     $self->setOutput($AUCMA);
   }

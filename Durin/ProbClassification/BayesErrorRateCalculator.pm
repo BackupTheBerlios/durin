@@ -1,3 +1,9 @@
+############################################################
+# OUTDATED!!! Are you sure you want to use it???? Try 
+# Durin::Classification::Experimentation::BayesModelTester;
+
+pppp
+
 package Durin::ProbClassification::BayesErrorRateCalculator;
 
 #use Class::MethodMaker get_set => [-java => qw/ Schema MultinomialGenerator IndepSet ProbApprox Tree TAN/];
@@ -74,7 +80,7 @@ sub run($)
 				   #my ($condDistrib,$class,$distrib,$total) = $self->{REAL_MODEL}->predict($row);
 				   my $expectedError;
 				   if ($self->{RANDOM_SAMPLE}) {
-				     $expectedError = 1 -  $predictionArray->[0]->{$predictedClass};
+				     $expectedError = 1 - $predictionArray->[0]->{$predictedClass};
 				   } else {
 				     $expectedError = $predictionArray->[3] *
 				       (1 -  $predictionArray->[0]->{$predictedClass});

@@ -1,23 +1,24 @@
 package Durin::TAN::RandomTANGenerator;
 
+@ISA = qw(Durin::ModelGeneration::ModelGenerator);
 use Class::MethodMaker get_set => [-java => qw/ Schema MultinomialGenerator IndepSet ProbApprox Tree TAN/];
 
 use strict;
 use warnings;
 
-use Durin::ModelGeneration::ModelGenerator;
 use Durin::TAN::TAN;
 use Durin::Math::Prob::MultinomialGenerator;
 use Durin::ProbClassification::ProbApprox::PATANModel;
 use Durin::Classification::ClassedTableSchema;
-use Durin::Metadata::Attribute;
-use Durin::Metadata::AttributeType;
-use Durin::Metadata::ATCreator;
+#use Durin::Metadata::Attribute;
+#use Durin::Metadata::AttributeType;
+#use Durin::Metadata::ATCreator;
+#use Durin::Metadata::Attribute;
+#use Durin::Metadata::AttributeType;
 use Durin::DataStructures::Graph;
 
 use POSIX;
 
-@Durin::TAN::RandomTANGenerator::ISA = qw(Durin::ModelGeneration::ModelGenerator);
 
 sub new_delta {
   my ($class,$self) = @_;
@@ -210,6 +211,5 @@ sub composeTAN {
   $TAN->setTree($self->getTree());
   $self->setTAN($TAN);
 }
-
 
 1;

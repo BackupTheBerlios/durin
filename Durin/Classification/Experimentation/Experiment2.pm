@@ -6,14 +6,16 @@
 #   |  |--- fold
 #   |     |--- proportion
 #   |        |--- model-name.out
-#   |--- summary.out ? (not decided yet.
+#   |        |--- model-name2.out
+#   |--- dataset.out 
+#   |--- dataset.out.totals
 #
-# data.out has the following structure:
+# model-name.out has the following structure:
 # 
-# CLASS [0..numclasses-1], ALGORITHM 1 PROBABILITY FOR CLASS 0,..., ALGORITHM 1 PROBABILITY FOR CLASS numclasses-1, ..., ALGORITHM k PROBABILITY FOR CLASS numclasses-1
-# 
-# summary.out has the following structure:
-# RUN, FOLD, PROPORTION, ALGORITHM 1 ER, ALGORITHM 1 LogP, ALGORITHM 1 AUC, ..., ALGORITHM k AUC
+# REAL CLASS [0..numclasses-1], MODEL PROBABILITY FOR CLASS 0,..., MODEL PROBABILITY FOR CLASS numclasses-1, CLASS PREDICTED BY MODEL
+#
+# dataset.out has the following structure:
+# RUN.FOLD, PROPORTION, ALGORITHM 1 ER, ALGORITHM 1 LogP, ALGORITHM 1 AUC, ..., ALGORITHM k AUC
 
 package Durin::Classification::Experimentation::Experiment2;
 

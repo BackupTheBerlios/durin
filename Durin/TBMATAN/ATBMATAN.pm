@@ -32,7 +32,7 @@ sub predict {
   @class_values = @{$class_att->getType()->getValues()};
 
   foreach $class_val (@class_values) {
-    $Prob{$class_val} = $self->CalculateValueProportionalToPClass($row_to_classify,$class_val);
+    $Prob{$class_val} = $self->CalculateValueProportionalToPClass($row_to_classify,$class_val)->sclr;
   }
   
   # Normalization of probabilities & calculation of the most probable class

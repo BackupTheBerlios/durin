@@ -16,11 +16,12 @@ package Durin::Classification::Model;
 =over
 
 =cut
-use Durin::Components::Data;
+use base Durin::Components::Data;
 
-@ISA = (Durin::Components::Data);
+#@ISA = (Durin::Components::Data);
 
 #use Durin::Metadata::Model;
+use Durin::Metadata::Table;
 use Durin::Components::Metadata;
 
 sub new_delta

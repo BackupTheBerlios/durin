@@ -19,8 +19,13 @@ use Durin::Basic::NamedObject;
 #
 # LIST_OF_MODELS -> list of models generated.
 
+use Durin::TAN::RandomTANGenerator;
+use Durin::Classification::ClassedTableSchema;
+#use Durin::Metadata::Attribute;
+use Durin::Metadata::ATCreator;
 
 use strict;
+use warnings;
 
 sub new_delta {
   my ($class,$self) = @_;
@@ -32,6 +37,23 @@ sub new_delta {
 
 sub clone_delta { 
   my ($class,$self,$source) = @_;
+}
+
+sub create {
+  my ($class,$characteristics) = @_;
+
+  my $name = $characteristics->{METHOD_NAME};
+  my $generator;
+  
+  if ("Multinomial" eq $name) {
+    print "Generating samples from a huge multinomial\n";
+    $generator = Durin::Multinomial::MultinomialModelGenerator->new();
+  } elsif ("RandomTAN" eq $name) {
+    print "Generating samples from a TAN\n";
+    $generator = Durin::TAN::RandomTANGenerator->new();
+  }
+  $generator->setInput($characteristics);
+  return $generator;
 }
 
 
@@ -60,13 +82,13 @@ sub init($$) {
 
 
 sub run($)
-{
-  my ($self) = @_;
+	{
+	  my ($self) = @_;
+	  
+	  my $input = $self->getInput();
   
-  my $input = $self->getInput();
-  
-  $self->init($input);
- 
+	  $self->init($input);
+	  
   my $modelList = [];
   my $model;
   foreach my $i (1..$self->{NUMBER_OF_MODELS}) {
@@ -85,14 +107,14 @@ sub getDetails($) {
   my $details = {}; 
   return $details;
 }
-	
+	       
 sub generateModel($) {
   my ($self) = @_;
   
   die "Durin::ModelGeneration::ModelGenerator::generateModel is pure virtual\n";
 }
-
-# Generates the model schema (the attributes & its values)
+		  
+		  # Generates the model schema (the attributes & its values)
 
 sub generateSchema {
   my ($self) = @_;
