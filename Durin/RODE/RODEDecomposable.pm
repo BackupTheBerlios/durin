@@ -105,10 +105,10 @@ sub computeLogRo {
   
   foreach my $class_val_iter (@class_values) {
     foreach my $u_val (@u_values) {
-      print "LA\n";
+      print STDERR "LA\n";
       my $nquote_uc = $self->N_u($node_u,$u_val,$class_val_iter);
       my $n_uc = $ct->getCountXClass($class_val_iter,$node_u,$u_val);
-      print "LO\n";
+      print STDERR  "LO\n";
 
       my $log_first_factor = ($numClassValues - 3) * (Math::Gsl::Sf::lngamma($nquote_uc) - Math::Gsl::Sf::lngamma($nquote_uc + $n_uc)); 
       $log_ro_u += $log_first_factor;
@@ -177,11 +177,11 @@ sub initializeSampleSize {
     {
       my @att_values = @{$schema->getAttributeByPos($att)->getType()->getValues()};
       my $num_att_values = scalar(@att_values);
-      print "M\n";
+      print STDERR  "M\n";
       my $array = ones $num_att_values,$num_classes;
       $array = $array * ($lambda / ($num_att_values * $num_classes));
       push @{$self->getN_u()},$array;
-      print "N\n";
+      print STDERR  "N\n";
     }
   
   # Att x Att x Class pidls
@@ -202,11 +202,11 @@ sub initializeSampleSize {
 		{
 		  my @att_values2 = @{$schema->getAttributeByPos($att2)->getType()->getValues()};
 		  my $num_att_values2 = scalar(@att_values2);
-		  print "M2\n";
+		  print STDERR  "M2\n";
 		  my $array = ones $num_att_values1,$num_att_values2,$num_classes;
 		  $array = $array * ($lambda / ($num_att_values1 * $num_att_values2 * $num_classes));
 		  $self->getN_uv()->[$att1][$att2] = $array;
-		  print "N2\n";
+		  print STDERR  "N2\n";
 		}
 	    }
 	}
@@ -215,19 +215,19 @@ sub initializeSampleSize {
 
 sub N_u {
   my ($self,$u,$u_val,$class_val) = @_;
-  print "A\n";
+  print STDERR  "A\n";
   my $class_attno = $self->getClassAttIndex();
   my $class_val_index = $self->getIndexes()->[$class_attno]->{$class_val};
   my $u_val_index = $self->getIndexes()->[$u]->{$u_val};
   my $temp = $self->getN_u()->[$u]->at($u_val_index,$class_val_index);
-  print "B\n";
+  print STDERR  "B\n";
   return $temp;
 }
 
 sub N_uv  {
   my ($self,$u,$v,$u_val,$v_val,$class_val) = @_;
   
-  print"C\n";
+  print STDERR "C\n";
   if ($u==$v) {
     die "Durin::RODEDecomposable::getCountXYClass \$x equal \$y\n";
   }
@@ -244,7 +244,7 @@ sub N_uv  {
   my $class_val_index = $self->getIndexes()->[$class_attno]->{$class_val};
   my $u_val_index = $self->getIndexes()->[$u]->{$u_val};
   my $v_val_index = $self->getIndexes()->[$v]->{$v_val};
-  print "D\n";
+  print STDERR  "D\n";
   my $temp = $self->getN_uv()->[$u][$v]->at($u_val_index,$v_val_index,$class_val_index);  
   #print $temp;
   return $temp;
