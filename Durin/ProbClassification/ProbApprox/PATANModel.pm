@@ -1,4 +1,4 @@
-package Durin::ProbClassification::ProbApprox::PAMarginals;
+package Durin::ProbClassification::ProbApprox::PATANModel;
 
 use Durin::Classification::Model;
 

@@ -1,4 +1,4 @@
-package Durin::ProbClassification::ProbApprox::PAMarginals;
+package Durin::ProbClassification::ProbApprox::PAHierarchicalMarginals;
 
 use Durin::Classification::Model;
 
@@ -29,7 +29,7 @@ sub getLambda {
 }
 
 sub getGamma {
-  return 0.01;
+  return 10000;
 }
 
 
@@ -50,7 +50,7 @@ sub setCountTable
 	  }
       }
     
-    for ($att = 0 ; $att < $self->{COUNTTABLE}->getNumAtts() ; $att++)
+    for ($att = 0 ; $att <  $self->{COUNTTABLE}->getNumAtts() ; $att++)
       {
 	#print "B, $att\n";
 	#if ($att != $self->{COUNTTABLE}->getClassIndex())
@@ -98,8 +98,10 @@ sub setCountTable
 	  my $cardClass = $self->{COUNTTABLE}->getNumClasses();
 	  my $cntClass = $self->{COUNTTABLE}->getCountClass($classVal);
 	  
-	  my $numX = ($cntClass + ($gamma / $cardClass)) * ($cntX + ($gamma / $cardX));
-	  my $denomX = ($cntTot + $gamma) * ($cntTot + $gamma);
+	  #my $numX = ($cntX + ($gamma / $cardX));
+	  my $numX = $cntX;
+	  #my $denomX = ($cntTot + $gamma) * $cardClass;
+	  my $denomX = $cntTot;
 	  
 	  $self->{PINDXCLASS}[$attX]{$attXVal}{$classVal} = ($numX / $denomX);
 	  $self->{PINDTOTX}[$attX] += $self->{PINDXCLASS}[$attX]{$attXVal}{$classVal};
@@ -111,10 +113,12 @@ sub setCountTable
 	      #print "attY = $attY   attYVal = $attYVal\n";
 	      my $cntY = $self->{COUNTX}[$attY]{$attYVal};
 	      
-	      if (!defined($cntY)) { die "Morí\n"};
+	      #if (!defined($cntY)) { die "Morí\n"};
 	      #print "cntY = $cntY\n";
-	      my $numXY = $numX * ($cntY + ($gamma / $cardY));
-	      my $denomXY = $denomX * ($cntTot + $gamma);
+	      my $numXY = $numX;	
+	      #* ($cntY + ($gamma / $cardY));
+	      my $denomXY = $denomX;
+		# * ($cntTot + $gamma);
 	      
 	      $self->{PINDXYCLASS}[$attX]{$attXVal}{$classVal}[$attY]{$attYVal} = ($numXY / $denomXY);
 	      #print "PInd[$attX][$attXVal][$classVal][$attY][$attYVal] = ".$self->{PINDXYCLASS}[$attX]{$attXVal}{$classVal}[$attY]{$attYVal}."\n";
@@ -171,22 +175,24 @@ sub setCountTable
     }
     
     # Normalizing probabilities (if needed)
+
     my $class = $self->{COUNTTABLE}->getClassIndex();
     
     for (my $attX = 0 ; $attX <  $self->{COUNTTABLE}->getNumAtts() ; $attX++) {	
-      if ($attX != $self->{COUNTTABLE}->getClassIndex())  {
+      if ($attX != $class)  {
 	if (difeps($self->{PTOTX}[$attX],1)) {
 	  print "Warning the probability sum for $attX (class is $class) is : ".$self->{PTOTX}[$attX]."\n";
 	}
       }
       for (my $attY = $attX + 1 ; $attY <  $self->{COUNTTABLE}->getNumAtts() ; $attY++) {  
-	if (($attX != $self->{COUNTTABLE}->getClassIndex()) && ($attY != $self->{COUNTTABLE}->getClassIndex()))  {
+	if (($attX != $class) && ($attY != $class))  {
 	  if (difeps($self->{PTOTXY}[$attX][$attY],1)) {
 	    print "Warning the probability sum D for $attX,$attY (class is $class) is: ".$self->{PTOTXY}[$attX][$attY]."\n";
 	  }
 	}
       }
     }
+    
   }
 
 sub difeps {
@@ -206,15 +212,12 @@ sub getPClass
   {
     my ($self,$classVal) = @_;
 
-    my $lambda = $self->{LAMBDA};
-    my $gamma = $self->{GAMMA};
-    my $pindnum = $self->{COUNTTABLE}->getCountClass($classVal) + ($gamma / $self->{COUNTTABLE}->getNumClasses());
-    my $pinddenom = $self->{COUNTTABLE}->getCount() + $gamma;
-    my $pind = $pindnum/$pinddenom;
-    my $num = $self->{COUNTTABLE}->getCountClass($classVal) + ($pind * $lambda);
-    my $denom = $self->{COUNTTABLE}->getCount() + $lambda;
-    #my $num = $self->{COUNTTABLE}->getCountClass($classVal);
-    #my $denom = $self->{COUNTTABLE}->getCount();
+    #my $lambda = $self->{LAMBDA};
+    #my $num = $self->{COUNTTABLE}->getCountClass($classVal) +  ($lambda / $self->{COUNTTABLE}->getNumClasses());
+    #my $denom = $self->{COUNTTABLE}->getCount() + $lambda;
+    #print "Num classes : ".$self->{COUNTTABLE}->getNumClasses()."\n";
+    my $num = $self->{COUNTTABLE}->getCountClass($classVal);
+    my $denom = $self->{COUNTTABLE}->getCount();
     
     return ($num / $denom);
   }
@@ -277,6 +280,6 @@ sub getDetails()
   {
     my ($class) = @_;
     
-    return {"PAMarginals lambda"=> $class->getLambda(),
-	    "PAMarginals gamma"=> $class->getGamma()};
+    return {"PAHierarchicalMarginals lambda"=> $class->getLambda(),
+	    "PAHierarchicalMarginals gamma"=> $class->getGamma()};
   }

@@ -98,7 +98,9 @@ sub setSchema
 	    if ($att1 != $class_attno)
 	      {
 		my @att_values1 = @{$schema->getAttributeByPos($att1)->getType()->getValues()};
+		print join(',',@att_values1)."\n";
 		my $num_att_values1 = scalar(@att_values1);
+		print "Num att values = $num_att_values1\n";
 		foreach my $att2 (0..$att1-1)
 		  {
 		    if ($att2 != $class_attno)
