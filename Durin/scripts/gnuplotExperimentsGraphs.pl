@@ -110,7 +110,7 @@ sub preparateDifferencePlot {
   
   my $datasetsAandB = [];
   my $datasetsHash = {};
-  %count = ();
+  my %count = ();
   foreach my $element (@$datasetsA, @$datasetsB) { $count{$element}++ }
   foreach my $element (keys %count) {
     if ($count{$element} > 1) {
