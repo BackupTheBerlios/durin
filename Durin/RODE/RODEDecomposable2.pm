@@ -466,16 +466,16 @@ sub computeProbConcreteModel {
   my $N = $ct->getCount();
   my $N_quote_u = $self->getN_Quote_u($node_u);
   
-  my $N_quote_uc_u = $self->getN_Quote_uc_u($u_val,$class_val_iter,$node_u);
-  my $N_uc = $ct->getCountXClass($class_val_iter,$node_u,$u_val);
+  my $N_quote_uc_u = $self->getN_Quote_uc_u($u_val,$class_val,$node_u);
+  my $N_uc = $ct->getCountXClass($class_val,$node_u,$u_val);
 
   my $prob = ($N_uc + $N_quote_uc_u) / ($N + $N_quote_u);
   for(my $node_v = 0 ; $node_v < $num_atts; $node_v++) {
     if (($node_v != $class_attno) && ($node_v != $node_u)) { 
       my $v_val = $row_to_classify->[$node_v];
-      my $N_quote_uc_uv = $self->getN_Quote_uc_uv($u_val,$class_val_iter,$node_u,$node_v);
-      my $N_quote_vuc_uv = $self->getN_Quote_vuc_uv($v_val,$u_val,$class_val_iter,$node_u,$node_v);
-      my $N_vuc = $ct->getCountXYClass($class_val_iter,$node_u,$u_val,$node_v,$v_val);      
+      my $N_quote_uc_uv = $self->getN_Quote_uc_uv($u_val,$class_val,$node_u,$node_v);
+      my $N_quote_vuc_uv = $self->getN_Quote_vuc_uv($v_val,$u_val,$class_val,$node_u,$node_v);
+      my $N_vuc = $ct->getCountXYClass($class_val,$node_u,$u_val,$node_v,$v_val);      
       
       my $factor = ($N_vuc + $N_quote_vuc_uv) / ($N_uc + $N_quote_uc_uv); 
       $prob *= $factor;
