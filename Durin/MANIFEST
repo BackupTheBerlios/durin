@@ -1,7 +1,14 @@
-LICENSE
+Basic.pm
+Basic/MIManager.pm
+Basic/Makefile
+Basic/Makefile.PL
+Basic/NamedObject.pm
+Basic/t/MIManager.t
+Basic/t/NamedObject.t
 Changes
+Durin.pm
+LICENSE
+MANIFEST
 Makefile.PL
 README
-Durin.pm
 t/01_ini.t
-MANIFEST
