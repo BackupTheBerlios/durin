@@ -93,8 +93,8 @@ sub softenBetas {
   
   # Soften weights to the [StMin,StMax] interval
   my ($min,$max) = @{$self->calculateMinMax($schema,$WuvMatrix)};
-  my $StMin = -3;
-  my $StMax = 3;
+  my $StMin = -11.51;
+  my $StMax = 0;
   if (($max-$min)<($StMax-$StMin)) {
     # Do never exagerate beliefs. If the difference 
     # is not so marked keep it as it is and just move 
