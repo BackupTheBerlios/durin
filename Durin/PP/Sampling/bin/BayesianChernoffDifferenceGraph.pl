@@ -26,23 +26,26 @@ foreach my $n (@$samplingSizes) {
   push @line_styles,$style;
   $style++;
 }
-legend $samplingSizes,0.08,0.17,{LineStyle =>\@line_styles};
+my @styles = reverse @line_styles;
+my @sizes = reverse @$samplingSizes;
+legend \@sizes,0.08,0.17,{LineStyle =>\@styles};
 
 sub plotDifferenceInit {
   
   dev $device;
+  pgslw(1);
   pgpap(5,1);
   
-  my $items = 50;
+  my $items = 100;
   my @accuracies = ();
   for (my $i = 0; $i < $items ; $i++)
     {
       push @accuracies,(0.1 * $i/$items);
     }
-  env 0,0.1, 0,1, 0,-2;
+  env 0,0.1, 0,0.8, 0,-2;
   pglab("Accuracy","Confidence","Bayesian confidence - Chernoff confidence"); 
   pgaxis("N", 0,0 , 0.1,0 , 0,0.1, 0.01 , 0,0.5,0,0,1,0);
-  pgaxis("N", 0,0 , 0,1 , 0,1, 0.1 , 0,0.5,0,0,-1,0);
+  pgaxis("N", 0,0 , 0,0.8 , 0,0.8, 0.1 , 0,0.5,0,0,-1,0);
   
   hold();
   return @accuracies;

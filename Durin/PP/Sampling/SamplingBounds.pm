@@ -1,5 +1,6 @@
 package Durin::PP::Sampling::SamplingBounds;
 
+use Math::CDF;
 use Durin::Utilities::MathUtilities;
 use Durin::Math::Summation;
 use POSIX;
@@ -25,6 +26,29 @@ sub logRProb
     my ($N,$R,$n,$r) = @_;
     
     return Durin::Utilities::MathUtilities::logbinom($R,$r) + Durin::Utilities::MathUtilities::logbinom($N-$R,$n-$r) -  Durin::Utilities::MathUtilities::logbinom($N+1,$n+1);
+  }
+
+sub HypergeomProb
+  {
+     my ($N,$R,$n,$r) = @_;
+
+     if ($R < $r)
+       {
+	 return 0;
+       }
+     if (($N-$R) < ($n-$r))
+       {
+	 return 0;
+       }
+     
+     return exp(logHypergeomProb($N,$R,$n,$r));
+   }
+
+sub logHypergeomProb
+  {
+    my ($N,$R,$n,$r) = @_;
+    
+    return Durin::Utilities::MathUtilities::logbinom($R,$r) + Durin::Utilities::MathUtilities::logbinom($N-$R,$n-$r) -  Durin::Utilities::MathUtilities::logbinom($N,$n);
   }
 
 sub MAPREst
@@ -123,7 +147,7 @@ sub CerquidesAddConfidence
     {
       $start = $end;
     }
-    # print "Fest = $Fest, Start: $start, End:$end \n";
+    print "Fest = $Fest, Start: $start, End:$end \n";
   
     my $conf = 0;
     for (my $R = $start ; $R <= $end ; $R++)
@@ -134,7 +158,7 @@ sub CerquidesAddConfidence
 	$conf += $a;
       }
     $conf = Durin::Utilities::MathUtilities::min($conf,1);
-    print "Fest = $Fest, Start: $start, End:$end , Conf:$conf\n";
+    #print "Fest = $Fest, Start: $start, End:$end , Conf:$conf\n";
   
     return $conf;
   }
@@ -162,7 +186,7 @@ sub FastCerquidesAddConfidence
     my $conf = Durin::Math::Summation::SeriesSum($start,$end,$maxEvals,$probFunction);
     
     $conf = Durin::Utilities::MathUtilities::min($conf,1);
-    print "ConfFinal approx 1: $conf\n";
+    #print "ConfFinal approx 1: $conf\n";
     return $conf;
   }
 
@@ -208,7 +232,7 @@ sub FastCerquidesAddConfidence2
 	$conf += Durin::Math::Summation::SeriesSum($endInterval+1,$end,$quarterEvals,$probFunction);
       }
     $conf = Durin::Utilities::MathUtilities::min($conf,1);
-    print "ConfFinal approx 2: $conf\n";
+    #print "ConfFinal approx 2: $conf\n";
     return $conf;
   }
 
@@ -255,7 +279,7 @@ sub FastCerquidesAddConfidence3
 	  }
 	
 	$conf = 1-$confLower-$confUpper;
-	print "Conf: $conf, Lower: $confLower, Upper: $confUpper\n";
+	#print "Conf: $conf, Lower: $confLower, Upper: $confUpper\n";
       }
     else
       {
@@ -277,6 +301,76 @@ sub ChernoffAddConfidence
     
     return Durin::Utilities::MathUtilities::max($conf,0);
   }
+
+sub PriorHypergeometricAddConfidence
+  {
+    my ($N,$n,$eps) = @_;
+    
+    return HypergeometricAddConfidence($N,int($N/2),$n,$eps);
+  }
+
+    
+sub HypergeometricAddConfidence
+  {
+    my ($N,$R,$n,$eps) = @_;
+    
+    #my $Fest = MAPFEst($N,$n,$r);
+    my $start = POSIX::ceil( Durin::Utilities::MathUtilities::max((($R/$N)-$eps)*$n,0));
+    my $end = POSIX::floor( Durin::Utilities::MathUtilities::min((($R/$N)+$eps)*$n,$n));
+    
+    if ($end - $start < 0)
+      {
+	$start = $end;
+      }
+    print "Start: $start, End:$end \n";
+    
+    my $conf = 0;
+    for (my $r = $start ; $r <= $end ; $r++)
+      {
+	#print "R:$N,$R,$n,$r\n";
+	my $a = HypergeomProb($N,$R,$n,$r);
+	#	print $R." ".$a."\n";
+	$conf += $a;
+      }
+    $conf = Durin::Utilities::MathUtilities::min($conf,1);
+    #print "Fest = $Fest, Start: $start, End:$end , Conf:$conf\n";
+    
+    return $conf;
+  }
+
+sub HypergeometricBound
+  {
+    my ($N,$C,$eps) = @_;
+    
+    my $min = 1;
+    my $max = $N;
+    my $found = 0;
+    my $middle;
+    while (!$found)
+      {
+	$middle = int(($min+$max)/2);
+	if ($middle == $min)
+	  {
+	    $found = 1;
+	  }
+	else
+	  {
+	    $midC = PriorHypergeometricAddConfidence($N,$middle,$eps);
+	    if ($midC > $C)
+	      {
+		$max = $middle;
+	      }
+	    else
+	      {
+		$min = $middle;
+	      }
+	    #print "[$min-$max]\n";
+	  }
+      }
+    return $middle;
+  }
+
+
 
 sub ChernoffBound
   { 
@@ -318,10 +412,76 @@ sub CerquidesBound
 	      {
 		$min = $middle;
 	      }
+	    #print "[$min-$max]\n";
+	  }
+      }
+    return $middle;
+  }
+
+sub FastCerquidesBound
+  {
+    my ($N,$C,$eps,$maxEvals) = @_;
+
+    my $min = 1;
+    my $max = $N;
+    my $found = 0;
+    my $middle;
+    print "MaxEvals: $maxEvals\n";
+    while (!$found)
+      {
+	$middle = int(($min+$max)/2);
+	if ($middle == $min)
+	  {
+	    $found = 1;
+	  }
+	else
+	  {
+	    $midC = FastCerquidesAddConfidence3($N,$middle,POSIX::floor($middle/2),$eps,$maxEvals);
+	    if ($midC > $C)
+	      {
+		$max = $middle;
+	      }
+	    else
+	      {
+		$min = $middle;
+	      }
 	    print "[$min-$max]\n";
 	  }
       }
     return $middle;
   }
 
+sub CochranBound
+  {
+    my ($N,$C,$eps) = @_;
+
+    my $t = Math::CDF::qnorm(($C+1)/2);
+    print "T: $t\n";
+    
+    my $P = 0.5;
+    my $Q = 0.5;
+    if ($eps == 0) {
+      $eps = 0.0000000001;
+    }
+    print "$eps\n";
+    my $num = $t*$t*$P*$Q/($eps*$eps);
+    my $denom = 1+($num-1)/$N;
+    
+    my $n = $num/$denom;
+  
+    #my $n = $num;
+    return $n;
+  }
+
+sub CentralLimitBound
+  {
+    my ($N,$C,$eps) = @_;
+    my $t = Math::CDF::qnorm(($C+1)/2);
+    if ($eps == 0) {
+      $eps = 0.0000000001;
+    }
+    my $n = $t*$t/($eps*$eps*4);
+
+    return $n;
+  }
 1;

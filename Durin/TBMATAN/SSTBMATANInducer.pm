@@ -1,6 +1,6 @@
-# Tractable Bayesian Model Averaging TAN inducer
+# Structure Stubborn Tractable Bayesian Model Averaging TAN inducer
 
-package Durin::TBMATAN::TBMATANInducer;
+package Durin::TBMATAN::SSTBMATANInducer;
 
 use Durin::Classification::Inducer;
 
@@ -10,13 +10,13 @@ use PDL;
 use strict;
 use warnings;
 
-use Durin::TBMATAN::TBMATAN;
+use Durin::TBMATAN::ATBMATAN;
 
 sub new_delta
 {
     my ($class,$self) = @_;
     
-    $self->setName("TBMATAN");
+    $self->setName("SSTBMATAN");
     #   $self->{METADATA} = undef; 
 }
 
@@ -55,17 +55,19 @@ sub run
   my $betas = ones $num_atts,$num_atts;
   #$betas = $betas * exp(3.4*$bc->getOutput()->getCount);
   
-  my $TBMATAN = Durin::TBMATAN::TBMATAN->new();
+  my $SSTBMATAN = Durin::TBMATAN::ATBMATAN->new();
   
-  $TBMATAN->setSchema($table->getMetadata()->getSchema());
-  $TBMATAN->setBetaMatrix($betas);
-  $TBMATAN->setName($self->getName());
+  $SSTBMATAN->setStructureStubborn(1);
+  $SSTBMATAN->setSchema($table->getMetadata()->getSchema());
+  $SSTBMATAN->setBetaMatrix($betas);
+  $SSTBMATAN->setName($self->getName());
   #$TBMATAN->setEquivalentSampleSizeAndInitialize(
   #$self->CalculateEquivalentSampleSize(
   #$table->getMetadata()->getSchema())/100);
-  $TBMATAN->setEquivalentSampleSizeAndInitialize(10);
-  $TBMATAN->setCountTableAndInitialize($bc->getOutput);
-  $self->setOutput($TBMATAN);
+  $SSTBMATAN->setEquivalentSampleSizeAndInitialize(10);
+  $SSTBMATAN->setCountTableAndInitialize($bc->getOutput);
+  
+  $self->setOutput($SSTBMATAN);
 }
 
 # Inspired in the indifferent naive bayes results

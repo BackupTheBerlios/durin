@@ -52,8 +52,11 @@ sub plotReal
     foreach my $eps (@accuracies)
       {
 	set $x, $i, $eps;
-	set $ycher, $i, Durin::PP::Sampling::SamplingBounds::ChernoffBound($C,$eps);
-	set $ycer, $i, Durin::PP::Sampling::SamplingBounds::CerquidesBound($N,$C,$eps);
+	my $thisycher = Durin::PP::Sampling::SamplingBounds::ChernoffBound($C,$eps);
+	set $ycher, $i, $thisycher;
+	my $thisycer = Durin::PP::Sampling::SamplingBounds::CerquidesBound($N,$C,$eps);
+	set $ycer, $i, $thisycer;
+	print "$C,$eps: Chernoff=$thisycher Bayesian=$thisycer\n";
 	$i++;
       }	
     my @line_styles =();
