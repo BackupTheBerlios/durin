@@ -63,7 +63,7 @@ sub run
   my $num_atts = $schema->getNumAttributes();
   my $alphas = [];
   foreach my $node_u (0..$num_atts-1) {
-    push $alpha, 1;
+    push @$alphas, 1;
   }
 
   my $RODEDecomposable = Durin::RODE::RODEDecomposable->new();

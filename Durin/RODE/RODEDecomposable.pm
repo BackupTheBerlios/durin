@@ -301,7 +301,7 @@ sub predict {
   my $sum = 0; 
   my $max = 0;
   my $probMax = 0;
-  foreach $class_val (@class_values) {
+  foreach my $class_val (@class_values) {
     if ($probMax<$Prob{$class_val}) {
       $probMax = $Prob{$class_val};
       $max = $class_val;
@@ -309,11 +309,11 @@ sub predict {
     $sum += $Prob{$class_val};
   }
   if ($sum != 0) {
-    foreach $class_val (@class_values) {
+    foreach my $class_val (@class_values) {
       $Prob{$class_val} = $Prob{$class_val}/$sum; 
     }
   } else {
-    foreach $class_val (@class_values) {
+    foreach my $class_val (@class_values) {
       $Prob{$class_val} = 1 / ($#class_values + 1); 
     }
   }
