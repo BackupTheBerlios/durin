@@ -91,6 +91,7 @@ sub predict
     #print join(',',@class_values),"\n";
 
     my $PA = $self->getProbApprox();
+
     foreach $class_val (@class_values)
       {
 	#print "Class = $class_val, cv[0] = ",$class_values[0]," \n";
@@ -101,7 +102,7 @@ sub predict
       }
     $tree = $self->getTree();
     @nodes = @{$tree->getNodes()};
-    #    print join(",",@nodes),"\n";
+    #print join(",",@nodes),"\n";
     foreach my $node (@nodes)
       {	
 	$node_val = $row_to_classify->[$node];
@@ -117,6 +118,7 @@ sub predict
 	    #print "Parent: $parent\n";
 	    foreach $class_val (@class_values)
 	      {
+		#print "Asking PATAN for $class_val,$parent,$parent_val,$node,$node_val\n";
 		$PUpgrade = $PA->getPYCondXClass($class_val,$parent,$parent_val,$node,$node_val);
 		$Prob{$class_val} = $Prob{$class_val} * $PUpgrade;
 	      }
@@ -124,7 +126,8 @@ sub predict
 	else
 	  {
 	    foreach $class_val (@class_values)
-	      {
+	      {	
+		#print "Asking PATAN for $class_val,$node,$node_val\n";
 		$PUpgrade = $PA->getPXCondClass($class_val,$node,$node_val);
 		  
 		#$PUpgrade = ($countXClass{$class_val}[$node]{$node_val} + 1) / ($countClass{$class_val} + $card);  

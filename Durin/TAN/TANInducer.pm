@@ -44,7 +44,9 @@ sub run($)
   my $table = $input->{TABLE};
   my $PAGC = $input->{GC}->{PROBAPPROX};
   my $PATAN = $input->{TAN}->{PROBAPPROX};
-  
+  if (defined $input->{GC}->{MUTUAL_INFO_MEASURE}) {
+    $self->{GC}->{MUTUAL_INFO_MEASURE} = $input->{GC}->{MUTUAL_INFO_MEASURE};
+  }
 
   # If we do not receive the counting table, we calculate it
   
@@ -71,6 +73,10 @@ sub run($)
     my ($Input);
     $Input->{PROBAPPROX} = $PAGC;
     $Input->{SCHEMA} = $table->getMetadata()->getSchema();
+    $Input->{COUNTING_TABLE} = $self->{COUNTING_TABLE};
+    if (defined $self->{GC}->{MUTUAL_INFO_MEASURE}) {
+      $Input->{MUTUAL_INFO_MEASURE} = $self->{GC}->{MUTUAL_INFO_MEASURE};
+    }
     $gcons->setInput($Input);
   }
   $gcons->run();
@@ -109,6 +115,7 @@ sub run($)
   $TAN->setProbApprox($PATAN);
   $TAN->setTree($Tree);
   $self->setOutput($TAN);
+  print "Finished learningTAN\n";
 }
 
 1;

@@ -1,4 +1,4 @@
-package Durin::TAN::CoherentLaplaceTANInducer;
+package Durin::TAN::DecomposableLaplaceTANInducer;
 
 use Durin::Classification::Inducer;
 
@@ -10,13 +10,14 @@ use Durin::TAN::TANInducer;
 use Durin::ProbClassification::ProbApprox::PAFrequency;
 use Durin::ProbClassification::ProbApprox::PACoherent;
 use  Durin::ProbClassification::ProbApprox::PALaplace;
+use Durin::TAN::GraphConstructor;
 
 sub new_delta
 {
     my ($class,$self) = @_;
     
     $self->{INDUCER} = Durin::TAN::TANInducer->new();
-    $self->setName("TAN+MS+L");
+    $self->setName("TAN+DEC+L");
     #   $self->{METADATA} = undef; 
 }
 
@@ -37,9 +38,7 @@ sub run
     $input->{TABLE} = $self->getInput()->{TABLE};
     #print $input->{TABLE}->getMetadata();
     $input->{GC}->{PROBAPPROX} = Durin::ProbClassification::ProbApprox::PACoherent->new();
-    $input->{GC}->{PROBAPPROX}->setSchema($input->{TABLE}->getMetadata()->getSchema());
-    $input->{GC}->{PROBAPPROX}->setEquivalentSampleSizeAndInitialize($input->{GC}->{PROBAPPROX}->getLambda());
-    
+    $input->{GC}->{MUTUAL_INFO_MEASURE} = Durin::TAN::GraphConstructor::Decomposable;
     $input->{TAN}->{PROBAPPROX} = Durin::ProbClassification::ProbApprox::PALaplace->new();
     $inducer->setInput($input);
   }

@@ -20,9 +20,7 @@ sub new_delta
 sub clone_delta
   { 
     my ($class,$self,$source) = @_;
-    
     die "Durin::ProbClassification::ProbApprox::CountTable clone not implemented";
-   
   }
 
 # Sets the number of variable that will be taken into account

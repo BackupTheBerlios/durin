@@ -27,13 +27,12 @@ sub clone_delta
     my ($class,$self,$source) = @_;
     
     my (@edgeList,$e);
-    
-    @edgeList = $source->getEdges();
+    @edgeList = @{$source->getEdges()};
     foreach $e (@edgeList)
     {
-	$self->addEdge($e);
+	$self->addEdge($e->[0],$e->[1],$e->[2]);
     }
-#    print "DataStructures::UGraph cloning not tested\n");
+#   print "DataStructures::UGraph cloning not tested\n");
 }
 
 sub addEdge($$$$)
@@ -42,8 +41,8 @@ sub addEdge($$$$)
   
   if (!exists $self->{NODES}{$parent})
     {
-	$self->{NODES}{$parent} = undef;
-	push @{$self->{NODELIST}},($parent);
+      $self->{NODES}{$parent} = undef;
+      push @{$self->{NODELIST}},($parent);
     }
   if (!exists $self->{NODES}{$son})
     {
@@ -57,6 +56,39 @@ sub addEdge($$$$)
 # push @{$self->{PARENTSHASH}->{
 }
 
+sub removeEdge($$$) {
+  my ($self,$parent,$son) = @_;
+  
+  delete $self->{EDGES}{$parent}{$son};
+  delete $self->{INVERTEDEDGES}{$son}{$parent};
+  my $edgePos = $self->findEdgePos($parent,$son);
+  #print "Prior to removing edge $parent->$son\n**********************\n";	
+  #foreach my $edge (@{$self->getEdges()}) {
+  #3  print join(",",@$edge)."\n";
+  #}
+  splice (@{$self->{EDGELIST}},$edgePos,1);
+  #print "After removing edge $parent->$son\n**********************\n";
+  #foreach my $edge (@{$self->getEdges()}) {
+  #  print join(",",@$edge)."\n";
+  #}
+}
+	
+sub findEdgePos($$$) {
+  my ($self,$parent,$son) = @_;
+  
+  my $i = 0;
+  my $edgeList = $self->{EDGELIST};
+  my $found = 0;
+  while (($i < scalar(@$edgeList)) && (!$found)) {
+    my $edge = $edgeList->[$i];
+    $found = (($edge->[0] == $parent) && ($edge->[1] == $son));
+    if (!$found) {
+      $i++;
+    }
+  }
+  return $i;
+}
+       
 sub addNode($$$)
 {
     my ($self,$node,$label) = @_;

@@ -1,141 +1,90 @@
-# Constructs the graph with the weigths as described Friedman's paper.
+# Constructs a graph with an weighted edge from attribute A to attribute B as described in Cerquides paper. We add an additional node R (from Root) and a weigthed edge from every attribute A to R.
 
-package Durin::TAN::GraphConstructor;
-
-use Durin::Components::Process;
+package Durin::TAN::MAPDirectedGraphConstructor;
 
 use strict;
 use warnings;
 
-use base 'Durin::Components::Process';
+use Durin::Components::Process;
+
+@Durin::TAN::MAPDirectedGraphConstructor::ISA = qw/Durin::Components::Process/;
 
 use Class::MethodMaker
   get_set => [ -java => qw/EquivalentSampleSize InternalNQuoteUC InternalNQuoteUVC NQuoteC Schema/];
 
-use strict;
-
-use Durin::DataStructures::UGraph;
+use Durin::DataStructures::Graph;
 use Math::Gsl::Sf;
 use PDL;
 
-use constant MaximumLikelihood=>0;
-use constant Decomposable=>1;
-
-sub new_delta
-{
-    my ($class,$self) = @_;
-    
- #   $self->{METADATA} = undef; 
+sub new_delta {
+  my ($class,$self) = @_;
+  
+  #$self->{PRIOR} = $self->createPrior();
 }
 
-sub clone_delta
-{ 
-    my ($class,$self,$source) = @_;
-    
- #   $self->setMetadata($source->getMetadata()->clone());
+sub clone_delta { 
+  my ($class,$self,$source) = @_;
 }
 
 sub getLambda {
-  return 100;
+  return 1;
 }
 
-
-sub run($)
-{
+sub run($) {
   my ($self) = @_;
   
-  my ($Graph,$arrayofTablesRef,$schema,$num_atts,$class_attno,$class_att,$info2,$PA);
+  my ($Graph,$arrayofTablesRef,$schema,$num_atts,$class_attno,$class_att,$info2,$PA,$infoFunction);
   
   $schema = $self->getInput()->{SCHEMA};
   $self->setSchema($schema);
   $self->setEquivalentSampleSizeAndInitialize($self->getLambda());
   
-  #$arrayofTablesRef = $self->getInput()->{ARRAYOFTABLES};
-  $PA = $self->getInput()->{PROBAPPROX};
-  my $ct = $self->getInput()->{COUNTING_TABLE};
-  my $infoMeasure = MaximumLikelihood;
-  if (defined $self->getInput()->{MUTUAL_INFO_MEASURE}) {
-    $infoMeasure = $self->getInput()->{MUTUAL_INFO_MEASURE};
+  my $data = $self->getInput()->{COUNTING_TABLE};
+  
+  if (defined $self->getInput()->{PRIOR}) {
+    $self->{PRIOR} = $self->getInput()->{PRIOR};
   }
-  $Graph = Durin::DataStructures::UGraph->new();
-
-
+  my $prior = $self->{PRIOR};
+  
+  $Graph = Durin::DataStructures::Graph->new();
+  
   $class_attno = ($schema->getClassPos());
   $class_att = $schema->getAttributeByPos($class_attno);
   $num_atts = $schema->getNumAttributes();
   
+
+  # Calculate the edges from A to B
   my ($j,$k,$info);
-  
-  foreach $j (0..$num_atts-1)
-  {
-    if ($j!=$class_attno)
-      {
-	  foreach $k (0..$j-1)
-	    {
-	      if ($k!=$class_attno)
-		{
-		  if ($infoMeasure == MaximumLikelihood) {
-		    #print "MaxL\n";
-		    $info = $self->calculateInf($j,$k,$class_att,$schema,$PA);
-		  } elsif ($infoMeasure == Decomposable) {
-		    $info = $self->calculateDecomposableInf($j,$k,$class_att,$schema,$ct);
-		  }
-		  # $info2 = $self->calculateSmoothedInf($j,$k,$class_att,$schema,$arrayofTablesRef);
-		  # print "Info($j,$k): without smoothing p's: $info with smoothing:$info2\n";
-		  $Graph->addEdge($j,$k,$info);
-	      }
-	  }
+  foreach $j (0..$num_atts-1) {
+    if ($j!=$class_attno) {
+      #foreach $k (0..$j-1) {
+      foreach $k (0..$num_atts-1) {
+	if ($k!=$class_attno && $k!=$j) {
+	  $info = $self->calculateA_BLogProbabilityWeigth($j,$k,$class_att,$schema,$data);
+	  print "Adding edge $j -> $k , $info\n";
+	  $Graph->addEdge($j,$k,$info);
+	}
       }
+    }
+  }
+  
+  # Add the edges from R to A
+  # The root will have value -1;
+
+  my $R = -1;
+  foreach $j (0..$num_atts-1) {
+    if ($j!=$class_attno) {
+      $info = $self->calculateRoot_ALogProbabilityWeigth($j,$class_att,$schema,$data);
+      $Graph->addEdge($R,$j,$info);
+      #print "Adding edge $j -> $R, $info\n";
+
+    }
   }
   $self->setOutput($Graph);
 }
+	
 
-sub calculateInf
-{
-  my ($self,$j,$k,$class_att,$schema,$PA) = @_;
-
-  #my (@arrayofTables,$count,%countClass,%countXClass,%countXYClass);
-  
-  #@arrayofTables = @$arrayofTablesRef;
-  #$count = ${$arrayofTables[0]};
-  #%countClass = %{$arrayofTables[1]};
-  #%countXClass = %{$arrayofTables[2]};
-  #%countXYClass = %{$arrayofTables[3]};
-
-  my ($class_val,@class_values,@j_values,$j_val,@k_values,$k_val);
-  my ($Pxyz,$Pz,$Pxz,$Pyz,$quotient,$temp,$infoTotal,$infoPartial);
-
-  @class_values = @{$class_att->getType()->getValues()};
-  @j_values = @{$schema->getAttributeByPos($j)->getType()->getValues()};
-  @k_values = @{$schema->getAttributeByPos($k)->getType()->getValues()};
-  
-  $infoTotal = 0.0;
-
-  foreach $class_val (@class_values)
-  {	
-      foreach $j_val (@j_values)
-	{
-	  foreach $k_val (@k_values)
-	    {
-	      $Pxyz = $PA->getPXYClass($class_val,$j,$j_val,$k,$k_val);
-	      #print "Pxyz = $Pxyz\n";
-	      if ($Pxyz != 0)
-		{
-		  $infoPartial = $Pxyz * log($PA->getSinergy($class_val,$j,$j_val,$k,$k_val));
-		}
-	      else
-		{
-		  $infoPartial = 0;
-		}
-	      $infoTotal += $infoPartial;
-	    }
-	}
-    }
-#print "Info ($j,$k) = $infoTotal\n";
-  return $infoTotal;
-}
-
-sub calculateDecomposableInf {
+sub calculateA_BLogProbabilityWeigth {
   my ($self,$j,$k,$class_att,$schema,$data) = @_;
   
   my ($class_val,@class_values,@j_values,$j_val,@k_values,$k_val);
@@ -162,19 +111,41 @@ sub calculateDecomposableInf {
 	$total += Math::Gsl::Sf::lngamma($nquote + $n);
 	$total -= Math::Gsl::Sf::lngamma($nquote);
       }
-    } 
-    foreach $k_val (@k_values) {
-      #$nquote = $prior->getCountXClass($class_val,$j,$j_val); 
-      $nquote = $self->getNQuoteUC($k);
-      $n = $data->getCountXClass($class_val,$k,$k_val);
-      $total += Math::Gsl::Sf::lngamma($nquote);
-      $total -= Math::Gsl::Sf::lngamma($nquote + $n);
     }
   }
   #print "Info ($j,$k) = $infoTotal\n";
   return $total;
 }
 
+sub calculateRoot_ALogProbabilityWeigth {
+  my ($self,$j,$class_att,$schema,$data) = @_;
+  
+  my ($class_val,@class_values,@j_values,$j_val);
+  my ($Pxyz,$Pz,$Pxz,$Pyz,$quotient,$temp,$infoTotal,$infoPartial);
+  
+  @class_values = @{$class_att->getType()->getValues()};
+  @j_values = @{$schema->getAttributeByPos($j)->getType()->getValues()};
+  
+  my $total = 0.0;
+  my ($nquote,$n);
+  
+  foreach $class_val (@class_values) {	
+    #$nquote = $prior->getCountClass($class_val);
+    $nquote = $self->getNQuoteC();
+    $n = $data->getCountClass($class_val);
+    $total += Math::Gsl::Sf::lngamma($nquote);
+    $total -= Math::Gsl::Sf::lngamma($nquote + $n);
+    foreach $j_val (@j_values) {
+      #$nquote = $prior->getCountXClass($class_val,$j,$j_val);
+      $nquote = $self->getNQuoteUC($j);
+      $n = $data->getCountXClass($class_val,$j,$j_val);
+      $total += Math::Gsl::Sf::lngamma($nquote + $n);
+      $total -= Math::Gsl::Sf::lngamma($nquote);
+    }
+  }
+  #print "Info ($j,$k) = $infoTotal\n";
+  return $total;
+}
 
 sub setEquivalentSampleSizeAndInitialize {
   my ($self,$size) = @_;
