@@ -328,15 +328,18 @@ sub ProcessResultFile {
     my $proportion = $array[1];
     #print "Proportion: $proportion\n";
     foreach my $modelName (@$modelList) {
-      my $OKs = $array[$i * 4 + 2];
-      my $Wrongs = $array[$i * 4 + 3];
-      my $PLog = $array[$i *4 + 5];
+      #my $OKs = $array[$i * 4 + 2];
+      #my $Wrongs = $array[$i * 4 + 3];
+      my $ER = $array[$i * 3 + 2];
+      my $LogP = $array[$i * 3 + 3];
+      my $AUC = $array[$i * 3 + 4];
+      
       #print "Next One: $modelName $runId $OKs $Wrongs $PLog\n";
       #getc;
       my $PMA = Durin::ProbClassification::ProbModelApplication->new();
-      $PMA->setNumOKs($OKs);
-      $PMA->setNumWrongs($Wrongs);
+      $PMA->setErrorRate($ER);
       $PMA->setLogP($PLog);
+      $PMA->setAUC($AUC);
       
       # Check for CV results
       
@@ -345,16 +348,16 @@ sub ProcessResultFile {
 	$idNum = $1;
 	$foldNum = $2;
       } else {
-	  $idNum = $runId;
+	$idNum = $runId;
 	$foldNum = 0;
       }
       #Check if the model is in the actual model list
       if ($self->checkModel($modelName)) {
-	  $AveragesTable->addResult($dataset,$idNum,$foldNum,$proportion,$modelName,$PMA);
+	$AveragesTable->addResult($dataset,$idNum,$foldNum,$proportion,$modelName,$PMA);
       }
       $i++; 
-  }
-} until ($file->eof());
+    }
+  } until ($file->eof());
   $file->close();
 }
 

@@ -50,3 +50,17 @@ sub getLogP
     
     return $self->{LOGP};
   }
+
+sub setAUC
+  {
+    my ($self,$AUC) = @_;
+    
+    $self->{AUC} = $AUC;
+  }
+
+sub getAUC
+  { 
+    my ($AUC) = @_;
+    
+    return $self->{AUC};
+  }
