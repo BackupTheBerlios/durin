@@ -85,7 +85,10 @@ sub generateRandomBN {
   
   my $cmd = 'java BNGenerator';
   foreach my $option (keys %$options) {
-    $cmd = $cmd." -".$option." ".$options->{$option};
+    $cmd = $cmd." -".$option." ";
+    if (defined $options->{$option}) {
+      $cmd = $cmd.$options->{$option};
+    }
   }
   print "$cmd\n";
   print `$cmd`;
@@ -135,7 +138,7 @@ sub addVariableElement {
   
   my $name = $variableElement->getElementsByTagName("NAME")->item(0)->getFirstChild()->getData();
   
-  print "VariableElement: ".$variableElement->toString()."\n";
+  #print "VariableElement: ".$variableElement->toString()."\n";
   my $att = Durin::Metadata::Attribute->new();
   $att->setName($name);
   my $attType = Durin::Metadata::ATCreator->create("Categorical");
@@ -154,7 +157,7 @@ sub addVariableElement {
 sub addDefinitionElement {
   my ($self,$definitionElement,$BN) = @_;
   
-  print "DefinitionElement: ".$definitionElement->toString()."\n";
+  #print "DefinitionElement: ".$definitionElement->toString()."\n";
   my $schema = $BN->getSchema();
   my $nodeName = $definitionElement->getElementsByTagName("FOR")->item(0)->getFirstChild()->getData();
   my $nodePos = $schema->getPositionByName($nodeName);
@@ -166,7 +169,7 @@ sub addDefinitionElement {
   foreach my $parent (@parents) {
     my $parentName = $parent->getFirstChild()->getData();
     my $parentPos = $schema->getPositionByName($parentName);
-    print "Parent pos: $parentPos\n";
+    #print "Parent pos: $parentPos\n";
     push @$parentPositions,$parentPos;
     #push @$parentValues,$schema->getAttributeByPos($parentPos)->getType()->getValues();
     $BN->addEdge($parentPos,$nodePos);
@@ -176,7 +179,7 @@ sub addDefinitionElement {
   my @tableValues = split(/ /,$tableString);
   my $pos = 0;
   
-  print "ParentPositions: ".join(",",@$parentPositions)."\n";
+  #  print "ParentPositions: ".join(",",@$parentPositions)."\n";
 
   if ((scalar @$parentPositions) > 0){
     my $parentConfigurations = $schema->generateAllConfigurations($parentPositions);

@@ -36,7 +36,7 @@ sub run($) {
   {
     my $input = $self->{INPUT};
     if (!defined $input->{LAMBDA}) {
-      $input->{LAMBDA} = 6*6*6;
+      $input->{LAMBDA} = 10;
       print "CCMAPTAN: assuming Lambda = ".$input->{LAMBDA}."\n";
     }
     if (!defined $input->{GC}->{MUTUAL_INFO_MEASURE}) {
@@ -48,6 +48,7 @@ sub run($) {
   my $model = $inducer->getOutput();
   $model->setName($self->getName());
   $self->setOutput($model);
+   print "Finished learning ".$self->getName()."\n";
 }
 
 1;

@@ -115,7 +115,7 @@ sub run($)
   $TAN->setProbApprox($PATAN);
   $TAN->setTree($Tree);
   $self->setOutput($TAN);
-  print "Finished learningTAN\n";
+  print "Finished learning TAN\n";
 }
 
 1;

@@ -165,15 +165,28 @@ sub getModelKinds {
   foreach my $opt_name (keys %$options) {  
     my $newKinds = [];
     foreach my $kind (@$kinds) {
-      foreach my $opt_value (@{$options->{$opt_name}}) {
+      my $option_value = $options->{$opt_name};
+      #print "Value: $option_value\n";
+      if (!@$option_value) {
 	my $newKind;
 	my %newOptions = %{$kind->{OPTIONS}};
-	$newOptions{$opt_name} = $opt_value;
-	my $newName = $kind->{NAME}.".".$opt_name."=".$opt_value;
-	#print "Model kind: $newName\n";
+	$newOptions{$opt_name} = undef;
+	my $newName = $kind->{NAME}.".".$opt_name;
+	#print "Model kind A: $newName\n";
 	$newKind = {OPTIONS => \%newOptions,
 		    NAME => $newName};
 	push @$newKinds,$newKind;
+      } else { 
+	foreach my $opt_value (@{$options->{$opt_name}}) {
+	  my $newKind;
+	  my %newOptions = %{$kind->{OPTIONS}};
+	  $newOptions{$opt_name} = $opt_value;
+	  my $newName = $kind->{NAME}.".".$opt_name."=".$opt_value;
+	  # print "Model kind B: $newName\n";
+	  $newKind = {OPTIONS => \%newOptions,
+		      NAME => $newName};
+	  push @$newKinds,$newKind;
+	}
       }
     }
     $kinds = $newKinds;

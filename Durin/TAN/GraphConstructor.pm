@@ -85,7 +85,7 @@ sub mutualInformationFunction {
       my ($j,$k) = @_;
       
       my $info =  $self->calculateInf($j,$k,$class_att,$schema,$PA);
-      print "Maximum Likelihood Info($j,$k): $info\n";
+      #print "Maximum Likelihood Info($j,$k): $info\n";
       return $info;
     };
   } elsif ($infoMeasure == Decomposable) {
@@ -94,7 +94,7 @@ sub mutualInformationFunction {
       my ($j,$k) = @_;
       
       my $info = $distrib->calculateDecomposableInf($j,$k,$class_att,$schema);
-      print "Decomposable Info($j,$k): $info\n"; 
+      #print "Decomposable Info($j,$k): $info\n"; 
       return $info;
     }
   } elsif ($infoMeasure == DecomposableCardinalityConscious) {
@@ -103,7 +103,7 @@ sub mutualInformationFunction {
       my ($j,$k) = @_;
       
       my $info = $distrib->calculateDecomposableCardinalityConsciousInf($j,$k,$class_att,$schema);
-      print "Decomposable cardinality conscious Info($j,$k): $info\n"; 
+      #print "Decomposable cardinality conscious Info($j,$k): $info\n"; 
       return $info;
     }
   }

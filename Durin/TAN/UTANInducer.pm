@@ -35,7 +35,7 @@ sub run($) {
   my $input = $self->getInput();
   
   if (!defined $input->{LAMBDA}) {
-    $input->{LAMBDA} = 6*6*6;
+    $input->{LAMBDA} = 10;
     print "Assuming Lambda = ".$input->{LAMBDA}."\n";
   }
   
@@ -94,14 +94,21 @@ sub run($) {
   }
   $kruskal->run();
   my $UTree = $kruskal->getOutput()->{TREE};
+  
+  print "The undirected spanning tree is:\n";
+  my @edges = @{$UTree->getEdges()};
+  foreach my $p (@edges)
+    {
+      print ${@$p}[0],",",${@$p}[1], "\n";
+    }
   my $UTAN = Durin::TAN::UTAN->new();
   #print " Durin::TAN::TANInducer there should be a clone here\n";
   $UTAN->setSchema($schema);
   $UTAN->setDecomposableDistribution($distrib);
   $UTAN->setTree($UTree);
   $UTAN->setName($self->getName());
-  $self->setOutput($UTAN);
-  print "Finished learning MAPTAN\n";
+  $self->setOutput($UTAN); 
+  print "Finished learning ".$self->getName()."\n";
 }
 
 1;
