@@ -1,6 +1,6 @@
 # BMA Restricted One Dependence Estimator Inducer
 
-package Durin::RODE::RODInducer;
+package Durin::RODE::BMARODEInducer;
 
 use Durin::Classification::Inducer;
 

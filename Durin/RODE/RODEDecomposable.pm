@@ -334,7 +334,7 @@ sub computeProbConcreteModel {
   my $num_atts = $schema->getNumAttributes();
 
   my $u_val = $row_to_classify->[$node_u];
-  my $N_uc = $self->N_u($node_u,u_val,$class_val);
+  my $N_uc = $self->N_u($node_u,$u_val,$class_val);
   my $prob = $N_uc;
   for(my $node_v = 0 ; $node_v < $num_atts; $node_v++) {
     if (($node_v != $class_attno) && ($node_v != $node_u)) { 
@@ -343,7 +343,7 @@ sub computeProbConcreteModel {
       $prob *= $factor;
     }
   }
-  return prob;
+  return $prob;
 }
 
 1;
