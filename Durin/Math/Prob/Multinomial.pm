@@ -266,5 +266,10 @@ sub multidimensionalize {
   }
   return $m_indx;
 }
-      
+  
+sub toList {
+  my ($self) = @_;
+  return $self->{PDLTABLE}->list;
+}
+    
 1;

@@ -11,6 +11,10 @@ use Durin::BN::BN;
 
 my $BNGen = Durin::BN::BNGenerator->new;
 my $BN = $BNGen->generateModel();
-my $row = $BN->generateObservation();
-print join(",",@$row)."\n";
+print $BN->toString()."\n";
+for (my $i = 1 ; $i< 10; $i++) {
+  my $row = $BN->generateObservation();
+  print join(",",@$row)."\n";
+}
+
 #End

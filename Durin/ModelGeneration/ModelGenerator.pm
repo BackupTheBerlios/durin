@@ -21,6 +21,7 @@ use base qw(Durin::Components::Process Durin::Basic::NamedObject);
 # LIST_OF_MODELS -> list of models generated.
 
 use Durin::TAN::RandomTANGenerator;
+use Durin::BN::BNGenerator;
 use Durin::Classification::ClassedTableSchema;
 #use Durin::Metadata::Attribute;
 use Durin::Metadata::ATCreator;
@@ -72,7 +73,18 @@ sub create {
   } elsif ("RandomTAN" eq $name) {
     print "Generating samples from a TAN\n";
     $generator = Durin::TAN::RandomTANGenerator->new();
+  } elsif ("RandomBN" eq $name) {
+    print "Generating samples from a BN\n";
+    $generator = Durin::BN::BNGenerator->new();
   }
+  $generator->initSchemaGenerator($characteristics);
+  $generator->setInput($characteristics);
+  return $generator;
+}
+
+sub initSchemaGenerator {
+  my ($self,$characteristics) = @_;
+  
   my ($numAttsGen, $numValsGen);
   {
     my $attGenCharacteristics = $characteristics->{ATTRIBUTE_GENERATOR};
@@ -98,10 +110,7 @@ sub create {
   }
   $characteristics->{NUMBER_OF_ATTRIBUTES_GENERATOR} = $numAttsGen;
   $characteristics->{NUMBER_OF_VALUES_GENERATOR} = $numValsGen;
-  $generator->setInput($characteristics);
-  return $generator;
 }
-
 
 sub init($$) {
   my ($self,$input) = @_;
