@@ -105,9 +105,11 @@ sub computeLogRo {
   
   foreach my $class_val_iter (@class_values) {
     foreach my $u_val (@u_values) {
+      print "LA\n";
       my $nquote_uc = $self->N_u($node_u,$u_val,$class_val_iter);
       my $n_uc = $ct->getCountXClass($class_val_iter,$node_u,$u_val);
-      
+      print "LO\n";
+
       my $log_first_factor = ($numClassValues - 3) * (Math::Gsl::Sf::lngamma($nquote_uc) - Math::Gsl::Sf::lngamma($nquote_uc + $n_uc)); 
       $log_ro_u += $log_first_factor;
       for(my $node_v = 0 ; $node_v < $num_atts; $node_v++) {
@@ -175,9 +177,11 @@ sub initializeSampleSize {
     {
       my @att_values = @{$schema->getAttributeByPos($att)->getType()->getValues()};
       my $num_att_values = scalar(@att_values);
+      print "M\n";
       my $array = ones $num_att_values,$num_classes;
       $array = $array * ($lambda / ($num_att_values * $num_classes));
       push @{$self->getN_u()},$array;
+      print "N\n";
     }
   
   # Att x Att x Class pidls
@@ -198,9 +202,11 @@ sub initializeSampleSize {
 		{
 		  my @att_values2 = @{$schema->getAttributeByPos($att2)->getType()->getValues()};
 		  my $num_att_values2 = scalar(@att_values2);
+		  print "M2\n";
 		  my $array = ones $num_att_values1,$num_att_values2,$num_classes;
 		  $array = $array * ($lambda / ($num_att_values1 * $num_att_values2 * $num_classes));
 		  $self->getN_uv()->[$att1][$att2] = $array;
+		  print "N2\n";
 		}
 	    }
 	}
@@ -239,7 +245,7 @@ sub N_uv  {
   my $u_val_index = $self->getIndexes()->[$u]->{$u_val};
   my $v_val_index = $self->getIndexes()->[$v]->{$v_val};
   print "D\n";
-  my $temp = $self->getN_uv->[$u][$v]->at($u_val_index,$v_val_index,$class_val_index);  
+  my $temp = $self->getN_uv()->[$u][$v]->at($u_val_index,$v_val_index,$class_val_index);  
   #print $temp;
   return $temp;
 }
@@ -254,11 +260,11 @@ sub refineNs {
 
   for(my $node_u = 0 ; $node_u < $num_atts ; $node_u++) {
     if ($node_u != $class_attno)  { 
-      self->getN_u()->[$node_u] += $ct->getXClassTable($node_u);
+      $self->getN_u()->[$node_u] += $ct->getXClassTable($node_u);
     }
     for(my $node_v = 0 ; $node_v < $node_u; $node_v++) {
       if ($node_v != $class_attno)  { 
-	$self->getN_uv->[$node_u][$node_v] += $ct->getXYClassTable($node_u,$node_v);
+	$self->getN_uv()->[$node_u][$node_v] += $ct->getXYClassTable($node_u,$node_v);
       }
     }
   }
