@@ -11,13 +11,13 @@ $| = 1;
 if ($#ARGV < 0)
   {
     print "This script runs an experiment";
-    die "Usage: RunExperiment.pl experiment.exp\n";
+    die "Usage: RunExperiment.pl experiment.exp.pm </dev/null >& tracefile \n";
   }
 
 my $inFilePos = 0;
 
 $ExpFileName = $ARGV[$inFilePos];
-
+$traceFile = $ARGV[$2];
 my $exp_chr = do $ExpFileName;
 
 my $exp = Durin::Classification::Experimentation::ExperimentFactory->createExperiment($exp_chr);
