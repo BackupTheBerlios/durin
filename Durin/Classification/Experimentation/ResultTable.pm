@@ -25,6 +25,18 @@ sub new_delta
     $self->{VALUES_TABLE} = {};
   }
 
+sub clean {     
+    my ($class,$self) = @_;
+    
+    $self->{RESULTLIST} = [];
+    $self->{RESULTSCLASSIFIEDS} = {};
+    #$self->{PROPORTIONS} = {};
+    #$self->{MODELS} = {};
+    #$self->{AVERAGES_TABLE} = {};
+    #$self->{VALUES_TABLE} = {};
+}
+
+
 sub clone_delta
   {  
     # my ($class,$self,$source) = @_;
@@ -127,6 +139,41 @@ sub write {
   }
 }
 
+sub readFromFileAndSummarize {
+  my ($self,$inDir) = @_;
+  
+  #if (!(-d $inDir)) {
+  #  die "Unable to find directory $inDir\n";
+  #}
+  print "Reading result Table\n";
+  opendir(RUNIDDIR, $inDir) || die "Unable to find directory $inDir\n";
+  my @runIds = grep {/^[^\.]/} readdir(RUNIDDIR);
+  foreach my $runId (@runIds) {
+    #unless ( ($runId eq ".") || ($runId eq "..") )
+    #{ 
+    my $propDirName = $inDir."/".$runId;
+    opendir(PROPDIR,$propDirName);
+    my @proportions = grep {/^[^\.]/}readdir(PROPDIR);
+    foreach my $proportion (@proportions) {
+      my $modelDirName = $propDirName."/".$proportion;
+      opendir(MODELDIR,$modelDirName);
+      my @models = grep {/^[^\.]/}readdir(MODELDIR);
+      foreach my $modelFile (@models) {
+	my $modelApplication = Durin::Classification::Experimentation::AUCModelApplication->new();
+	$modelApplication->readFromFile($modelDirName."/".$modelFile);
+	$modelFile =~ /(.*)\.out/;
+	my $model = $1;
+	$modelApplication->summarize();
+	$self->addResult($runId,$proportion,$model,$modelApplication);
+      }
+      closedir(MODELDIR);
+    }
+    closedir(PROPDIR);
+  }
+  closedir(RUNIDDIR); 
+  $self->loadValuesAndAverages();
+}
+
 sub readFromFile {
   my ($self,$inDir) = @_;
   
@@ -171,7 +218,6 @@ sub summarize {
     my $fold = $propResult->[0];
     my $proportion = $propResult->[1];	
     my $PMAList = $propResult->[2];
-    
     foreach my $PMAPair (@$PMAList) {
       my $model = $PMAPair->[0];
       my $PMA = $PMAPair->[1];
@@ -180,6 +226,7 @@ sub summarize {
     }
   }
   $self->loadValuesAndAverages();
+  $self->clean();
 }
 
 sub summarizeBayes {

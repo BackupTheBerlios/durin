@@ -135,10 +135,10 @@ sub summarize {
   my $resultFile = $self->getBaseFileName();
 
   my $resultTable = Durin::Classification::Experimentation::ResultTable->new();
-  print "Reading data from dataset $dataset\n";
-  $resultTable->readFromFile($resultFile);
-  print "Summarizing dataset $dataset\n";
-  $resultTable->summarize();
+  print "Reading data from dataset $dataset and summarizing\n";
+  #$resultTable->readFromFile($resultFile);
+  #print "Summarizing dataset $dataset\n";
+  $resultTable->readFromFileAndSummarize($resultFile);
   $resultTable->writeSummary("$resultFile.out");
 }
 

@@ -164,6 +164,7 @@ sub readFromFile {
     $self->addInstance($realClass,\@new_line,$predictedClass);
   }
   $self->setNumClasses(scalar @line);
+  $file->close();
 }
 
 sub computeLogP {

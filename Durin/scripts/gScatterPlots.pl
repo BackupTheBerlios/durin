@@ -33,67 +33,132 @@ my $exp_chr = do $ExpFileName;
 my $exp = Durin::Classification::Experimentation::ExperimentFactory->createExperiment($exp_chr);
 
 my $table = $exp->getSQLiteTable();
+#my $scatterer = new Durin::Plot::Scatterer($exp);
+#$scatterer->setMeasure("AUC");
+#$scatterer->setScatteringAttribute("maxIW");
 
-scatter($table,
-	"AUC",
-	["maxIW"],
-	"inducer",
-	["proportion","nNodes","nVal"],
-	["run","fold"]);
-scatter($table,
-	"AUC",
-	["nVal"],
-	"inducer",
-	["proportion","nNodes","maxIW"],
-	["run","fold"]);
 
-scatter($table,
-	"AUC",
-	["nNodes"],
-	"inducer",
-	["proportion","nVal","maxIW"],
-	["run","fold"]);
+#scatter($exp,
+#	$table,
+#	"AUC",
+#	["maxIW"],
+#	"inducer",
+#	["proportion","nNodes","nVal"],
+#	["run","fold"]);
 
-scatter($table,
+#scatter($exp,
+#	$table,
+#	"AUC",
+#	["nVal"],
+#	"inducer",
+#	["proportion","nNodes","maxIW"],
+#	["run","fold"]);
+
+#scatter($exp,
+#	$table,
+#	"AUC",
+#	["nNodes"],
+#	"inducer",
+#	["proportion","nVal","maxIW"],
+#	["run","fold"]);
+
+scatter($exp,
+	$table,
 	"AUC",
 	["proportion"],
 	"inducer",
 	["nNodes","nVal","maxIW"],
 	["run","fold"]);
 
+#package Scatterer;
 
+#use Class::MethodMaker 
+#  new_with_init => 'new',
+#  get_set => [-java => qw/ ModelGenerationCharacteristics ModelKind/];
 
+#sub init {
+  
+#}
 
 sub single_scatter {
-  my ($table,$measure,$scattering_attribute,$scattering_attribute_value_1,$scattering_attribute_value_2,$grouping_attributes,$ordering_attributes,$running_attributes,$running_attributes_values) = @_;
-  #my $grouping_attributes_value_set = $table->project_unique($grouping_attributes);
-  #foreach my $grouping_attributes_values (@{$grouping_attributes_value_set->fetchall_arrayref()}) {
-  #  print "Fourth\n";
-  #  my $subtable = $table->select($grouping_attributes,$grouping_attributes_values);
-  #  print "Fifth\n";
-  #my $joint_table = $table->join
-
-  my $joint_table = $table->select_and_join($scattering_attribute,
-					    [$scattering_attribute_value_1,$scattering_attribute_value_2],
+  my ($exp,
+      $table,
+      $measure,
+      $scattering_attribute,$v1,$v2,
+      $grouping_attributes,
+      $ordering_attributes,
+      $running_attributes,$running_attributes_values) = @_;
+  
+  my @join_attributes = @$ordering_attributes;
+  push @join_attributes, @$grouping_attributes;
+  my $joint_table = $table->select_and_join($scattering_attribute,[$v1,$v2],
 					    $measure,
-					    $ordering_attributes,
-					    $grouping_attributes
+					    \@join_attributes
 					   );
-  plot_scatter($joint_table,$measure,Matrix::MultiAttribute::to_att($scattering_attribute_value_1),Matrix::MultiAttribute::to_att($scattering_attribute_value_2),$running_attributes,$running_attributes_values);
-  # The order is NOT GUARANTEED to be the same!! 
-  #plot_scatter
-  #do_scatter(
+  
+  my $v1_att = Matrix::MultiAttribute::to_att($v1);
+  my $v2_att = Matrix::MultiAttribute::to_att($v2);
+  my $measure_v1 = $measure."_".$v1_att;
+  my $measure_v2 = $measure."_".$v2_att;
+  my $filename = "";
+  for (my $i = 0; $i < scalar(@$running_attributes) ; $i++) {
+    $filename = $filename.$running_attributes->[$i]."=".$running_attributes_values->[$i]."-";
+  }
+  
+  my $filename1 = $filename."$v1_att-$v2_att-$measure";
+  my $filename2 = $filename."$v2_att-$v1_att-$measure";
+  
+
+ 
+  my ($v1_v2,$v2_v1) = @{multiple_sig_test($joint_table,
+					   $measure_v1,$measure_v2,
+					   $grouping_attributes,
+					   $percentage # Statistical sig percentage
+					  )};
+  
+  my $filename_sig_1 = catfile(catfile($exp->getBaseFileName(),"sig/$percentage"),$filename1);
+  my $filename_sig_2 = catfile(catfile($exp->getBaseFileName(),"sig/$percentage"),$filename2);
+  
+  my $file1 = new IO::File; 
+  $file1->open(">$filename_sig_1.sig") or die $!;
+  print $file1 "$v1_v2 - $v2_v1";
+  $file1->close();
+  my $file2 = new IO::File; 
+  $file2->open(">$filename_sig_2.sig") or die $!;
+  print $file2 "$v2_v1 - $v1_v2";
+  $file2->close();
+  
+  my $grouped_table = $joint_table->avg_group_by([$measure_v1,$measure_v2],
+						 $grouping_attributes);
+  
+  my $filename_figures_1 = catfile(catfile($exp->getBaseFileName(),"figures"),$filename1);
+  my $filename_figures_2 = catfile(catfile($exp->getBaseFileName(),"figures"),$filename2);
+  plot_scatter($grouped_table,
+	       $measure,
+	       $v1_att,$v2_att,
+	       $filename_figures_1);
+  plot_scatter($grouped_table,
+	       $measure,
+	       $v2_att,$v1_att,
+	       $filename_figures_2);
+  
+  #sig_test($joint_table,
+  #	   $mea
+
 }
 
 sub scatter {
-  my ($table,$measure,$running_attributes,$scattering_attribute,$grouping_attributes,$ordering_attributes) = @_;
+  my ($exp,
+      $table,
+      $measure,
+      $running_attributes,
+      $scattering_attribute,
+      $grouping_attributes,
+      $ordering_attributes) = @_;
   
   my $running_attributes_value_set = $table->project_unique($running_attributes);
-  #print "First\n";
   foreach my $running_attributes_values (@{$running_attributes_value_set->fetchall_arrayref()}) {
-    #print "Second\n";
     my $subtable = $table->select($running_attributes,$running_attributes_values);
-    #print "Third\n";
     my $scattering_attribute_values = $subtable->project_unique([$scattering_attribute]);
     my $visited = {};
     foreach my $scattering_attribute_value_1 (@{$scattering_attribute_values->fetchall_arrayref()}) {
@@ -101,18 +166,93 @@ sub scatter {
       $visited->{$v1} = 1;
       foreach my $scattering_attribute_value_2 (@{$scattering_attribute_values->fetchall_arrayref()}) { 
 	my $v2 = $scattering_attribute_value_2->[0];
-	#if (!$visited->{$v2}) {
-	if (!($v2 eq $v1)) {
-	  single_scatter($subtable,$measure,$scattering_attribute,$v1,$v2,$grouping_attributes,$ordering_attributes,$running_attributes,$running_attributes_values);
+	if (!($visited->{$v2})) {
+	  single_scatter($exp,
+			 $subtable,
+			 $measure,
+			 $scattering_attribute,$v1,$v2,
+			 $grouping_attributes,
+			 $ordering_attributes,
+			 $running_attributes,$running_attributes_values);
 	}
       }
     }
   }
 }
 
-sub plot_scatter {
-  my ($joint_table,$measure,$modelA,$modelB,$running_attributes,$running_attributes_values) = @_;
+sub multiple_sig_test {
+  my ($joint_table,
+      $v1,$v2,
+      $grouping_attributes,
+      $percentage) = @_;
 
+  my $v1_v2 = 0;
+  my $v2_v1 = 0;
+  my $grouping_attributes_value_set = $joint_table->project_unique($grouping_attributes);
+  foreach my $grouping_attributes_values (@{$grouping_attributes_value_set->fetchall_arrayref()}) {
+    my $subtable = $joint_table->select($grouping_attributes,$grouping_attributes_values);
+    my $dif_table_1 = $subtable->project_difference($v1,$v2);
+    my $dif_table_2 = $subtable->project_difference($v2,$v1);
+    my $result = sig_test($dif_table_1,$percentage);
+    if ($result == 1) {
+      $v1_v2++;
+    } 
+    $result = sig_test($dif_table_2,$percentage);
+    if ($result == 1) {
+      $v2_v1++;
+    }
+  }
+  return [$v1_v2,$v2_v1];
+}
+
+sub sig_test {
+  my ($table,$percentage) = @_;
+  
+  my $difference = $table->fetchall_arrayref([0]);
+  my $UValue = calculateUValue($difference);
+  my $n = scalar(@$difference);
+  my $U99 = Statistics::Distributions::tdistr($n-1,$percentage/100);
+  #print "n:$n  U: $UValue c:$U99\n";
+  my $result = 0;
+  if ($UValue>$U99) {
+    #print "$dataset: $m2 sign. better than $m1 at $percentage%\n";
+    $result = 1;
+  } else {
+    #print "No sign. difference\n";
+  }
+  #print join(",",@$ERdifference)."\n\n";
+  return $result;
+}
+
+sub calculateUValue {
+  my ($difference) = @_;
+
+  my $n = scalar(@$difference);
+  my $sum = 0;
+  foreach my $x (@$difference) {
+    $sum += $x->[0];
+  }
+  my $xav = $sum / $n;
+  my $sn2 = 0;
+  foreach my $x (@$difference) {
+    $sn2 += ($x->[0] - $xav)*($x->[0] - $xav);
+  }
+  #print join(",",@$ERdifference)."\n\n";
+  #print "sn2:$sn2\n";
+  
+  if ($sn2==0) {
+    return 0;
+  }
+  return (sqrt($n)*$xav)/(sqrt($sn2/($n-1)));
+}
+
+
+sub plot_scatter {
+  my ($joint_table,
+      $measure,
+      $modelA,$modelB,
+      $filename) = @_;
+  
   print "$modelA against $modelB\n";
   # transform plot data into string
   my $data = "";
@@ -193,19 +333,14 @@ sub plot_scatter {
   my $min = $min_x < $min_y ? $min_x : $min_y;
   my $max = $max_x < $max_y ? $max_y : $max_x;
 
-  my $filename = "";
-  for (my $i = 0; $i < scalar(@$running_attributes) ; $i++) {
-    $filename = $filename.$running_attributes->[$i]."=".$running_attributes_values->[$i]."-";
-  }
-  $filename = $filename."$modelA-$modelB-$measure.eps";
-  
+ 
   my %vars = (x_size => 2,
 	      y_size => 2,
 	      x_range_min => $min-($max-$min)*0.1,
 	      x_range_max => $max+($max-$min)*0.1,
 	      y_range_min => $min-($max-$min)*0.1,
 	      y_range_max => $max+($max-$min)*0.1,
-	      output => $filename,
+	      output => $filename.".eps",
 	      data => $data
 	     );
   #print "Template:".$template."\n";
