@@ -1,6 +1,6 @@
 # One Dependence Estimator Inducer
 
-package Durin::RODE::AODEInducer;
+package Durin::RODE::WekaAODEInducer;
 
 use Durin::Classification::Inducer;
 
@@ -10,13 +10,13 @@ use PDL;
 use strict;
 use warnings;
 
-use Durin::RODE::AODEModel;
+use Durin::RODE::WekaAODEModel;
 
 sub new_delta
 { 
   my ($class,$self) = @_;
   
-  $self->setName("AODE");
+  $self->setName("WekaAODE");
   #   $self->{METADATA} = undef; 
 }
 
@@ -61,7 +61,7 @@ sub run
   #print "Calculating betas\n";
   
   
-  my $AODEModel = Durin::RODE::AODEModel->new();
+  my $AODEModel = Durin::RODE::WekaAODEModel->new();
   $AODEModel->setSchema($schema);
   $AODEModel->setName($self->getName());
   $AODEModel->setMinimumCount($self->getMinimumCount());

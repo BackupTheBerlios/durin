@@ -153,13 +153,14 @@ sub softenLogRos {
       # Do never exagerate beliefs. If the difference 
       # is not so marked keep it as it is and just move 
       # it to be around 0 ($a will be 1).
-      $StMax = $StMin+($max-$min);
+      $StMin = $StMax-($max-$min);
     }
     print "Max-Min = $max, $min\n";
     my ($a,$b);
     if (($max-$min) > 0.0000000001) {
       $a = ($StMax-$StMin)/($max-$min);
-      $b = $StMin-$a*$min;
+      #$b = $StMin-$a*$min;
+      $b = $StMax - $a*$max;
       print "a = $a, b = $b\n";
     } else {
 	print "Almost no diff\n";
@@ -181,10 +182,40 @@ sub softenLogRos {
       $log_ro_u->[$i] = 0;
     }
   } elsif ($self->getStructureStubbornness() eq NoStubbornness){
+    my $log_max_dif = 300;
+    my ($min,$max) = @{$self->calculateMinMax($log_ro_u)};
+    my $StMin = -$log_max_dif;
+    my $StMax = 0;
+    if (($max-$min) < $log_max_dif) {
+      # Do never exagerate beliefs. If the difference 
+      # is not so marked keep it as it is and just move 
+      # it to be around 0 ($a will be 1).
+      $StMin = $StMax-($max-$min);
+    }
+    print "Max-Min = $max, $min\n";
+    my ($a,$b);
+    if (($max-$min) > 0.0000000001) {
+      $a = ($StMax-$StMin)/($max-$min);
+      $b = $StMax - $a*$max;
+      print "a = $a, b = $b\n";
+    } else {
+      print "Almost no diff\n";
+      $a = $StMin/$max;
+      $b = 0;
+    }
+    
+    foreach my $node_u (0..(scalar(@$log_ro_u)-1)) {
+      if ($node_u != $class_attno) {
+	#print "We enter with $lnWuv\n";
+	$log_ro_u->[$node_u] = $a*($log_ro_u->[$node_u])+$b; 
+	#print "And we get out with $lnWuv\n";
+      }
+    }
+    
     print "No stubbornness\n";
   }
 }
-  
+
 sub calculateMinMax {
   my ($self,$log_ro_u) = @_;
 
