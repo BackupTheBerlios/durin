@@ -185,4 +185,18 @@ sub makeDirected
     return $self->copyDirectedTo($Tree);
   }
 
+sub makestring {
+  my ($self) = @_;
+  
+  my $str = "";
+  foreach my $e (@{$self->{EDGELIST}}) {
+    if (defined $e->[2]) {
+      $str .= $e->[0]."-".$e->[1]." w=".$e->[2]."\n";
+    } else {
+      $str .= $e->[0]."-".$e->[1]."\n";
+    }
+  }
+  return $str;
+}
+
 1;

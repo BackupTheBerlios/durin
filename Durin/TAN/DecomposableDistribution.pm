@@ -1,128 +1,40 @@
-# Constructs the graph with the weigths as described Friedman's paper.
+# Stores a decomposable distribution
 
-package Durin::TAN::GraphConstructor;
-
-use Durin::Components::Process;
+package Durin::TAN::DecomposableDistribution;
 
 use strict;
 use warnings;
 
-use base 'Durin::Components::Process';
+use base 'Durin::Basic::MIManager';
 
 use Class::MethodMaker
-  get_set => [ -java => qw/EquivalentSampleSize InternalNQuoteUC InternalNQuoteUVC NQuoteC Schema/];
+  get_set => [ -java => qw/EquivalentSampleSize InternalNQuoteUC InternalNQuoteUVC NQuoteC Schema CountingTable/];
 
 use Durin::DataStructures::UGraph;
 use Math::Gsl::Sf;
 use PDL;
 
-use constant MaximumLikelihood=>0;
-use constant Decomposable=>1;
 
-sub new_delta
-{
-    my ($class,$self) = @_;
-    
- #   $self->{METADATA} = undef; 
+sub new_delta {
+  my ($class,$self) = @_;
 }
 
-sub clone_delta
-{ 
-    my ($class,$self,$source) = @_;
-    
- #   $self->setMetadata($source->getMetadata()->clone());
+sub clone_delta { 
+  my ($class,$self,$source) = @_;
+}
+
+sub createPrior {
+  my ($class,$schema,$lambda) = @_;
+  
+  my $newDecomposable = Durin::TAN::DecomposableDistribution->new();
+  $newDecomposable->setSchema($schema);
+  $newDecomposable->setEquivalentSampleSizeAndInitialize($lambda);
+  
+  return $newDecomposable;
 }
 
 sub getLambda {
   return 1;
-}
-
-
-sub run($)
-{
-  my ($self) = @_;
-  
-  my ($Graph,$arrayofTablesRef,$schema,$num_atts,$class_attno,$class_att,$info2,$PA);
-  
-  $schema = $self->getInput()->{SCHEMA};
-  $self->setSchema($schema);
-  $self->setEquivalentSampleSizeAndInitialize($self->getLambda());
-  
-  #$arrayofTablesRef = $self->getInput()->{ARRAYOFTABLES};
-  $PA = $self->getInput()->{PROBAPPROX};
-  my $ct = $self->getInput()->{COUNTING_TABLE};
-  my $infoMeasure = MaximumLikelihood;
-  if (defined $self->getInput()->{MUTUAL_INFO_MEASURE}) {
-    $infoMeasure = $self->getInput()->{MUTUAL_INFO_MEASURE};
-  }
-  $Graph = Durin::DataStructures::UGraph->new();
-
-
-  $class_attno = ($schema->getClassPos());
-  $class_att = $schema->getAttributeByPos($class_attno);
-  $num_atts = $schema->getNumAttributes();
-  
-  my ($j,$k,$info);
-  
-  foreach $j (0..$num_atts-1)
-  {
-    if ($j!=$class_attno)
-      {
-	  foreach $k (0..$j-1)
-	    {
-	      if ($k!=$class_attno)
-		{
-		  if ($infoMeasure == MaximumLikelihood) {
-		    #print "MaxL\n";
-		    $info = $self->calculateInf($j,$k,$class_att,$schema,$PA);
-		  } elsif ($infoMeasure == Decomposable) {
-		    $info = $self->calculateDecomposableInf($j,$k,$class_att,$schema,$ct);
-		  }
-		  # $info2 = $self->calculateSmoothedInf($j,$k,$class_att,$schema,$arrayofTablesRef);
-		  # print "Info($j,$k): without smoothing p's: $info with smoothing:$info2\n";
-		  $Graph->addEdge($j,$k,$info);
-	      }
-	  }
-      }
-  }
-  $self->setOutput($Graph);
-}
-
-sub calculateInf
-{
-  my ($self,$j,$k,$class_att,$schema,$PA) = @_;
-
-  my ($class_val,@class_values,@j_values,$j_val,@k_values,$k_val);
-  my ($Pxyz,$Pz,$Pxz,$Pyz,$quotient,$temp,$infoTotal,$infoPartial);
-
-  @class_values = @{$class_att->getType()->getValues()};
-  @j_values = @{$schema->getAttributeByPos($j)->getType()->getValues()};
-  @k_values = @{$schema->getAttributeByPos($k)->getType()->getValues()};
-  
-  $infoTotal = 0.0;
-
-  foreach $class_val (@class_values)
-  {	
-      foreach $j_val (@j_values)
-	{
-	  foreach $k_val (@k_values)
-	    {
-	      $Pxyz = $PA->getPXYClass($class_val,$j,$j_val,$k,$k_val);
-	      #print "Pxyz = $Pxyz\n";
-	      if ($Pxyz != 0)
-		{
-		  $infoPartial = $Pxyz * log($PA->getSinergy($class_val,$j,$j_val,$k,$k_val));
-		}
-	      else
-		{
-		  $infoPartial = 0;
-		}
-	      $infoTotal += $infoPartial;
-	    }
-	}
-    }
-#print "Info ($j,$k) = $infoTotal\n";
-  return $infoTotal;
 }
 
 sub calculateDecomposableInf {
@@ -214,7 +126,12 @@ sub initializeSampleSize {
 sub getNQuoteUVC {
   my ($self,$node_u,$node_v) = @_;
   
-  return $self->getInternalNQuoteUVC()->at($node_u,$node_v);
+  #print "A $node_u,$node_v\n";
+  
+  my $ret = $self->getInternalNQuoteUVC()->at($node_u,$node_v);
+  #print "OK\n";
+  
+  return $ret;
 }
 
 sub getNQuoteUC {
@@ -223,5 +140,25 @@ sub getNQuoteUC {
   return $self->getInternalNQuoteUC()->at($node_u);
 }
 
+sub getNQuoteAsteriscUVC {
+  my ($self,$class_val,$node_u,$u_val,$node_v,$v_val) = @_;
 
+  #print "$class_val,$node_u,$u_val,$node_v,$v_val\n";
+  return $self->getCountingTable()->getCountXYClass($class_val,$node_u,$u_val,$node_v,$v_val) + $self->getNQuoteUVC($node_u,$node_v);
+}
+
+sub getNQuoteAsteriscUC{ 
+  my ($self,$class_val,$node_u,$u_val) = @_;
+  #print "$class_val,$node_u,$u_val\n";
+  return $self->getCountingTable()->getCountXClass($class_val,$node_u,$u_val) + $self->getNQuoteUC($node_u);
+}
+
+sub huv {
+  my ($self,$class_val,$node_u,$u_val,$node_v,$v_val) = @_;
+
+  my $num = $self->getNQuoteAsteriscUVC($class_val,$node_u,$u_val,$node_v,$v_val);
+  my $denom  = $self->getNQuoteAsteriscUC($class_val,$node_u,$u_val) * 
+    $self->getNQuoteAsteriscUC($class_val,$node_v,$v_val);
+  return $num / $denom;
+}
 1;

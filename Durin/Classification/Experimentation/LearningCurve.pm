@@ -71,7 +71,7 @@ sub performComparison {
 
 sub learnModels($$$$$) {
   my ($self, $train, $runId, $trainProportion,$compositeInducer,$shareCountTable) = @_;
-
+  
   my $startTime;
   my $previous = sub { 
     my ($inducer) = @_;

@@ -96,3 +96,5 @@ sub generateObservation {
   
   die "Durin::Classification::Model::generateObservation Pure virtual\n";
 }
+
+1;

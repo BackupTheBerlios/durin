@@ -225,9 +225,9 @@ sub makestring {
   my $str = "";
   foreach my $e (@{$self->{EDGELIST}}) {
     if (defined $e->[2]) {
-      $str .= $e->[0]."-".$e->[1]." w=".$e->[2]."\n";
+      $str .= $e->[0]."->".$e->[1]." w=".$e->[2]."\n";
     } else {
-      $str .= $e->[0]."-".$e->[1]."\n";
+      $str .= $e->[0]."->".$e->[1]."\n";
     }
   }
   return $str;

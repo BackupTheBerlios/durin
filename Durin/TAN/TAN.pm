@@ -5,7 +5,7 @@ use warnings;
 
 use Durin::Classification::Model;
 
-@Durin::TAN::TAN::ISA =  qw(Durin::Classification::Model);
+use base 'Durin::Classification::Model';
 
 use Durin::Data::MemoryTable;
 
@@ -253,3 +253,5 @@ sub recursivelyGenerateValues {
     $self->recursivelyGenerateValues($row,$son);
   }
 }
+
+1;

@@ -77,12 +77,14 @@ sub run($) {
     if ($input->{SHARE_COUNT_TABLE} && defined($sharedCountTable)) {
       $input->{COUNTING_TABLE} = $sharedCountTable;
     }
-    my $model = $inducer->run();
+    $inducer->run();
+    my $model = $inducer->getOutput();
     if ($input->{SHARE_COUNT_TABLE} && !defined($sharedCountTable)) {
       $sharedCountTable = $inducer->getCountingTable();
     }
     $self->posteriorToLearningHook($inducer);
     push @$modelList,$model;
+    print "Nombre: ".$model->getName()."\n";
   }
   $self->setOutput({MODEL_LIST => $modelList});
 }
