@@ -23,7 +23,7 @@ sub clone_delta
   }
 
 sub getLambda {
-  return 10;
+  return 10000000000000;
 }
 
 sub setCountTable

@@ -18,7 +18,7 @@ if ($#ARGV < 0)
 $ExpFileName = $ARGV[$inFile];
 my $percentage = 5;
 if ($#ARGV == 1) {
-  $percentage = $ARGV[$percentage];
+  $percentage = $ARGV[1];
 }
 
 our $exp;
