@@ -7,6 +7,7 @@ use Durin::Classification::Experimentation::ResultTable;
 use Durin::Classification::Experimentation::LearningCurve;
 use Durin::Data::STDFileTable;
 use Durin::Classification::ClassedTableSchema;
+use POSIX;
 
 @ISA = (Durin::Components::Process);
 
@@ -116,28 +117,31 @@ sub distributeObservations {
   my ($self,$numFolds,$table,$problems) = @_;
 
   print "Splitting dataset for cross-validation\n";
-  
+  my $count = [];
   for (my $fold = 0; $fold < $numFolds ; $fold++)
     {
       $problems->[$fold]->[0]->open(">");
       $problems->[$fold]->[1]->open(">");
+      $count->[$fold] = 0;
     }
   
   $table->open();
   
-  #$table->a
-  
-  #my $maxFold = 
+  my $i = 0;
+  $table->applyFunction(sub {$i++;});
+  print "Number of instances: $i\n";
+  my $maxFold = POSIX::ceil($i / $numFolds);
+  print "MaxFold = $maxFold\n";
   $table->applyFunction(sub
 			{
 			  my ($row) = @_;
 			  
 			  my $luckyFold = int (rand $numFolds);
 			  
-			  #while ($count[$luckyFold] == $maxFold)
-			  #  {
-			  #    $luckyFold = int (rand $numFolds);
-			  #  }
+			  while ($count->[$luckyFold] == $maxFold)
+			    {
+			      $luckyFold = int (rand $numFolds);
+			    }
 			  
 			  #print "Lucky = $luckyFold\n";
 			  for (my $fold = 0; $fold < $numFolds ; $fold++)
@@ -146,7 +150,7 @@ sub distributeObservations {
 				{
 				  #print "Adding to test set: $fold\n";
 				  $problems->[$fold]->[1]->addRow($row);
-				 # $count[$luckyFold]++;
+				  $count->[$luckyFold]++;
 				}
 			      else
 				{

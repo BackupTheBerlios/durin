@@ -69,16 +69,16 @@ sub getAccuracy
   {
     my ($self) = @_; 
     
-    return ($self->{OKS} + 1) / ($self->{WRONGS} + $self->{OKS} + 2);
-    #return ($self->{OKS} ) / ($self->{WRONGS} + $self->{OKS});
+    #return ($self->{OKS} + 1) / ($self->{WRONGS} + $self->{OKS} + 2);
+    return ($self->{OKS} ) / ($self->{WRONGS} + $self->{OKS});
   }
 
 sub getErrorRate
   {
     my ($self) = @_; 
     
-    return ($self->{WRONGS} + 1) / ($self->{WRONGS} + $self->{OKS} + 2);
+    #return ($self->{WRONGS} + 1) / ($self->{WRONGS} + $self->{OKS} + 2);
 
-    #return ($self->{WRONGS} ) / ($self->{WRONGS} + $self->{OKS} );
+    return ($self->{WRONGS} ) / ($self->{WRONGS} + $self->{OKS} );
   }
 
