@@ -48,7 +48,7 @@ print "Comparing LogScore\n******************\n";
 compareAllModelsInAllProportions($logPFunc,$AveragesTable);
 
 sub compareAllModelsInAllProportions {
-  my ($comparisonFunc,$AveragesTable) = @_;
+  my ($self,$comparisonFunc,$AveragesTable) = @_;
 
   my $models = $AveragesTable->getModels();
   my $proportionList = $AveragesTable->getProportions();
