@@ -28,14 +28,14 @@ sub setExtInfo
     print "Setting Ext Info in STDFileTable [$outputStrFileName,$outputCSVFileName]\n";
     my $tableMetadata = $self->getMetadata();
 
-    my $tableExtInfo1 = Durin::FlexibleIO::ExtInfo->create("Durin::Data::FileTable Standard [FlexibleIO::File $outputCSVFileName]");
-    my $tableExtInfo2 = Durin::FlexibleIO::ExtInfo->create("Durin::Data::FileTable Standard [FlexibleIO::File $outputCSVFileName]");
+    my $tableExtInfo1 = Durin::FlexibleIO::ExtInfo->create("Durin::Data::FileTable Standard [Durin::FlexibleIO::File $outputCSVFileName]");
+    my $tableExtInfo2 = Durin::FlexibleIO::ExtInfo->create("Durin::Data::FileTable Standard [Durin::FlexibleIO::File $outputCSVFileName]");
     $tableMetadata->setInExtInfo($tableExtInfo1);
     $tableMetadata->setOutExtInfo($tableExtInfo2);
     
     my $schemaMetadata = Durin::Components::Metadata->new();
-    my $schemaExtInfo1 = Durin::FlexibleIO::ExtInfo->create("Durin::Classification::ClassedTableSchema Standard [FlexibleIO::File $outputStrFileName]");
-    my $schemaExtInfo2 = Durin::FlexibleIO::ExtInfo->create("Durin::Classification::ClassedTableSchema Standard [FlexibleIO::File $outputStrFileName]");
+    my $schemaExtInfo1 = Durin::FlexibleIO::ExtInfo->create("Durin::Classification::ClassedTableSchema Standard [Durin::FlexibleIO::File $outputStrFileName]");
+    my $schemaExtInfo2 = Durin::FlexibleIO::ExtInfo->create("Durin::Classification::ClassedTableSchema Standard [Durin::FlexibleIO::File $outputStrFileName]");
     $schemaMetadata->setInExtInfo($schemaExtInfo1);
     $schemaMetadata->setOutExtInfo($schemaExtInfo2);
     $tableMetadata->getSchema()->setMetadata($schemaMetadata);

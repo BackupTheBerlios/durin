@@ -98,7 +98,7 @@ for ($thisRepetition = 0; $thisRepetition < $numRepeats ; $thisRepetition++)
     my $inducerList = [];
     foreach my $inducerName (@$inducerNamesList)
       {
-	push @$inducerList,Classification::Registry->getInducer($inducerName);
+	push @$inducerList,Durin::Classification::Registry->getInducer($inducerName);
       }
     $LCInput->{INDUCERLIST} = $inducerList;
     $LCInput->{APPLIER} = Durin::ProbClassification::ProbModelApplier->new();
