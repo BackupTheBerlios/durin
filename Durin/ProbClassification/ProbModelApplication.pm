@@ -60,7 +60,7 @@ sub setAUC
 
 sub getAUC
   { 
-    my ($AUC) = @_;
+    my ($self) = @_;
     
     return $self->{AUC};
   }

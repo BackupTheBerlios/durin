@@ -338,7 +338,7 @@ sub ProcessResultFile {
       #getc;
       my $PMA = Durin::ProbClassification::ProbModelApplication->new();
       $PMA->setErrorRate($ER);
-      $PMA->setLogP($PLog);
+      $PMA->setLogP($LogP);
       $PMA->setAUC($AUC);
       
       # Check for CV results

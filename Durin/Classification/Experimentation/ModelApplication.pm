@@ -65,12 +65,19 @@ sub getNumWrongs
     return $self->{WRONGS};
   }
 
+sub setErrorRate {
+  my ($self,$ER) = @_;
+  
+  $self->{ERROR_RATE} = $ER;
+}
+
 sub getAccuracy
   {
     my ($self) = @_; 
     
     #return ($self->{OKS} + 1) / ($self->{WRONGS} + $self->{OKS} + 2);
-    return ($self->{OKS} ) / ($self->{WRONGS} + $self->{OKS});
+    return 1-$self->getErrorRate();
+    #($self->{OKS} ) / ($self->{WRONGS} + $self->{OKS});
   }
 
 sub getErrorRate
@@ -78,7 +85,7 @@ sub getErrorRate
     my ($self) = @_; 
     
     #return ($self->{WRONGS} + 1) / ($self->{WRONGS} + $self->{OKS} + 2);
-
-    return ($self->{WRONGS} ) / ($self->{WRONGS} + $self->{OKS} );
-  }
+    #return ($self->{WRONGS} ) / ($self->{WRONGS} + $self->{OKS} );  
+    return $self->{ERROR_RATE};
+}
 

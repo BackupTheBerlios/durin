@@ -216,7 +216,7 @@ sub CalculateMinMax {
 }
  
 
-sub geModelResults {
+sub getModelResults {
   my ($plotType,$modelA,$modelB,$AveragesTable,$proportion) = @_;
   
   #print "Proportion: $proportion\n";
