@@ -236,8 +236,8 @@ sub N_uv  {
     $u = $v;
     $v = $tmp;
     $tmp = $v_val;
-    $u_val = $v_val;
-    $v_val = $tmp;
+    $v_val = $u_val;
+    $u_val = $tmp;
   }
   
   my $class_attno = $self->getClassAttIndex();
