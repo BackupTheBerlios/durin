@@ -29,34 +29,7 @@ sub getCountingTable {
   return $self->{COUNTING_TABLE};
 }
 
-sub calculateLambda {
-  my ($self,$schema) = @_;
-  
-  my $lambda = 2*2*2;
-  
-  my $class_attno = $schema->getClassPos();
-  my $class_att = $schema->getAttributeByPos($class_attno);
-  my $num_atts = $schema->getNumAttributes();
-  
-  my $num_classes = scalar  @{$class_att->getType()->getValues()};
-  my ($j,$k,$info);
-  
-  foreach $j (0..$num_atts-1) {
-    if ($j!=$class_attno) {
-      my $num_j_values = scalar @{$schema->getAttributeByPos($j)->getType()->getValues()};
-      foreach $k (0..$j-1) {
-	if ($k!=$class_attno) {
-	  my $num_k_values = scalar @{$schema->getAttributeByPos($k)->getType()->getValues()};
-	  my $product = $num_k_values*$num_j_values*$num_classes;
-	  $lambda = $product if $product > $lambda;
-	  #$info = &$infoFunc($j,$k);
-	  #$Graph->addEdge($j,$k,$info);
-	}
-      }
-    }
-  }
-  return $lambda;
-}
+
 
 
 sub run($) {
@@ -68,7 +41,8 @@ sub run($) {
  
   my $table = $input->{TABLE};
   my $schema = $table->getMetadata()->getSchema();
-  my $lambda = $self->calculateLambda($schema);
+  my $lambda = $schema->calculateLambda();
+
   #$input->{LAMBDA};$input->{LAMBDA} = 10;
   print "Assuming Lambda = ".$lambda."\n";
   #}

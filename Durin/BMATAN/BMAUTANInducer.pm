@@ -35,15 +35,15 @@ sub run($) {
   
   my $input = $self->getInput();
   
-  $input->{LAMBDA} = 6*6*6;
   $input->{GC}->{MUTUAL_INFO_MEASURE} = Durin::TAN::GraphConstructor::Decomposable;
   $input->{K} = $self->getNumTrees();
   
   my $table = $input->{TABLE};
   my $k = $input->{K};
-  my $lambda = $input->{LAMBDA};
   my $schema = $table->getMetadata()->getSchema();
-  
+  my $lambda = $schema->calculateLambda();
+  print "Lambda: $lambda\n";
+
   my $kkruskal;
 
   if (defined $input->{GC}->{MUTUAL_INFO_MEASURE}) {

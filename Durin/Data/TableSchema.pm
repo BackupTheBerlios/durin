@@ -274,4 +274,30 @@ sub makestring($)
     return $string . "]";
 }
 
+sub calculateLambda {
+  my ($self) = @_;
+  
+  my $lambda = 2*2*2;
+  
+  my $class_attno = $self->getClassPos();
+  my $class_att = $self->getAttributeByPos($class_attno);
+  my $num_atts = $self->getNumAttributes();
+  
+  my $num_classes = scalar  @{$class_att->getType()->getValues()};
+  my ($j,$k,$info);
+  
+  foreach $j (0..$num_atts-1) {
+    if ($j!=$class_attno) {
+      my $num_j_values = scalar @{$self->getAttributeByPos($j)->getType()->getValues()};
+      foreach $k (0..$j-1) {
+	if ($k!=$class_attno) {
+	  my $num_k_values = scalar @{$self->getAttributeByPos($k)->getType()->getValues()};
+	  my $product = $num_k_values*$num_j_values*$num_classes;
+	  $lambda = $product if $product > $lambda;
+	}
+      }
+    }
+  }
+  return $lambda;
+}
 1;

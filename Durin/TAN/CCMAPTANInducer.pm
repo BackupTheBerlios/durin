@@ -35,10 +35,10 @@ sub run($) {
   my $inducer = $self->{INDUCER};
   {
     my $input = $self->{INPUT};
-    if (!defined $input->{LAMBDA}) {
-      $input->{LAMBDA} = 10;
-      print "CCMAPTAN: assuming Lambda = ".$input->{LAMBDA}."\n";
-    }
+    #if (!defined $input->{LAMBDA}) {
+    #  $input->{LAMBDA} = 10;
+    #  print "CCMAPTAN: assuming Lambda = ".$input->{LAMBDA}."\n";
+    #}
     if (!defined $input->{GC}->{MUTUAL_INFO_MEASURE}) {
       $input->{GC}->{MUTUAL_INFO_MEASURE} = Durin::TAN::GraphConstructor::DecomposableCardinalityConscious;
     }
