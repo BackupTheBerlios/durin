@@ -131,33 +131,42 @@ sub DrawPictures
     my $models = $AveragesTable->getModels();
     my @listDevices = ();
     
-    my $window = PDL::Graphics::PGPLOT::Window->new(Device => "\@:0.0/XSERVE");
-    pgend();
+
+    my $dev = "/XSERVE";
+    if ($interactive)
+      {
+	dev $dev;
+	pgend();
+      }
+    else
+      {
+	$dev = "/VCPS";
+	dev $dev;
+	pgend();
+      }
     my $i = 0;
-    my $numGraphs = scalar(@$models) * (scalar(@$models) - 1) / 2; 
-    my $status = pgopen("\@:0.0/XSERVE");
+    my $numGraphs = scalar(@$models) * (scalar(@$models) - 1) / 2;  
+    my $status = dev $dev;
     $numGraphs = 1;
     while (($i < $numGraphs-1) && ($status > 0))
       {
 	push @listDevices,($status); 
 	$i++;
-	$status = pgopen("\@:0.0/XSERVE");	    
+	$status = pgopen("$dev");	    
       }
     if (($i >= $numGraphs-1))
       {
 	push @listDevices,($status); 
       }
-    print "Created all of them ".join(",",@listDevices)."\n";
+    #print "Created all of them ".join(",",@listDevices)."\n";
     $i = 0;
-    $window->env(0,5,0,5,0,-2); # set world-window size 
+    env(0,5,0,5,0,-2); # set world-window size 
     foreach my $m1 (@$models)
       {
 	foreach my $m2 (@$models)
 	  {
 	    if ($m1 lt $m2)
 	      {
-
-
 		if ($interactive) {
 		  pgslct($listDevices[$i % ($#listDevices + 1)]);
 		  DifferencePlot("ER",$m1,$m2,$AveragesTable);
@@ -169,13 +178,13 @@ sub DrawPictures
 		  my $id = pgopen("ER$m2-$m1.ps/VCPS");
 		  pgslct($id);
 		  DifferencePlot("ER",$m1,$m2,$AveragesTable);
-		  pgend();
+		  pgclos();
 		  $i++;
 		  $id = pgopen("LogP$m2-$m1.ps/VCPS");
 		  pgslct($id);
 		  $i++;
 		  DifferencePlot("LogP",$m1,$m2,$AveragesTable);
-		  pgend();
+		  pgclos();
 		}
 	      }
 	  }
@@ -186,11 +195,12 @@ sub DifferencePlot {
   my ($plotType,$modelA,$modelB,$AveragesTable) = @_;
   
   my $proportionList = $AveragesTable->getProportions();
-  my ($x,$subsOrdIndx) = preparateDifferencePlot($plotType,$modelA,$modelB,$AveragesTable,$proportionList->[0]);
-  my $color = 3;
+  my ($x,$subsOrdIndx,$colours) = preparateDifferencePlot($plotType,$modelA,$modelB,$AveragesTable,$proportionList->[0]);
+ 
+  my $i = 0;
   foreach my $proportion (@$proportionList) {
-    DifferencePlotByProportion($plotType,$modelA,$modelB,$AveragesTable,$x,$subsOrdIndx,$proportion,$color);
-    $color++;
+    DifferencePlotByProportion($plotType,$modelA,$modelB,$AveragesTable,$x,$subsOrdIndx,$proportion,$colours->[$i]);
+    $i++;
   }
 }
 
@@ -204,26 +214,15 @@ sub preparateDifferencePlot {
   my $plotList = [];
   $color = 2;
 
-  my $subs = CalculateSubs($plotType,$modelA,$modelB,$AveragesTable,$proportion);
- 
-  my $min = min($subs);
-  #if ($min < -100)
-  #  {
-  #    $min = -100;
-  #  }
-  my $max = max($subs);
-  #if ($max > 100)
-  #  {
-  #    $max = 100;
-  #  }
-  my $margin = ($max-$min) * 0.4;
-  my $step = ($max-$min)*0.1;
+  
+  my ($min,$max,$subsOrdIndx,$names,$line_styles,$colours) = @{CalculateMinMax($plotType,$modelA,$modelB,$AveragesTable)};
+  
+  my $margin = ($max-$min) * 0.1;
+  my $step = ($max-$min) * 0.1; 
+  
   $min = $min - $margin;
   $max = $max + $margin;
-  my $subsOrdIndx = $subs->qsorti;
-  #dev "/XSERVE";  # Open plot device 
   pgpap(7,1); # set x-window size 
-  #pgwnad(-1,16,$min,$max);
   env 0,$numDatasets-1,$min,$max,0,-2; # set world-window size 
   my $title = GetPlotTitle($plotType,$modelA,$modelB);
   pglab("Datasets","",$title);
@@ -239,8 +238,9 @@ sub preparateDifferencePlot {
       pgtick(0,$min,$numDatasets-1,$min,$tick/($numDatasets-1),.5,.5,1,60,$name);
       $tick++;
     }
+  legend $names, 1, $max-$margin, {LineStyle => $line_styles, Colour => $colours};
   line $x,$zeroLine,{COLOR => $color++};
-  return ($x,$subsOrdIndx);
+  return ($x,$subsOrdIndx,$colours);
 }
 
 sub GetPlotTitle {
@@ -257,7 +257,7 @@ sub GetPlotTitle {
 sub CalculateSubs {
   my ($plotType,$modelA,$modelB,$AveragesTable,$proportion) = @_;
   
-  print "Proportion: $proportion\n";
+  #print "Proportion: $proportion\n";
   my ($piddleA,$piddleB);
   if ($plotType eq "LogP")
     {
@@ -272,6 +272,33 @@ sub CalculateSubs {
   return $subs;
 }
 
+sub CalculateMinMax {
+  my ($plotType,$modelA,$modelB,$AveragesTable) = @_;
+
+  my $min = exp(1000);
+  my $max = -exp(1000);
+  my $subs;
+  my $subsOrdIndx;
+  my $proportionList = $AveragesTable->getProportions();
+
+  my $color = 3;
+  my @colours = ();
+  my @line_styles= ();
+  my @names = ();
+  foreach my $proportion (@$proportionList) {
+    $subs = CalculateSubs($plotType,$modelA,$modelB,$AveragesTable,$proportion);
+    $subsOrdIndx = $subs->qsorti;
+    $min = Durin::Utilities::MathUtilities::min(min($subs),$min);
+    $max = Durin::Utilities::MathUtilities::max(max($subs),$max);
+    push @names,($proportion*100)." %";
+    push @colours,$color++;
+    push @line_styles,'Solid';
+  }
+  
+  #print "Subs = $subs SubsOrdIndx : $subsOrdIndx \n";
+  return [$min,$max,$subsOrdIndx,\@names,\@line_styles,\@colours];
+}
+ 
 
 sub DifferencePlotByProportion {
   my ($plotType,$modelA,$modelB,$AveragesTable,$x,$subsOrdIndx,$proportion,$color) = @_;
