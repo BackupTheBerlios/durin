@@ -146,6 +146,8 @@ sub compressRunsByProportion
     $self->{$proportion}->{PDLERSTDEVTABLE} = zeroes $dim1,$dim2;
     $self->{$proportion}->{PDLLOGPAVERAGETABLE} = zeroes $dim1,$dim2;
     $self->{$proportion}->{PDLLOGPSTDEVTABLE} = zeroes $dim1,$dim2;
+    $self->{$proportion}->{PDLAUCAVERAGETABLE} = zeroes $dim1,$dim2;
+    $self->{$proportion}->{PDLAUCSTDEVTABLE} = zeroes $dim1,$dim2;
     
     my $modelIndex;
     foreach my $model (@$models)
@@ -162,11 +164,14 @@ sub compressRunsByProportion
 	    my @IdNums = (keys %$vect);
 	    my ($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax);
 	    my ($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax);
+	    my ($AUCAverage,$AUCRMS,$AUCMedian,$AUCMin,$AUCMax);
+	    	    
 	    print "It has been run ".($#IdNums+1)." times\n";
 	    if ($#IdNums != -1)
 	      {
 		my $ERList = zeroes $#IdNums+1;
 		my $LogPList = zeroes $#IdNums+1;
+		my $AUCList = zeroes $#IdNums+1;
 		my $runIndex = 0;
 		#print "Number of runs: ",$#IdNums + 1,"\n";
 		foreach my $idNum (@IdNums)
@@ -179,6 +184,7 @@ sub compressRunsByProportion
 		    print "Run $idNum has ".($#numFolds+1)." folds \n";
 		    my $runERList =  zeroes $#numFolds+1;
 		    my $runLogPList = zeroes $#numFolds+1;
+		    my $runAUCList = zeroes $#numFolds+1;
 		    my $foldNumIndex = 0;
 		    #print "Number of folds = ",$#numFolds + 1,"\n";
 		    foreach my $foldNum (@numFolds)
@@ -187,28 +193,36 @@ sub compressRunsByProportion
 			#print "ER:".$run->{$foldNum}->getErrorRate()."\n";
 			set $runERList,$foldNumIndex,$run->{$foldNum}->getErrorRate()*100;
 			set $runLogPList,$foldNumIndex,$run->{$foldNum}->getLogP();
+			set $runAUCList,$foldNumIndex,$run->{$foldNum}->getAUC();
 			$foldNumIndex++;
 		      }
 		    ($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = stats($runERList);
 		    ($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = stats($runLogPList);
+		    ($AUCAverage,$AUCRMS,$AUCMedian,$AUCMin,$AUCMax) = stats($runAUCList);
+		    
 		    
 		    set $ERList,$runIndex,$ERAverage;
 		    set $LogPList,$runIndex,$LogPAverage;
+		    set $AUCList,$runIndex,$AUCAverage;
 		    $runIndex++;
 		  }
 		if ($#IdNums != 0) {
 		  ($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = stats($ERList);
 		  ($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = stats($LogPList);
+		  ($AUCAverage,$AUCRMS,$AUCMedian,$AUCMin,$AUCMax) = stats($AUCList);
 		}
 	      } else {
 		($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = (-1,0,-1,-1,-1);
 		($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = (-1,0,-1,-1,-1);
+	 	($AUCAverage,$AUCRMS,$AUCMedian,$AUCMin,$AUCMax) = (-1,0,-1,-1,-1);
 	      }
 	    #print "Average: $ERAverage\n";
 	    set $self->{$proportion}->{PDLERAVERAGETABLE},$modelIndex,$datasetIndex,$ERAverage;
 	    set $self->{$proportion}->{PDLERSTDEVTABLE},$modelIndex,$datasetIndex,sqrt($ERRMS);
 	    set $self->{$proportion}->{PDLLOGPAVERAGETABLE},$modelIndex,$datasetIndex,$LogPAverage;
 	    set $self->{$proportion}->{PDLLOGPSTDEVTABLE},$modelIndex,$datasetIndex,sqrt($LogPRMS);
+	    set $self->{$proportion}->{PDLAUCAVERAGETABLE},$modelIndex,$datasetIndex,$AUCAverage;
+	    set $self->{$proportion}->{PDLAUCSTDEVTABLE},$modelIndex,$datasetIndex,sqrt($AUCRMS);
 	    #$datasetIndex++;
 	  }
 	#$modelIndex++;
@@ -266,6 +280,30 @@ sub getMinimumLogPForDatasetAndProportion {
   return $min;
 }
 
+sub getMinimumAUCForDatasetAndProportion {
+  my ($self,$dataset,$proportion) = @_;
+  
+  my $pdl = $self->getAvAUCModels($dataset,$proportion);
+  my $nelem = $pdl->nelem();
+
+  #print "num elems:$nelem\n";
+  my $i = 0;
+  my $min = exp(10000);
+  while ($i < $nelem)
+    {
+      my $val = $pdl->at($i);
+      #print "Val:$val\n";
+      if ($val != -1) {
+	if ($val < $min)
+	  {
+	    $min = $val;
+	  }
+      }
+      $i++;
+    }
+  return $min;
+}
+
 sub HasModelMinimumERForDatasetAndProportion {
   my ($self,$model,$dataset,$proportion) = @_;
 
@@ -278,6 +316,13 @@ sub HasModelMinimumLogPForDatasetAndProportion {
   
   my $min = $self->getMinimumLogPForDatasetAndProportion($dataset,$proportion);
   return ($min == $self->getAvLogP($model,$dataset,$proportion));
+}
+  
+sub HasModelMinimumAUCForDatasetAndProportion {
+  my ($self,$model,$dataset,$proportion) = @_;
+  
+  my $min = $self->getMinimumAUCForDatasetAndProportion($dataset,$proportion);
+  return ($min == $self->getAvAUC($model,$dataset,$proportion));
 }
   
 sub getAvER {
@@ -310,6 +355,21 @@ sub getStDevLogP {
   my $datasetIndex = $self->{DATASETS}->{$dataset};
   
   return $self->{$proportion}->{PDLLOGPSTDEVTABLE}->at($modelIndex,$datasetIndex);
+}
+sub getAvAUC {
+  my ($self,$model,$dataset,$proportion) = @_;
+  my $modelIndex = $self->{MODELS}->{$model};
+  my $datasetIndex = $self->{DATASETS}->{$dataset};
+  
+  return $self->{$proportion}->{PDLAUCAVERAGETABLE}->at($modelIndex,$datasetIndex);
+}
+
+sub getStDevAUC {
+  my ($self,$model,$dataset,$proportion) = @_;
+  my $modelIndex = $self->{MODELS}->{$model};
+  my $datasetIndex = $self->{DATASETS}->{$dataset};
+  
+  return $self->{$proportion}->{PDLAUCSTDEVTABLE}->at($modelIndex,$datasetIndex);
 }
 
 sub getAvERModels
@@ -352,6 +412,28 @@ sub getAvLogPDatasets
     my $modelIndex = $self->{MODELS}->{$model};
     
     my $pdl = $self->{$proportion}->{PDLLOGPAVERAGETABLE}->slice("($modelIndex),:");
+   
+    return $pdl;
+  }
+
+sub getAvAUCModels
+  {
+    my ($self,$dataset,$proportion)  = @_;
+    
+    my $datasetIndex = $self->{DATASETS}->{$dataset};
+    
+    my $pdl = $self->{$proportion}->{PDLAUCAVERAGETABLE}->slice(":,($datasetIndex)");
+   
+    return $pdl;
+  }
+
+sub getAvAUCDatasets
+  {
+    my ($self,$model,$proportion)  = @_;
+    
+    my $modelIndex = $self->{MODELS}->{$model};
+    
+    my $pdl = $self->{$proportion}->{PDLAUCAVERAGETABLE}->slice("($modelIndex),:");
    
     return $pdl;
   }
