@@ -23,6 +23,8 @@ use Durin::Classification::Experimentation::ResultTable;
 
 use IO::File;
 
+$| = 1;
+
 # Default characteristics (this can also be made a file and put it somewhere...)
 
 my $inFileName = "";

@@ -26,9 +26,9 @@ sub addPClass
   {
     my ($self,$PClass) = @_;
     
-    if ($PClass == 0)
+    if ($PClass <= 0)
       {
-	print "A probability evaluated to 0. Just another illogical prediction\n";
+	print "A probability evaluated to 0 or even less. Just another illogical prediction\n";
 	$self->{LOGP} += 15000; # Just something big
       }
     else

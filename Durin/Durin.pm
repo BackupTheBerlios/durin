@@ -97,12 +97,23 @@ http://www.jclark.com/xml/expat.html
 
 =item XML::Generator
 
-=item PDL 
+=item PDL
 
-The Perl Data Language 
+The Perl Data Language
 http://pdl.perl.org/
 
-= item Class::MethodMaker
+=item GSL
+
+The GNU Scientific Library
+http://sources.redhat.com/gsl/
+
+=item Math::Gsl
+
+=item slatec, PDL::Slatec
+
+http://www.netlib.org/slatec/
+
+=item Class::MethodMaker
 
 =head1 USAGE
 

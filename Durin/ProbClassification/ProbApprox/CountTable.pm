@@ -122,7 +122,7 @@ sub addObservation
     my ($class_val,$j,$j_val,$k,$k_val,$j_val_index,$k_val_index);
     
     $self->{COUNT}++;
-    print "I have counted: ", $self->{COUNT}, "\n";
+    #print "I have counted: ", $self->{COUNT}, "\n";
     
     my $class_attno = $self->{CLASS_ATT_NUMBER};
     my $num_atts = $self->{NUM_ATTRIBUTES};
