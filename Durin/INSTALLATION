@@ -1,0 +1,51 @@
+1.- Make sure your system has available:
+	1.1.- The following debian packages:
+		swig1.3 >= 1.3.17
+		libswig1.3 >= 1.3.17
+		pgplot5
+		libgmp3-dev
+		libgmp3
+		slatec
+		slatec-dev
+		libgsl0
+		libgsl0-dev
+	1.2.- If swig1.3 >= 1.3.17 is not available :
+		1.2.1.- Download latest swig tar.gz from http://switch.dl.sourceforge.net/sourceforge/swig/
+		1.2.2.- Unpack in directory swig somewhere
+		1.2.3.- ./configure
+		1.2.4.- make
+		1.2.5.- make install
+
+2.- Install the following debian packages containing Perl modules:
+
+	pdl
+	pgperl
+	libclass-methodmaker-perl
+	libxml-generator-perl
+	libtest-simple-perl
+
+3.- Install the following Perl modules by means of 
+> perl -MCPAN -e 'install xxx'
+
+	Time::HiRes
+	Statistics::Distributions
+	Math::Gsl::Sf
+
+4.- Install NTL.
+	4.1.- Download latest ntl tar.gz from http://www.shoup.net/ntl/
+	4.2.- Unpack in directory ntl somewhere
+	4.3.- Modify make.config set GMP_LIP to on
+	4.4.- Modify flags.config set GMP_LIP to on
+	4.5.- ./configure
+	4.6.- make
+	4.7.- Either make install or define a CPATH environment variable pointing to ntl/include
+	4.8.- Review mini-make.sh directories and library names
+	4.9.- Run mini-make.sh
+	4.10.- Add to PERL5LIB environment variable the directory where ntl.so is.
+
+5.- Install Durin
+	5.1.- Either download and unpack or get from CVS Durin. Let's say in dir durindist
+	5.2.- Add to the PATH durindist/Durin/scripts
+	5.3.- Add to PERL5LIB durindist
+
+

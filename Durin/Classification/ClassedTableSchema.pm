@@ -19,7 +19,7 @@ sub clone_delta
 {
     my ($class,$self,$source) = @_;
     
-    print "Calling Durin::Classification::ClassedTableSchema\n";
+    #print "Calling Durin::Classification::ClassedTableSchema\n";
     $self->setClassByPos($source->getClassPos());
 }
 

@@ -4,7 +4,7 @@
 package Durin::Classification::Experimentation::Experiment;
 
 use base Durin::Components::Process;
-use Class::MethodMaker get_set => [-java => qw/ Name DataDir ResultDir DurinDir Tasks Folds Runs Proportions DiscMethod DiscIntervals Inducers Dataset LaTexTablePrefix/];
+use Class::MethodMaker get_set => [-java => qw/ Name DataDir ResultDir DurinDir Tasks Folds Runs Proportions DiscMethod DiscIntervals Inducers Dataset LaTexTablePrefix Machine/];
 
 use strict;
 use warnings;
@@ -80,6 +80,9 @@ sub processTaskList {
 	}
 	if (exists $optHash->{inducers}) {
 	  $t->setInducers($optHash->{inducers});
+	}
+	if (exists $optHash->{machine}) {
+	  $t->setMachine($optHash->{machine});
 	}	
       }
       push @$tasks,$t;
@@ -138,6 +141,11 @@ sub runTask {
       $inducers = $action->getInducers();
     }
 
+  my $machine = $self->getMachine();
+  if ($action->getMachine())
+    {
+      $machine = $action->getMachine();
+    }
 
   my $dataDir = $self->getDataDir();
   my $resultDir = $self->getResultDir();
@@ -153,7 +161,9 @@ sub runTask {
   
   # Write the experiment file
   my $file = IO::File->new();
-  $file->open(">$resultFile.exp");
+  if (!$file->open(">$resultFile.exp")) {
+    die "Impossible to open $resultFile.exp\n";
+  }
   $file->print("\$numFolds = $folds;
 \$numRepeats = $runs;
 \@proportionList = qw($proportionsString);
@@ -164,18 +174,30 @@ sub runTask {
 \$totalsOutFileName = \"$resultFile.totals\";
 \$inducerNamesList = [$inducersString];");
   $file->close();
-  
-  # Get to the place where the dataset is
 
-  chdir $dataDir."/".$dataset;
+  $self->launchDatasetExperiment($machine,$dataDir,$dataset,$DurinDir,$resultFile);
+}
 
-  # Execute the action
+sub launchDatasetExperiment {
+  my ($self,$machine,$dataDir,$dataset,$DurinDir,$resultFile) = @_;
 
-  print "Executing for dataset ".$dataset."\n";
-  my $command = "perl -w $DurinDir"."scripts/IndComp.pl $resultFile.exp > $resultFile.trace";
-  print "Command: $command\n";
-  system($command);
-  print "Finished execution for dataset ".$dataset."\n";
+  if ($machine eq "local")
+    {
+      # Get to the place where the dataset is
+      
+      chdir $dataDir."/".$dataset;
+      
+      # Execute the action
+      
+      print "Executing for dataset ".$dataset."\n";
+      my $command = "perl -w $DurinDir"."scripts/IndComp.pl $resultFile.exp > $resultFile.trace";
+      print "Command: $command\n";
+      system($command);
+      print "Finished execution for dataset ".$dataset."\n";
+    }
+  else {
+    print "Machine to be executed: $machine\n";
+  }
 }
 
 sub getDatasetsByInducer {

@@ -21,7 +21,7 @@ sub clone_delta($$)
 {
     my ($class,$self,$source) = @_;
  
-    print "Calling Durin::Data::TableSchema\n";
+    #print "Calling Durin::Data::TableSchema\n";
     my ($att);
     foreach $att (@{$source->getAttributeList()})
     {

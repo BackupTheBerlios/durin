@@ -35,9 +35,9 @@ sub read
 	$inheritance = 1;
       }
     
-    print "Looking for : $class,$format,$inheritance\n";
+    #print "Looking for : $class,$format,$inheritance\n";
     my $IOHandler = Durin::FlexibleIO::IORegistry->get($class,$format,$inheritance);
-    print $IOHandler,"\n";
+    #print $IOHandler,"\n";
     my $table = $IOHandler->read($disp);
     return $table;
   }

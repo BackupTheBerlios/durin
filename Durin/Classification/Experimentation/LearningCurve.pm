@@ -42,8 +42,8 @@ sub run
     foreach my $trainProportion (@proportionList)
       { 
 	my $newTrain = $train;
-	if ($trainProportion != 1)
-	  {
+	#if ($trainProportion != 1)
+	#  {
 	    my $splitter = new Durin::PP::Sampling::Sampler->new();
 	    {
 	      my $input = {};
@@ -56,7 +56,7 @@ sub run
 	    #print "Done\n";
 	    my $output = $splitter->getOutput();
 	    $newTrain = $output->{TRAIN};
-	  }
+	#}
 	my @sampleResult = ();
 	foreach my $inducer (@inducerList)
 	  {

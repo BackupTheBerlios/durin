@@ -10,6 +10,7 @@ sub new_delta
 {     
     my ($class,$self) = @_;
     
+    print "Creating memory table\n";
     $self->{ROW_ARRAY} = [];
 }
 
@@ -64,7 +65,7 @@ sub getRow($$)
 sub applyFunction($$)
 {
     my ($self,$function) = @_;
-    
+    #print "\nAPPLYING\n";
     map {&$function($_)} (@{$self->{ROW_ARRAY}}) ;
 }
 

@@ -25,7 +25,7 @@ sub setExtInfo
   {
     my ($self,$outputStrFileName,$outputCSVFileName) = @_;
     
-    print "Setting Ext Info in STDFileTable [$outputStrFileName,$outputCSVFileName]\n";
+    #print "Setting Ext Info in STDFileTable [$outputStrFileName,$outputCSVFileName]\n";
     my $tableMetadata = $self->getMetadata();
 
     my $tableExtInfo1 = Durin::FlexibleIO::ExtInfo->create("Durin::Data::FileTable Standard [Durin::FlexibleIO::File $outputCSVFileName]");

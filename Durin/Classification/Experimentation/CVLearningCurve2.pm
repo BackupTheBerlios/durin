@@ -77,7 +77,7 @@ sub run
       # we need to have the .str file name. This is not well made. We should create the str, but...
       
       my $strName = $table->getSchema()->getMetadata()->getInExtInfo()->getDevice()->getFileName();
-      print "Opening $strName\n";
+      #print "Opening $strName\n";
       my $csvName = $table->getMetadata()->getInExtInfo()->getDevice()->getFileName();
       my $trainName = $csvName."-Train-$uniqueId-$fold";
 
@@ -99,19 +99,23 @@ sub run
       push @problems,([$train,$test]);
    #   @countFold[$fold] = 0;
     }
-  print "Aun no pase\n";
-    $table->open();
-  print "Pase\n";
+  #print "Aun no pase\n";
+  $table->open();
+  #print "Pase\n";
+  print "Splitting dataset for cross-validation\n";
+  #$table->a
+
+  #my $maxFold = 
   $table->applyFunction(sub
 			{
 			  my ($row) = @_;
 			  
 			  my $luckyFold = int (rand $numFolds);
 
-	#		  while ($count[$luckyFold] == $maxFold)
-	#		    {
-	#		      $luckyFold = int (rand $numFolds);
-	#		    }
+			  #while ($count[$luckyFold] == $maxFold)
+			  #  {
+			  #    $luckyFold = int (rand $numFolds);
+			  #  }
 			  
 			  #print "Lucky = $luckyFold\n";
 			  for ($fold = 0; $fold < $numFolds ; $fold++)
@@ -120,6 +124,7 @@ sub run
 				{
 				  #print "Adding to test set: $fold\n";
 				  $problems[$fold]->[1]->addRow($row);
+				 # $count[$luckyFold]++;
 				}
 			      else
 				{

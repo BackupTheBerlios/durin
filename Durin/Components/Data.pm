@@ -34,7 +34,7 @@ sub clone_delta
   { 
     my ($class,$self,$source) = @_;
     
-    print "Calling Durin::Components::Data\n";
+    #print "Calling Durin::Components::Data\n";
     $self->setMetadata($source->getMetadata()->clone());
   }
 

@@ -53,10 +53,7 @@ $file->open("<$inFileName") or die "Unable to open input file: $inFileName\n";
 my $table_total = Durin::Data::FileTable->read($file);
 $file->close();
 
-my $table;
-$table = $table_total;
-
-# A first step of sampling if it is required by the user
+printExperimentalConditions($percentage,$table_total,$numRepeats,$numFolds,$discOptions,$proportionList,$inducerNamesList);
 
 if (scalar (@proportionList) == 0)
   {
@@ -66,47 +63,14 @@ if (scalar (@proportionList) == 0)
 	push @proportionList,($i/$numSplits);
       }
   }
-my $resultTable = Durin::Classification::Experimentation::ResultTable->new();  
+
+my $resultTable = Durin::Classification::Experimentation::ResultTable->new();
 my $CVLC2 = Durin::Classification::Experimentation::CVLearningCurve2->new();
 
 my $thisRepetition;
 for ($thisRepetition = 0; $thisRepetition < $numRepeats ; $thisRepetition++)
   {
-    if ($percentage!=1)
-      {
-	my $splitter = new Durin::PP::Sampling::Sampler->new();
-	my ($input) = {};
-	$input->{TABLE} = $table_total;
-	$input->{PERCENTAGE} = $percentage;
-	$splitter->setInput($input);
-	$splitter->run();
-	my $output = $splitter->getOutput();
-	$table = $output->{TRAIN};
-      }
-    
-    my $input;
-    $input->{TABLE} = $table;
-    $input->{FOLDS} = $numFolds;
-    $input->{RESULTTABLE} = $resultTable;
-    $input->{DISCRETIZE} = $table->getMetadata()->getSchema()->hasNumericAttributes();
-    $input->{RUNID} = $thisRepetition;
-    if ($input->{DISCRETIZE})
-      {
-	$input->{DISCINPUT} = $discOptions;
-      }
-    my $LCInput;
-    $LCInput->{PROPORTIONLIST} = \@proportionList;
-
-    my $inducerList = [];
-    foreach my $inducerName (@$inducerNamesList)
-      {
-	push @$inducerList,Durin::Classification::Registry->getInducer($inducerName);
-      }
-    $LCInput->{INDUCERLIST} = $inducerList;
-    $LCInput->{APPLIER} = Durin::ProbClassification::ProbModelApplier->new();
-    $input->{LC} = $LCInput;
-    $CVLC2->setInput($input);
-    $CVLC2->run();
+    doRun($thisRepetition,$percentage,$table_total,$numFolds,$resultTable,$discOptions,$proportionList,$inducerNamesList);
   }
 
 # Write the output file
@@ -215,3 +179,75 @@ foreach my $proportion (@$proportionList)
   }
 
 $file->close();
+
+sub doRun {
+  my ($thisRepetition,$percentage,$table_total,$numFolds,$resultTable,$discOptions,$proportionList,$inducerNamesList) = @_;
+  
+  my $table;
+  $table = $table_total;
+  
+  if ($percentage!=1)
+    {
+      my $splitter = new Durin::PP::Sampling::Sampler->new();
+      my ($input) = {};
+      $input->{TABLE} = $table_total;
+      $input->{PERCENTAGE} = $percentage;
+      $splitter->setInput($input);
+      $splitter->run();
+      my $output = $splitter->getOutput();
+      $table = $output->{TRAIN};
+    }
+  my $input;
+    $input->{TABLE} = $table;
+    $input->{FOLDS} = $numFolds;
+    $input->{RESULTTABLE} = $resultTable;
+    $input->{DISCRETIZE} = $table->getMetadata()->getSchema()->hasNumericAttributes();
+    $input->{RUNID} = $thisRepetition;
+    if ($input->{DISCRETIZE})
+      {
+	$input->{DISCINPUT} = $discOptions;
+      }
+    my $LCInput;
+    $LCInput->{PROPORTIONLIST} = \@proportionList;
+
+    my $inducerList = [];
+    foreach my $inducerName (@$inducerNamesList)
+      {
+	push @$inducerList,Durin::Classification::Registry->getInducer($inducerName);
+      }
+    $LCInput->{INDUCERLIST} = $inducerList;
+    $LCInput->{APPLIER} = Durin::ProbClassification::ProbModelApplier->new();
+    $input->{LC} = $LCInput;
+    $CVLC2->setInput($input);
+    $CVLC2->run();
+  }
+
+
+sub printExperimentalConditions {
+  my ($percentage,$table_total,$numRepeats,$numFolds,$discOptions,$proportionList,$inducerNamesList) = @_;
+  
+  print "\nRunning inducer comparison using cross validation with learning curve\n";
+  print "-------------------------------------------\n";
+  print "Dataset: ".$table_total->getName()."\n";
+  print "Inducers compared: ",join(",",@$inducerNamesList)."\n";
+  if ($percentage==1) {
+    print "Applying no sampling prior to cross validation\n";
+  } else {
+    print "Applying a sampling of ".($percentage*100)."% prior to cross validation";
+  }
+  print "Number of cross validation runs: $numRepeats\n";
+  print "Number of cross validation folds: $numFolds\n";
+  print "List of proportions for learning curve: ",join(",",@proportionList)."\n";
+  if (defined $discOptions->{DISCMETHOD}) {
+    print "Discretization method: ".$discOptions->{DISCMETHOD}."\n";
+    if (defined $discOptions->{NUMINTERVALS}) {
+      print "Number of intervals: ".$discOptions->{NUMINTERVALS}."\n";
+    }
+  }
+  print "Input file name: $inFileName\n";
+  print "Output file name: $outFileName\n";
+  print "Totals output file name: $totalsOutFileName\n";
+  my $schema_string = $table_total->getMetadata()->makestring();
+  print "Dataset structure: $schema_string\n";
+  print "--------------------------------------\n";
+}
