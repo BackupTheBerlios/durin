@@ -44,6 +44,12 @@ sub getClassPos($)
     return $self->{CLASS};
 } 
 
+sub getClass($) {
+  my ($self) = @_;
+
+  return $self->getAttributeByPos($self->getClassPos());
+}
+
 sub makestring($)
 {
     my $self = shift;

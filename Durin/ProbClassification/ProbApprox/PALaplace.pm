@@ -25,25 +25,27 @@ sub setCountTable
   {
     my ($self,$ct) = @_;
     
-    my @ctArray = @$ct;
-
     $self->{COUNTTABLE} = $ct;
-    $self->{COUNT} = ${$ctArray[0]};
-# print "Count =",$self->{COUNT},"\n";
-$self->{COUNTCLASS} = $ctArray[1];
-$self->{COUNTXCLASS} = $ctArray[2];
-$self->{COUNTXYCLASS} = $ctArray[3];
-my @classValues = keys %{$ctArray[1]};
-$self->{CLASSCARD} = $#classValues + 1;
-# print "Class card =",$self->{CLASSCARD},"\n";
-my $oneclass = $classValues[0];
-$self->{ATTRIBUTECARD} = [];
-foreach my $hash (@{$ctArray[2]->{$oneclass}})
-  {
-    my @l = keys %$hash;
-    push @{$self->{ATTRIBUTECARD}},($#l + 1);
-  }
-my $i = 0;
+    
+    #my @ctArray = @$ct;
+
+#    $self->{COUNTTABLE} = $ct;
+#    $self->{COUNT} = ${$ctArray[0]};
+## print "Count =",$self->{COUNT},"\n";
+#$self->{COUNTCLASS} = $ctArray[1];
+#$self->{COUNTXCLASS} = $ctArray[2];
+#$self->{COUNTXYCLASS} = $ctArray[3];
+#my @classValues = keys %{$ctArray[1]};
+#$self->{CLASSCARD} = $#classValues + 1;
+## print "Class card =",$self->{CLASSCARD},"\n";
+#my $oneclass = $classValues[0];
+#$self->{ATTRIBUTECARD} = [];
+#foreach my $hash (@{$ctArray[2]->{$oneclass}})
+#  {
+#    my @l = keys %$hash;
+#    push @{$self->{ATTRIBUTECARD}},($#l + 1);
+#  }
+#my $i = 0;
 #foreach my $card (@{$self->{ATTRIBUTECARD}})
 #  {
     # print "Cardinality $i = ",$card,"\n";
@@ -63,12 +65,12 @@ sub getPClass
   {
     my ($self,$classVal) = @_;
  
-    my $LaplaceAddition = $self->{CLASSCARD};
+    my $LaplaceAddition = $self->{COUNTTABLE}->getNumClasses();
     if ($LaplaceAddition == 0)
       {
 	print "Error horroroso\n";
       }
-    return ($self->{COUNTCLASS}{$classVal} + 1) / ($self->{COUNT} + $LaplaceAddition);
+    return ($self->{COUNTTABLE}->getCountClass($classVal) + 1) / ($self->{COUNTTABLE}->getCount() + $LaplaceAddition);
   }
 
 sub getPXYClass
@@ -100,12 +102,12 @@ sub getPXCondClass
     my ($self,$classVal,$attX,$attXVal) = @_;
     
 
-    my $LaplaceAddition = $self->{ATTRIBUTECARD}[$attX];
+    my $LaplaceAddition = $self->{COUNTTABLE}->getNumAttValues($attX);
     if ($LaplaceAddition == 0)
-    {
+      {
 	print "Error horroroso\n";
       }
-    return ($self->{COUNTXCLASS}{$classVal}[$attX]{$attXVal} + 1) / ($self->{COUNTCLASS}{$classVal} + $LaplaceAddition);  
+    return ($self->{COUNTTABLE}->getCountXClass($classVal,$attX,$attXVal) + 1) / ($self->{COUNTTABLE}->getCountClass($classVal) + $LaplaceAddition);  
   }
 
 sub getPYCondXClass
@@ -116,21 +118,20 @@ sub getPYCondXClass
     
     if ($attX > $attY)
       {
-	$CXYClass = $self->{COUNTXYCLASS}{$classVal}[$attX]{$attXVal}[$attY]{$attYVal};
+	$CXYClass = $self->{COUNTTABLE}->getCountXYClass($classVal,$attX,$attXVal,$attY,$attYVal);
 	# print " A CXYClass{$classVal}[$attX]{$attXVal}[$attY]{$attYVal} = $CXYClass\n";
       }
     else
       {
-	$CXYClass = $self->{COUNTXYCLASS}{$classVal}[$attY]{$attYVal}[$attX]{$attXVal};
+	$CXYClass = $self->{COUNTTABLE}->getCountXYClass($classVal,$attY,$attYVal,$attX,$attXVal);
 	# print " B CXYClass{$classVal}[$attX]{$attXVal}[$attY]{$attYVal} = $CXYClass\n";
       }
-
-    my $LaplaceAddition = $self->{ATTRIBUTECARD}[$attY];
+    my $LaplaceAddition = $self->{COUNTTABLE}->getNumAttValues($attY);
     if ($LaplaceAddition == 0)
       {
 	print "Error horroroso\n";
       }
-    return ($CXYClass + 1)/ ($self->{COUNTXCLASS}{$classVal}[$attX]{$attXVal} + $LaplaceAddition);  
+    return ($CXYClass + 1)/ ($self->{COUNTTABLE}->getCountXClass($classVal,$attX,$attXVal) + $LaplaceAddition);  
   }
 
 sub getSinergy

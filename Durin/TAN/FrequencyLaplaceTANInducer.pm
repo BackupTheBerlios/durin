@@ -1,4 +1,4 @@
-package Durin::TAN::FrequencyCoherentTANInducer;
+package Durin::TAN::FrequencyLaplaceTANInducer;
 
 use Durin::Classification::Inducer;
 
@@ -9,13 +9,14 @@ use strict;
 use Durin::TAN::TANInducer;
 use Durin::ProbClassification::ProbApprox::PAFrequency;
 use Durin::ProbClassification::ProbApprox::PACoherent;
+use  Durin::ProbClassification::ProbApprox::PALaplace;
 
 sub new_delta
 {
     my ($class,$self) = @_;
     
     $self->{INDUCER} = Durin::TAN::TANInducer->new();
-    $self->setName("TAN+F+MS");
+    $self->setName("TAN+F+L");
     #   $self->{METADATA} = undef; 
 }
 
@@ -36,7 +37,7 @@ sub run
     $input->{TABLE} = $self->getInput()->{TABLE};
     #print $input->{TABLE}->getMetadata();
     $input->{GC}->{PROBAPPROX} = Durin::ProbClassification::ProbApprox::PAFrequency->new();
-    $input->{TAN}->{PROBAPPROX} = Durin::ProbClassification::ProbApprox::PACoherent->new();
+    $input->{TAN}->{PROBAPPROX} = Durin::ProbClassification::ProbApprox::PALaplace->new();
     $inducer->setInput($input);
   }
   $inducer->run();
@@ -44,5 +45,19 @@ sub run
   $model->setName($self->getName());
   $self->setOutput($model);
 }
+
+sub getDetails {
+  my ($self) = @_;
+  my $details = $self->SUPER::getDetails();
+  
+  $details->{"Probability approximation for GC"} = "PAFrequency";
+  $details->{"Probability approximation for TAN"} = "PALaplace";
+  my $PACoherentDetails = Durin::ProbClassification::ProbApprox::PACoherent->getDetails();
+  foreach my $key (keys %$PACoherentDetails) {
+    $details->{$key} = $PACoherentDetails->{$key};
+  } 
  
+  return $details;
+}
+
 1;

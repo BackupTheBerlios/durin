@@ -101,6 +101,7 @@ sub softenBetas {
     # it to be around 0 ($a will be 1).
     $StMax = $StMin+($max-$min);
   }
+  print "Max-Min = $max, $min\n";
   my $a = ($StMax-$StMin)/($max-$min);
   my $b = $StMin-$a*$min;
   #print "Max: $max, Min: $min, StMax:$StMax, StMin:$StMin, a:$a, b;$b\n";

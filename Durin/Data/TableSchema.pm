@@ -122,6 +122,30 @@ sub hasNumericAttributes
       }
     return $res;
   }
+
+sub convertToIndexes ($$) {
+  my ($self,$row) = @_;
+  
+  my $indexes_row = [];
+  my $i = 0;
+  foreach my $att (@{$self->getAttributeList()}) {
+    push @$indexes_row,$att->getType()->getValuePosition($row->[$i]);
+    $i++;
+  }
+  return $indexes_row;
+}
+
+sub convertToValues ($$) {
+  my ($self,$indexes_row) = @_;
+  
+  my $row= [];
+  my $i = 0;
+  foreach my $att (@{$self->getAttributeList()}) {
+    push @$row,$att->getType()->getValue($indexes_row->[$i]);
+    $i++;
+  }
+  return $row;
+}
     
 sub makestring($)
 {

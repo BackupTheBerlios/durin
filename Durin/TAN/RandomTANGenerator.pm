@@ -1,25 +1,30 @@
 package Durin::TAN::RandomTANGenerator;
 
+use Class::MethodMaker get_set => [-java => qw/ Schema MultinomialGenerator IndepSet ProbApprox Tree TAN/];
+
+use strict;
+use warnings;
+
 use Durin::ModelGeneration::ModelGenerator;
 use Durin::TAN::TAN;
+use Durin::Math::Prob::MultinomialGenerator;
 use Durin::ProbClassification::ProbApprox::PATANModel;
 use Durin::Classification::ClassedTableSchema;
 use Durin::Metadata::Attribute;
+use Durin::Metadata::AttributeType;
 use Durin::Metadata::ATCreator;
 use Durin::DataStructures::Graph;
 
 use POSIX;
 
-@ISA = qw(Durin::ModelGeneration::ModelGenerator);
-
-use strict;
+@Durin::TAN::RandomTANGenerator::ISA = qw(Durin::ModelGeneration::ModelGenerator);
 
 sub new_delta {
   my ($class,$self) = @_;
-
-  my $self->{NUMBER_OF_ATTRIBUTES_GENERATOR}=sub {return 10;};
-  my $self->{NUMBER_OF_VALUES_GENERATOR}=sub {return (rand 5)+1;};
   
+  $self->{INDEPENDENCE_PERCENTAGE} = 0;
+  $self->setMultinomialGenerator(Durin::Math::Prob::MultinomialGenerator->new());
+    
 }
 
 sub clone_delta {
@@ -28,100 +33,36 @@ sub clone_delta {
   die "Durin::TAN::RandomTANGenerator clone not implemented";
 }
 
-sub run($)
-{
-  my ($self) = @_;
-  
-  my $input = $self->getInput();
-  
-  # Get the number of models to generate
-  
-  if (defined $input->{NUMBER_OF_MODELS}) {
-    $self->{NUMBER_OF_MODELS} = $input->{NUMBER_OF_MODELS};
-  }
+sub init($$) {
+  my ($self,$input) = @_;
 
-  # Get the number of attributes to generate (including the class)
-  
-  if (defined $input->{NUMBER_OF_ATTRIBUTES_GENERATOR}) {
-    $self->{NUMBER_OF_ATTRIBUTES_GENERATOR} = $input->{NUMBER_OF_ATTRIBUTES_GENERATOR};
-  }
-  
-  # Get the function that generates the number of values per attribute
-  
-  if (defined $input->{NUMBER_OF_VALUES_GENERATOR}) {
-    $self->{NUMBER_OF_VALUES_GENERATOR} = $input->{NUMBER_OF_VALUES_GENERATOR};
-  }
+  $self->SUPER::init($input);
   
   # Get the percentage of independent tables 
   
   if (defined $input->{INDEPENDENCE_PERCENTAGE}) {
     $self->{INDEPENDENCE_PERCENTAGE} = $input->{INDEPENDENCE_PERCENTAGE};
   }
-    
-  my $modelList = [];
-  my $model;
-  foreach my $i (1..$self->{NUMBER_OF_MODELS}) {
-    $model = $self->generateModel($self->{NUMBER_OF_ATTRIBUTES_GENERATOR},
-				  $self->{NUMBER_OF_VALUES_GENERATOR},
-				  $self->{INDEPENDENCE_PERCENTAGE});
-    push @$modelList,$model;
-  }
 }
 
 sub generateModel {
-  my ($self,$attGen,$valGen,$indPct) = @_;
+  my ($self) = @_;
 
-  my $schema = $self->generateSchema($attGen,$valGen);
-  my $tree = $self->generateTree($schema);
-  my $probApprox = $self->generateProbApprox($schema,$tree,$indPct);
-  my $TAN = $self->composeTAN($schema,$probApprox,$tree);
+  $self->generateSchema();
+  $self->generateTree();
+  $self->generateProbApprox();
+  $self->composeTAN();
 
-  return $TAN;
+  return $self->getTAN();
 }
 
-# Generates the model schema (the attributes & its values)
-
-sub generateSchema {
-  my ($self,$attGen,$valGen) = @_;
-
-  my ($att,$attType,$attVals,$attValList);
-  my $numAtts = &$attGen();
-  my $schema = Durin::Classification::ClassedTableSchema->new();
-  foreach my $i (1..$numAtts) {
-    $att = Durin::Metadata::Attribute->new(); 
-    $att->setName($i);
-    $attType = Durin::Metadata::ATCreator->create("Categorical");
-    
-    $attVals = &$valGen();
-    $attValList = $self->generateValList($attVals);
-    $attType->setRest(join(':',@$attValList));
-    $att->setType($attType);
-    $schema->addAttribute($att);
-  } 
-  # 0 is always the class
-  $schema->setClassByPos(0);       ;
-  return $schema;
-}
-  
-# Generates the list of values in the "$rest" style 
-# of the TSIOStandard format, so it is parsed correctly 
-# when it is sent to the attribute type.
-
-sub generateValList {
-  my ($self,$numVals) = @_;
-  
-  my $list = [];
-  foreach my $i (1..$numVals) {
-    push @$list,$i;
-  }
-  return $list;
-}
 
 # Randomly Generates a tree structure
 
 sub generateTree {
-  my ($self,$schema) = @_;
-  
+  my ($self) = @_;
+
+  my $schema = $self->getSchema();
   my $Tree = Durin::DataStructures::Graph->new();
 
   my $attList = $schema->getAttributeList();
@@ -142,19 +83,22 @@ sub generateTree {
     my $parentFound = 0;
     while (!$parentFound) {
       my $parent = POSIX::floor(rand($numAtts-1)) + 1;
-      $parentFound = !$Tree->isAncestor($son,$parent);
+      $parentFound = (!$Tree->isAncestor($son,$parent) && !($son==$parent));
       if ($parentFound) {
 	$Tree->addEdge($parent,$son,undef);
+	print "adding $parent->$son \n";
       }
     }
   }
-
-  return $Tree;
+  $self->setTree($Tree);
 }
 
 sub generateProbApprox {
-  my ($self,$schema,$tree,$indPct) = @_;
+  my ($self) = @_;
  
+  my $indPct = $self->{INDEPENDENCE_PERCENTAGE};
+  my $schema = $self->getSchema();
+  my $tree = $self->getTree();
   my $numAtts = $schema->getNumAttributes();
   
   # Calculate the number of independent attributes 
@@ -173,68 +117,99 @@ sub generateProbApprox {
       $i++;
     }
   }
-
-  my $probApprox = Durin::ProbClassification::ProbApprox::PATANModel->new;
-
+  $self->setIndepSet($indepSet);
+  
+  my $probApprox = Durin::ProbClassification::ProbApprox::PATANModel->new();
+  $probApprox->setSchema($schema);
+  $self->setProbApprox($probApprox);
   # Generate class probabilities
 
   my $classPos = $schema->getClassPos();
   my $classAtt = $schema->getAttributeByPos($classPos);
-  my $numClasses = $classAtt->getCardinality();
+  my $numClasses = $classAtt->getType()->getCardinality();
   
-  my $distribClass = $self->generateMultinomial($numClasses);
+  my $distribClass =  $self->getMultinomialGenerator()->generateUnidimensionalMultinomial($numClasses);
   $probApprox->setDistribution($classPos,$distribClass);
   
-  # Generate root probabilities
   # First find the root
 
-  my $node = $tree->getNodes()->[0];
-  my $nodeAncestors = $tree->getAncestors($node);
-  while (scalar @$nodeAncestors) {
-    $node = $nodeAncestors->[0];
-    $nodeAncestors = $tree->getAncestors($node);
-  }
-  my $root = $node;
-  my $numValuesRoot = $schema->getAttributeByPos($root)->getCardinality();
-  my $distribRootClass;
-  if (defined $indepSet->{$root}) {
-    my $distribRoot = $self->generateMultinomial($numValuesRoot);
-    $distribRootClass = $self->generateIndependentBidimensionalMultinomial($distribClass,$distribRoot); 
-  } else {
-    $distribRootClass = $self->generateDependentBidimensionalMultinomial($distribClass,$numValuesRoot);
-  }
-  $probApprox->setDistribution($root,$distribRootClass);
+  #my $node = $tree->getNodes()->[0];
+  my $root = $tree->getRoot();
+  print "Root: $root\n";
+  # Generate probabilities for all the nodes starting by the root downwards
+  
+  $self->recursivelyGenerateDistributions($root);
+}
 
-  # Generate probabilities for all the other nodes
+sub recursivelyGenerateDistributions {
+  my ($self,$node) = @_;
+  
+  # Generate distribution for this node
+  $self->generateDistribution($node);
+  
+  my $tree = $self->getTree();
+  my $sons = $tree->getSons($node);
+  print "Sons: ".join(',',@$sons)."\n";
+  foreach my $son (@$sons) {
+    $self->recursivelyGenerateDistributions($son);
+  }
+}
+  
 
-  my $distribClassParentNode;
-  foreach $node (@{$tree->getNodes()}) {
-    if ($node != $root) {
-      my $numValuesNode = $schema->getAttributeByPos($node)->getCardinality();	
-      my $parent = $tree->getParents($node)->[0];
-      my $distribParent = $probApprox->getMarginal($parent);
-      if (defined $indepSet->{$node}) {
-	my $distribNode = $self->generateMultinomial($numValuesNode);
-	$distribClassParentNode = $self->generateIndependentTridimensionalMultinomial($distribClass,$distribParent,$distribNode); 
-	$probApprox->setDistribution($node,$distribClassParentNode);
-      } else {
-	$distribClassParentNode = $self->generateDependentTridimensionalMultinomial($distribClass,$distribParent,$numValuesNode);
-      }	
-      $probApprox->setDistribution($node,$distribClassParentNode);
+sub generateDistribution {
+  my ($self,$node) = @_;
+
+  print "Generating CPT for node $node\n";
+  my $tree = $self->getTree();
+  my $parents = $tree->getParents($node);
+  my $numParents = scalar @$parents;
+  my $schema = $self->getSchema();
+  my $multinomialGenerator = $self->getMultinomialGenerator();
+  my $probApprox = $self->getProbApprox();
+  my $distribClass = $probApprox->getDistribution($schema->getClassPos());
+  my $indepSet = $self->getIndepSet();
+  if ($numParents == 0) {
+    # We are in the root
+    #my $root = $node;
+    my $numValuesRoot = $schema->getAttributeByPos($node)->getType()->getCardinality();
+    my $distribRootClass;
+    if (defined $indepSet->{$node}) {
+      print "Generating Independent distribution\n";
+      my $distribRoot = $multinomialGenerator->generateUnidimensionalMultinomial($numValuesRoot);
+      $distribRootClass = $multinomialGenerator->generateIndependentBidimensionalMultinomial($distribClass,$distribRoot); 
+    } else {
+      print "Generating Dependent distribution\n";
+      $distribRootClass = $multinomialGenerator->generateDependentBidimensionalMultinomial($distribClass,$numValuesRoot);
     }
+    $probApprox->setDistribution($node,$distribRootClass);
+  } else {
+    my $distribClassParentNode;
+    my $numValuesNode = $schema->getAttributeByPos($node)->getType()->getCardinality();	
+    my $parent = $tree->getParents($node)->[0];
+    my $distribParent = $probApprox->getMarginalDistribution($parent);
+    if (defined $indepSet->{$node}) { 
+      print "Generating Independent distribution\n";
+      my $distribNode = $multinomialGenerator->generateUnidimensionalMultinomial($numValuesNode);
+      $distribClassParentNode = $multinomialGenerator->generateIndependentTridimensionalMultinomial($distribClass,$distribParent,$distribNode); 
+    } else { 
+      print "Generating Dependent distribution\n";
+      $distribClassParentNode = $multinomialGenerator->generateDependentTridimensionalMultinomial($distribClass,$distribParent,$numValuesNode);
+    } 
+    $probApprox->setDistribution($node,$distribClassParentNode);
   }
 }
 
 # Puts all the pieces together
 
 sub composeTAN {
-  my ($self,$schema,$probApprox,$tree) = @_;
+  my ($self) = @_;
   
   my $TAN = Durin::TAN::TAN->new();
-  $TAN->setSchema($schema);
-  $TAN->setProbApprox($probApprox);
-  $TAN->setTree($tree);
-  
-  return $TAN;
+  $TAN->setSchema($self->getSchema());
+  $TAN->setProbApprox($self->getProbApprox());
+  $TAN->setTree($self->getTree());
+  $self->setTAN($TAN);
 }
+
+
 1;

@@ -7,15 +7,16 @@ use Durin::Classification::Inducer;
 use strict;
 
 use Durin::TAN::TANInducer;
-#use Durin::ProbClassification::ProbApprox::PAFrequency;
+use Durin::ProbClassification::ProbApprox::PAFrequency;
 use Durin::ProbClassification::ProbApprox::PACoherent;
+use  Durin::ProbClassification::ProbApprox::PALaplace;
 
 sub new_delta
 {
     my ($class,$self) = @_;
     
     $self->{INDUCER} = Durin::TAN::TANInducer->new();
-    $self->setName("TAN+MS");
+    $self->setName("TAN+MS+MS");
     #   $self->{METADATA} = undef; 
 }
 

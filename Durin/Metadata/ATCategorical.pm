@@ -24,6 +24,7 @@ sub new_delta
     my ($class,$self) = @_;
     
     $self->{LIST_OF_VALUES} = [];
+    $self->{HASH_OF_VALUES} = {};
     $self->setName("Categorical");    
 }
 
@@ -46,6 +47,17 @@ sub setValues($$)
     my ($self,$values) = @_;
     
     $self->{LIST_OF_VALUES} = $values;
+    $self->{HASH_OF_VALUES} = {};
+    my $i = 0;
+    foreach my $val (@$values) {
+      $self->{HASH_OF_VALUES}{$val} = $i;
+      $i++;
+    }
+}
+sub getValue($$) {
+  my ($self,$pos)  = @_;
+
+  return $self->{LIST_OF_VALUES}[$pos];
 }
 
 sub getValues($)
@@ -53,6 +65,14 @@ sub getValues($)
     my $self = shift;
     
     return $self->{LIST_OF_VALUES};
+}
+
+# Returns the position of a value of the attribute in the list
+
+sub getValuePosition($$) {
+  my ($self,$val) = @_;
+
+  return $self->{HASH_OF_VALUES}{$val};
 }
 
 sub getCardinality($)

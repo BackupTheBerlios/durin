@@ -1,10 +1,14 @@
 package Durin::TAN::TAN;
 
+use strict;
+use warnings;
+
 use Durin::Classification::Model;
 
-@ISA = (Durin::Classification::Model);
+@Durin::TAN::TAN::ISA =  qw(Durin::Classification::Model);
 
-use strict;
+use Durin::Data::MemoryTable;
+
 
 sub new_delta
 {
@@ -177,3 +181,71 @@ sub classify
     
     return $class;
   }
+
+#sub generateDataset {
+#    my ($self,$numRows)  = @_;
+
+#    my $dataset = Durin::Data::MemoryTable->new();
+#    my $metadataDataset = Durin::Metadata::Table->new();
+#    $metadataDataset->setSchema($self->getSchema());
+#    $metadataDataset->setName("tmp");
+#    $dataset->setMetadata($metadataDataset);
+
+#    my $count = 0;
+#    $dataset->open();
+#    for my $i (1..$numRows) {
+#      my $row = $self->generateObservation();
+#      #print join(",",@$row)."\n";
+#      $dataset->addRow($row);
+#    }
+#    $dataset->close();
+#    return $dataset;
+#  }
+
+sub generateObservation {
+  my ($self) = @_;
+
+  my $row = [];
+
+  # Generate class
+
+  my $classPos = $self->getSchema()->getClassPos();
+  my $classVal = $self->{PROBAPPROX}->sampleClass();
+  $row->[$classPos] = $classVal;
+
+  # Recursively generate attribute values from the root downwards
+  my $tree = $self->getTree();
+  my $root = $tree->getRoot();
+
+  $self->recursivelyGenerateValues($row,$root);
+  #print "\n";
+  print ".";
+
+  return $row;
+}
+
+sub recursivelyGenerateValues {
+  my ($self,$row,$node) = @_;
+
+  my $classPos = $self->getSchema()->getClassPos();
+  my $classVal = $row->[$classPos];
+  my $tree = $self->getTree();
+  my $parents = $tree->getParents($node);
+  my $numParents = scalar @$parents;
+  if ($numParents == 0) {
+    # Root
+    #print "$node-r";
+    my $nodeVal = $self->{PROBAPPROX}->sampleXCondClass($classVal,$node);
+    $row->[$node] = $nodeVal;
+  } else {
+    #print "-$node";
+    my $parent = $parents->[0];
+    my $parentVal = $row->[$parent];
+    my $nodeVal = $self->{PROBAPPROX}->sampleYCondXClass($classVal,$parent,$parentVal,$node);
+    $row->[$node] = $nodeVal;
+  }
+  my $sons = $tree->getSons($node);
+  foreach my $son (@$sons) {
+    $self->recursivelyGenerateValues($row,$son);
+  }
+}

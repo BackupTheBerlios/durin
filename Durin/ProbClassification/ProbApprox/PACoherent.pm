@@ -5,6 +5,7 @@ use Durin::Classification::Model;
 @ISA = (Durin::Classification::Model);
 
 use strict;
+use warnings;
 
 sub new_delta
   {
@@ -33,31 +34,6 @@ sub setCountTable
     #my @ctArray = @$ct;
 
     $self->{COUNTTABLE} = $ct;
-    #$self->{COUNT} = ${$ctArray[0]};
-    # print "Count =",$self->{COUNT},"\n";
-    #$self->{COUNTCLASS} = $ctArray[1];
-    #$self->{COUNTXCLASS} = $ctArray[2];
-    #$self->{COUNTXYCLASS} = $ctArray[3];
-    #my @classValues = keys %{};
-    #$self->{CLASSCARD} = $#classValues + 1;
-    # print "Class card =",$self->{CLASSCARD},"\n";
-    #my $oneclass = $classValues[0];
-    #$self->{ATTRIBUTECARD} = [];
-    #$self->{DATASETSIZE} = $self->{CLASSCARD};
-    #foreach my $hash (@{$ctArray[2]->{$oneclass}})
-    #  {
-    #    my @l = keys %$hash;
-    #    push @{$self->{ATTRIBUTECARD}},($#l + 1);
-    #    $self->{DATASETSIZE} += ($#l + 1);
-    #  } 
-    #print "Selection of lambda for probability estimation: ",$self->{DATASETSIZE},"\n";
-    #my $i = 0;
-    #foreach my $card (@{$self->{ATTRIBUTECARD}})
-    #  {
-    # print "Cardinality $i = ",$card,"\n";
-    #    $i++;
-    #  }
-    
   }
 
 # Fixes the lambda for probability approximation

@@ -8,15 +8,15 @@ use strict;
 
 # Number of instances to generate
 
-my $N = 5;
+my $N = 100;
 
 # Cardinality of attribute A
 
-my $cardA = 3;
+my $cardA = 4;
 
 # Cardinality of attribute B
 
-my $cardB = 3;
+my $cardB = 4;
 
 # Number of runs
 
@@ -167,7 +167,7 @@ sub generateDistrib {
   my $total = 0;
   for (my $i = 0 ; $i < $cardA ; $i++) {
     for (my $j = 0 ; $j < $cardB ; $j++) {
-      $thisP = exp(exp(exp(rand 1)));
+      $thisP = -log(rand 1);
       $pAB->[$i][$j] = $thisP;
       $total = $total + $thisP;
     }
@@ -211,7 +211,7 @@ sub generateUniformMultinomial {
   # Generate probabilities 
   my $p = [];
   for (my $i = 0 ; $i < $card ; $i++) {
-    $thisP = exp(exp(exp(rand 1)));
+    $thisP = log(rand 1);
     $p->[$i] = $thisP;
     $total = $total + $thisP;
   }

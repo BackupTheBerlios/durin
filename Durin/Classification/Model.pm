@@ -67,5 +67,32 @@ sub getSchema
 
 sub classify
 {
-  print "Durin::Classification::Model::classify Pure virtual\n";
+  die "Durin::Classification::Model::classify Pure virtual\n";
+}
+
+
+sub generateDataset {
+  my ($self,$numRows)  = @_;
+  
+  my $dataset = Durin::Data::MemoryTable->new();
+  my $metadataDataset = Durin::Metadata::Table->new();
+  $metadataDataset->setSchema($self->getSchema());
+  $metadataDataset->setName("tmp");
+  $dataset->setMetadata($metadataDataset);
+  
+  my $count = 0;
+  $dataset->open();
+  for my $i (1..$numRows) {
+    my $row = $self->generateObservation();
+    #print join(",",@$row)."\n";
+    $dataset->addRow($row);
+  }
+  $dataset->close();
+  return $dataset;
+}
+
+sub generateObservation {
+  my ($self) = @_;
+  
+  die "Durin::Classification::Model::generateObservation Pure virtual\n";
 }

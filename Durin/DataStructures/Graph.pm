@@ -2,9 +2,12 @@
 
 package Durin::DataStructures::Graph;
 
+use strict;
+use warnings;
+
 use Durin::Basic::MIManager;
 
-@ISA = (Durin::Basic::MIManager);
+@Durin::DataStructures::Graph::ISA = qw(Durin::Basic::MIManager);
 
 sub new_delta
 {
@@ -163,3 +166,37 @@ sub isAncestor
     
     return (exists $self->getAncestors($x)->{$ancestor});
   }
+
+# Finds the root node given a node in a directed graph
+
+sub getRootByNode {
+  my ($self,$node) = @_;
+
+  my $nodeParents = $self->getParents($node);
+  while (scalar @$nodeParents) {
+    #print "$node\n";
+    $node = $nodeParents->[0];
+    $nodeParents = $self->getParents($node);
+  }
+  return $node;
+}
+
+sub getRoot {
+  my ($self) = @_;
+  
+  return ($self->getRootByNode($self->{NODELIST}[0]));
+}
+
+sub makestring {
+  my ($self) = @_;
+  
+  my $str = "";
+  foreach my $e (@{$self->{EDGELIST}}) {
+    if (defined $e->[2]) {
+      $str .= $e->[0]."-".$e->[1]." w=".$e->[2]."\n";
+    } else {
+      $str .= $e->[0]."-".$e->[1]."\n";
+    }
+  }
+  return $str;
+}

@@ -30,6 +30,12 @@ sub clone_delta
  #   $self->setMetadata($source->getMetadata()->clone());
 }
 
+sub getCountingTable {
+  my ($self) = @_;
+
+  return $self->{COUNTING_TABLE};
+}
+
 sub run($)
 {
   my ($self) = @_;
@@ -39,22 +45,25 @@ sub run($)
   my $PAGC = $input->{GC}->{PROBAPPROX};
   my $PATAN = $input->{TAN}->{PROBAPPROX};
   
-  #print "Starting counting\n";
-  my $bc = Durin::ProbClassification::ProbApprox::Counter->new();
-  {
-    my $input = {};
-    $input->{TABLE} = $table;
-    $input->{ORDER} = 2;
-    $bc->setInput($input);
-  }
-  #$bc->setInput($table);
-  $bc->run();
 
-  #print "Done with counting\n";
-  #  my @tablesRef = @{$bc->getOutput()};
+  # If we do not receive the counting table, we calculate it
   
-  $PAGC->setCountTable($bc->getOutput());
-  $PATAN->setCountTable($bc->getOutput());
+  if (!defined $input->{COUNTING_TABLE}) {
+    my $bc = Durin::ProbClassification::ProbApprox::Counter->new();
+    {
+      my $input = {};
+      $input->{TABLE} = $table;
+      $input->{ORDER} = 2;
+      $bc->setInput($input);
+    }
+    $bc->run();
+    $self->{COUNTING_TABLE} = $bc->getOutput(); 
+  } else {
+    $self->{COUNTING_TABLE} = $input->{COUNTING_TABLE};
+  }
+  
+  $PAGC->setCountTable($self->{COUNTING_TABLE});
+  $PATAN->setCountTable($self->{COUNTING_TABLE});
   
   my $gcons = Durin::TAN::GraphConstructor->new();
   {

@@ -81,6 +81,7 @@ sub getPClass
     # + $NZERO * $self->{COUNTTABLE}->getCountClass($classVal) / $self->{COUNTTABLE}->getCount();
     my $denom = $self->{COUNTTABLE}->getCount();
       # + $NZERO;
+
     return $num/$denom;
   }
 
