@@ -41,34 +41,7 @@ sub init($$) {
   #}
 }
 
-sub setModelKind {
-  my ($self,$modelKind) = @_;
-  
-  $self->{OPTIONS} = $self->getInput()->{OPTIONS};
-  foreach my $option (keys %{$modelKind->{OPTIONS}}) {
-    $self->{OPTIONS}->{$option} = $modelKind->{OPTIONS}->{$option};
-  }
-}
 
-sub getModelKinds {
-  my ($self) = @_;
-  
-  my $options = $self->getInput()->{OPTIONS};
-  my $kinds = [];
-  foreach my $nNodes (@{$options->{nNodes}}) {
-    foreach my $maxIW (@{$options->{maxIW}}) {
-      foreach my $nVal (@{$options->{nVal}}) {
-	my $kind = {OPTIONS => {nNodes => $nNodes,
-				maxIW => $maxIW,
-				nVal => $nVal},
-		    NAME =>	"$nNodes.$maxIW.$nVal"
-		   };
-	push @$kinds,$kind;
-      }
-    }
-  }
-  return $kinds;
-}
 sub generateModel {
   my ($self) = @_;
   
