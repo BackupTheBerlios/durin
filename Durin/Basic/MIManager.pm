@@ -10,11 +10,20 @@ package Durin::Basic::MIManager;
 
 =head1 DESCRIPTION
 
-This multiple inheritance manager defines a Perl idiom to create and clone Perl objects using multiple inheritance. By default, Perl allows for multiple inheritance, but when you call the constructor new it is only called in the derived class or searched for in the inheritance tree if if does not exist in the derived class. What MIManager offers is an idiom where every object in the hierarchy has two special methods "new" and "clone". The code for these two methods resides in MIManager and they are implemented by means of two "hook methods" "new_delta" and "clone_delta" into each class, that "new" and "clone" take care to call in the addecuate order. Hence, every object derived from MIManager you should have: 
-=over
-=item a sub new_delta
-=item a sub clone_delta (if the object has to be clonable)
+This multiple inheritance manager defines a Perl idiom to create and clone Perl objects using multiple inheritance. By default, Perl allows for multiple inheritance, but when you call the constructor new it is only called in the derived class or searched for in the inheritance tree if if does not exist in the derived class. What MIManager offers is an idiom where every object in the hierarchy has two special methods "new" and "clone". The code for these two methods resides in MIManager and they are implemented by means of two "hook methods" "new_delta" and "clone_delta" into each class, that "new" and "clone" take care to call in the addecuate order. Hence, every class derived from MIManager you should have two class methods:
+
+=over 
+
+=item a sub new_delta($self). 
+
+It constructs everything needed into $self to be an object of this class.
+
+=item a sub clone_delta($self,$source)(if the object has to be clonable). 
+
+It clones $source into $self
+
 =back
+
 even if they appear completely empty.
 
 =cut
@@ -25,7 +34,7 @@ use strict;
 
 =item new($class)
 
-  This function allows us to have constructors. These constructors are called following a depth first order in the is-a hierarchy. For each class that we want to be constructible we need to provide a "new_delta" function and take care that this function initializes whatever is added by its concrete class.
+This function allows us to have constructors. These constructors are called following a depth first order in the is-a hierarchy. For each class that we want to be constructible we need to provide a "new_delta" function and take care that this function initializes whatever is added by its concrete class.
 
 
 =cut
@@ -44,7 +53,7 @@ sub new
 
 =item clone($class)
 
-  This function allows us to have a deep-cloning language. Clones are called following a depth first order in the is-a hierarchy. For each class that we want to be cloneable we need to provide a "clone" function and take care that this function clones whatever is added by its concrete class.
+This function allows us to have a deep-cloning language. Clones are called following a depth first order in the is-a hierarchy. For each class that we want to be cloneable we need to provide a "clone" function and take care that this function clones whatever is added by its concrete class.
 
 =cut
 

@@ -41,9 +41,9 @@ sub init($$)
     $self->{NAME} = undef;
 }
 
-=item setName/getName
+=item setName()
 
-  Sets/Gets the name of the object.
+Sets the name of the object.
 
 =cut
 sub setName($$)
@@ -52,6 +52,12 @@ sub setName($$)
     
     $self->{NAME} = $name;
 }
+
+=item getName()
+
+Gets the name of the object.
+
+=cut
 
 sub getName($)
 {
