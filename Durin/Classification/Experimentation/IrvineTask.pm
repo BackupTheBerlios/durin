@@ -129,7 +129,7 @@ sub summarize {
   my ($self) = @_;
 
   my $dataset = $self->getDataset();
-  my $resultDir = $self->getExecutionCharacteristics()->getResultDir();
+  my $resultDir = $self->getResultDir();
   my $expName = $self->getName();
   my $resultFile = $resultDir.$expName."/".$dataset;
   
