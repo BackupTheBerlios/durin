@@ -35,21 +35,21 @@ sub run($) {
   
   my $input = $self->getInput();
   
-  $input->{GC}->{MUTUAL_INFO_MEASURE} = Durin::TAN::GraphConstructor::Decomposable;
-  $input->{K} = $self->getNumTrees();
+   $input->{K} = $self->getNumTrees();
   
   my $table = $input->{TABLE};
   my $k = $input->{K};
   my $schema = $table->getMetadata()->getSchema();
   my $lambda = $schema->calculateLambda();
   print "Lambda: $lambda\n";
-
-  my $kkruskal;
-
-  if (defined $input->{GC}->{MUTUAL_INFO_MEASURE}) {
-    $self->{GC}->{MUTUAL_INFO_MEASURE} = $input->{GC}->{MUTUAL_INFO_MEASURE};
-  }
   
+  my $kkruskal;
+  
+  if (!defined $input->{GC}->{MUTUAL_INFO_MEASURE}) {
+      $input->{GC}->{MUTUAL_INFO_MEASURE} = Durin::TAN::GraphConstructor::Decomposable;
+  }
+  $self->{GC}->{MUTUAL_INFO_MEASURE} = $input->{GC}->{MUTUAL_INFO_MEASURE};
+
   if (exists $input->{MTREEGEN}) {
     $kkruskal = $input->{MTREEGEN};
   } else {

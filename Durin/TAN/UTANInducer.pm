@@ -42,7 +42,7 @@ sub run($) {
   my $table = $input->{TABLE};
   my $schema = $table->getMetadata()->getSchema();
   my $lambda = $schema->calculateLambda();
-
+  #my $lambda = 0.1;
   #$input->{LAMBDA};$input->{LAMBDA} = 10;
   print "Assuming Lambda = ".$lambda."\n";
   #}
