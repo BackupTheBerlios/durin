@@ -48,13 +48,13 @@ sub create {
   my $generator;
   
   if ("Multinomial" eq $name) {
-    print "Generating samples from a huge multinomial\n";
+    #print "Generating samples from a huge multinomial\n";
     $generator = Durin::Multinomial::MultinomialModelGenerator->new();
   } elsif ("RandomTAN" eq $name) {
-    print "Generating samples from a TAN\n";
+    #print "Generating samples from a TAN\n";
     $generator = Durin::TAN::RandomTANGenerator->new();
   } elsif ("RandomBN" eq $name) {
-    print "Generating samples from a BN\n";
+    #print "Generating samples from a BN\n";
     $generator = Durin::BN::BNGenerator->new();
   }
   $generator->initSchemaGenerator($characteristics);
@@ -170,7 +170,7 @@ sub getModelKinds {
 	my %newOptions = %{$kind->{OPTIONS}};
 	$newOptions{$opt_name} = $opt_value;
 	my $newName = $kind->{NAME}.".".$opt_name."=".$opt_value;
-	print "Model kind: $newName\n";
+	#print "Model kind: $newName\n";
 	$newKind = {OPTIONS => \%newOptions,
 		    NAME => $newName};
 	push @$newKinds,$newKind;

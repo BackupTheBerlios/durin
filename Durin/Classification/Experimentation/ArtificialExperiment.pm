@@ -141,6 +141,51 @@ sub testModels {
   }
 }
 
+sub loadResultsFromFiles {
+  my ($self) = @_;
+
+  my $AveragesTable = Durin::Classification::Experimentation::CompleteResultTable->new();
+  my $mainDir = $ENV{PWD};
+  my $destinationDir = $self->getResultDir().$self->getName();
+  print $destinationDir."\n";
+  chdir $destinationDir;
+
+  my $modelGenerationCharateristics = $self->getModelGenerationCharacteristics();
+  # Create the model generator
+  my $modelGenerator = Durin::ModelGeneration::ModelGenerator->create($modelGenerationCharateristics);
+  
+  my $modelKinds = $modelGenerator->getModelKinds();
+  for my $modelKind (@$modelKinds) {
+    my $name =  $modelKind->{NAME};	
+    if (-e $name.".out") {
+      print "Taking info from $name\n";
+      $self->ProcessResultFile($name,$AveragesTable);
+    } else {
+      print "$name has not yet been calculated\n";
+    }
+  }
+  chdir $mainDir;
+  
+  return $AveragesTable;
+}
+
+sub getDatasetsByInducer {
+  my ($self,$inducer) = @_;
+
+  my $modelGenerationCharateristics = $self->getModelGenerationCharacteristics();
+  # Create the model generator
+  my $modelGenerator = Durin::ModelGeneration::ModelGenerator->create($modelGenerationCharateristics);
+  
+  my $modelKinds = $modelGenerator->getModelKinds();
+  my $datasetList = [];
+  foreach my $mk (@{$modelKinds})
+    {
+      push @$datasetList,$mk->{NAME};
+    }
+  return $datasetList;
+}
+
+
 # End
 
 1;

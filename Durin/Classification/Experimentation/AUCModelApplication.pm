@@ -5,17 +5,17 @@ package Durin::Classification::Experimentation::AUCModelApplication;
 use Durin::Classification::Experimentation::ModelApplication;
 use Durin::Utilities::MathUtilities;
 @ISA = (Durin::Classification::Experimentation::ModelApplication);
-use Class::MethodMaker get_set => [-java => qw/ AUC LogP ErrorRate NumClasses/];
+use Class::MethodMaker get_set => [-java => qw/ AUC LogP ErrorRate NumClasses Summarized/];
 
 use strict;
 use warnings;
 
-sub new_delta 
-{     
-    my ($class,$self) = @_;
-    
-    $self->{INSTANCE_LIST} = [];
-    $self->{INSTANCE_PROBABILITY_LIST} = [];
+sub new_delta {     
+  my ($class,$self) = @_;
+  
+  $self->{INSTANCE_LIST} = [];
+  $self->{INSTANCE_PROBABILITY_LIST} = [];
+  $self->setSummarized(0);
 }
 
 sub clone_delta
@@ -23,6 +23,12 @@ sub clone_delta
   # my ($class,$self,$source) = @_;
   
   die "Durin::Classification::Experimentation::AUCModelApplication::clone not implemented\n";
+}
+
+sub freeInstances {
+  my ($self) = @_;
+  $self->{INSTANCE_LIST} = [];
+  $self->{INSTANCE_PROBABILITY_LIST} = [];
 }
 
 sub addInstance
@@ -198,9 +204,13 @@ sub computeErrorRate {
 sub summarize {
   my ($self) = @_;
 
-  $self->setAUC($self->computeAUC());
-  $self->setLogP($self->computeLogP());
-  $self->setErrorRate($self->computeErrorRate());
+  if (!$self->getSummarized()) {
+    $self->setAUC($self->computeAUC());
+    $self->setLogP($self->computeLogP());
+    $self->setErrorRate($self->computeErrorRate());
+    $self->setSummarized(1);
+    $self->freeInstances();
+  }
 }
 
 sub computeAUCBayes {
@@ -322,8 +332,12 @@ sub computeErrorRateBayes {
 
 sub summarizeBayes {
   my ($self) = @_;
-  
-  $self->setAUC($self->computeAUCBayes());
-  $self->setLogP($self->computeLogPBayes());
-  $self->setErrorRate($self->computeErrorRateBayes());
+
+  if (!$self->getSummarized()) {
+    $self->setAUC($self->computeAUCBayes());
+    $self->setLogP($self->computeLogPBayes());
+    $self->setErrorRate($self->computeErrorRateBayes());
+    $self->setSummarized(1);
+    $self->freeInstances();
+  }
 }

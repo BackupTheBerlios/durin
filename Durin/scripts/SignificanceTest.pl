@@ -9,7 +9,7 @@ use Durin::Classification::Experimentation::CompleteResultTable;
 use Durin::ProbClassification::ProbModelApplication;
 use Durin::Utilities::MathUtilities;
 use Statistics::Distributions;
-
+$|=1;
 my $inFile = 0;
 
 if ($#ARGV < 0)
@@ -40,12 +40,20 @@ my $logPFunc = sub {
   return $self->getLogP();
 };
 
+my $AUCFunc = sub {
+  my ($self) = @_;
+  
+  return -$self->getAUC();
+};
+
 my $AveragesTable = $exp->loadResultsFromFiles();
 
 print "Comparing Error Rate\n******************\n";
 compareAllModelsInAllProportions($errorRateFunc,$AveragesTable);
 print "Comparing LogScore\n******************\n";
 compareAllModelsInAllProportions($logPFunc,$AveragesTable);
+print "Comparing AUC\n******************\n";
+compareAllModelsInAllProportions($AUCFunc,$AveragesTable);
 
 sub compareAllModelsInAllProportions {
   my ($comparisonFunc,$AveragesTable) = @_;
@@ -88,7 +96,7 @@ sub directionallyCompareModels {
   my $datasets1and2 = calculateDatasetIntersection($exp,$m1,$m2);
   my $counter = 0;
   foreach my $dataset (@$datasets1and2) {
-    #      print "$dataset\n";
+    print "$dataset\n";
     $counter += compareModelsInDatasetAndProportion($exp,$AveragesTable,$m1,$m2,$dataset,$proportion,$comparisonFunc);
   }
   return $counter;
@@ -138,10 +146,10 @@ sub compareModelsInDatasetAndProportion {
   #print "n:$n  U: $UValue c:$U99\n";
   my $result = 0;
   if ($UValue>$U99) {
-    #print "$dataset: $m2 sign. better than $m1 at $percentage%\n";
+    print "$dataset: $m2 sign. better than $m1 at $percentage%\n";
     $result = 1;
   } else {
-    #print "No sign. difference\n";
+    print "No sign. difference\n";
   }
   #print join(",",@$ERdifference)."\n\n";
   return $result;
