@@ -6,6 +6,7 @@ use Durin::Classification::Experimentation::ResultTable;
 use Durin::Classification::Experimentation::CompleteResultTable;
 use Durin::ProbClassification::ProbModelApplication;
 use Durin::Utilities::MathUtilities;
+use Durin::Classification::Experimentation::ExperimentFactory;
 
 use PDL::Graphics::PGPLOT;
 use PDL;
@@ -32,10 +33,13 @@ my $LOGP = 2;
 
 my $ExpFileName = $ARGV[$inFilePos];
 
-our $exp;
+#our $exp;
 
-do $ExpFileName;
-my $AveragesTable = $exp->loadResultsFromFiles();
+my $exp_chr = do $ExpFileName;
+my $exp = Durin::Classification::Experimentation::ExperimentFactory->createExperiment($exp_chr);
+#$exp->run(); 
+my $AveragesTable = Durin::Classification::Experimentation::CompleteResultTable->new();
+$exp->loadSummary($AveragesTable);
 $AveragesTable->compressRuns();
 DrawPictures($exp,$AveragesTable);
 print "Done\n";
@@ -77,10 +81,10 @@ sub ComparisonPlot {
 sub calculateDatasetIntersection {
   my ($modelA,$modelB,$exp) = @_;
   
-  my $datasetsA = $exp->getDatasetsByInducer($modelA);
+  my $datasetsA = $exp->getTasksByInducer($modelA);
   print "Datasets for inducer $modelA -> [".join(',',@$datasetsA)."]\n";
   
-  my $datasetsB = $exp->getDatasetsByInducer($modelB);
+  my $datasetsB = $exp->getTasksByInducer($modelB);
   print "Datasets for inducer $modelB -> [".join(',',@$datasetsB)."]\n";
   
   my $datasetsAandB = [];

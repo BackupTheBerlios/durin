@@ -1,14 +1,18 @@
 #!/usr/bin/perl -w 
 
-use strict;
-use warnings;
-
-use IO::File;
 use Durin::Classification::Experimentation::ResultTable;
 use Durin::Classification::Experimentation::CompleteResultTable;
 use Durin::ProbClassification::ProbModelApplication;
 use Durin::Utilities::MathUtilities;
+use Durin::Classification::Experimentation::ExperimentFactory;
+
+use IO::File;
 use Statistics::Distributions;
+
+use strict;
+use warnings;
+
+
 $|=1;
 my $inFile = 0;
 
@@ -24,9 +28,11 @@ if ($#ARGV == 1) {
   $percentage = $ARGV[1];
 }
 
-our $exp;
-
-do $ExpFileName;
+my $exp_chr = do $ExpFileName;
+my $exp = Durin::Classification::Experimentation::ExperimentFactory->createExperiment($exp_chr);
+#$exp->run(); 
+my $AveragesTable = Durin::Classification::Experimentation::CompleteResultTable->new();
+$exp->loadSummary($AveragesTable);
 
 my $errorRateFunc = sub {
   my ($self) = @_;
@@ -46,8 +52,6 @@ my $AUCFunc = sub {
   return -$self->getAUC();
 };
 
-my $AveragesTable = $exp->loadResultsFromFiles();
-
 print "Comparing Error Rate\n******************\n";
 compareAllModelsInAllProportions($errorRateFunc,$AveragesTable);
 print "Comparing LogScore\n******************\n";
@@ -60,7 +64,7 @@ sub compareAllModelsInAllProportions {
 
   my $models = $AveragesTable->getModels();
   my $proportionList = $AveragesTable->getProportions();
-  
+  my $summaries = {};
   foreach my $proportion (@$proportionList) {
     print "******\n Results with proportion: $proportion\n *******\n";
     my $visitedModels = {};
@@ -80,7 +84,7 @@ sub compareModels {
   
   my $m2BetterThanm1 = directionallyCompareModels($exp,$AveragesTable,$m1,$m2,$proportion,$comparisonFunc);
   my $m1BetterThanm2 = directionallyCompareModels($exp,$AveragesTable,$m2,$m1,$proportion,$comparisonFunc);
-
+  
   if ($m1BetterThanm2>$m2BetterThanm1) {
     print "$m1 > $m2: $m1BetterThanm2 - $m2 > $m1: $m2BetterThanm1\n";
   } elsif ($m1BetterThanm2<=$m2BetterThanm1) {
@@ -90,13 +94,13 @@ sub compareModels {
 
 
 sub directionallyCompareModels {
-  my ($exp,$AveragesTable,$m1,$m2,$proportion,$comparisonFunc) = @_;
+  my ($exp,$AveragesTable,$m1,$m2,$proportion,$comparisonFunc,$summaries) = @_;
   
   # Calculate the datasets in which both models have been run
   my $datasets1and2 = calculateDatasetIntersection($exp,$m1,$m2);
   my $counter = 0;
   foreach my $dataset (@$datasets1and2) {
-    print "$dataset\n";
+    #print "$dataset\n";
     $counter += compareModelsInDatasetAndProportion($exp,$AveragesTable,$m1,$m2,$dataset,$proportion,$comparisonFunc);
   }
   return $counter;
@@ -105,10 +109,10 @@ sub directionallyCompareModels {
 sub calculateDatasetIntersection{
   my ($exp,$modelA,$modelB) = @_;
   
-  my $datasetsA = $exp->getDatasetsByInducer($modelA);
+  my $datasetsA = $exp->getTasksByInducer($modelA);
   #print "Datasets for inducer $modelA -> [".join(',',@$datasetsA)."]\n";
   
-  my $datasetsB = $exp->getDatasetsByInducer($modelB);
+  my $datasetsB = $exp->getTasksByInducer($modelB);
   #print "Datasets for inducer $modelB -> [".join(',',@$datasetsB)."]\n";
 
   my $datasetsAandB = [];
@@ -146,10 +150,10 @@ sub compareModelsInDatasetAndProportion {
   #print "n:$n  U: $UValue c:$U99\n";
   my $result = 0;
   if ($UValue>$U99) {
-    print "$dataset: $m2 sign. better than $m1 at $percentage%\n";
+    #print "$dataset: $m2 sign. better than $m1 at $percentage%\n";
     $result = 1;
   } else {
-    print "No sign. difference\n";
+    #print "No sign. difference\n";
   }
   #print join(",",@$ERdifference)."\n\n";
   return $result;

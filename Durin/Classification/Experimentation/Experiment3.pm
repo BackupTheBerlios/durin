@@ -122,4 +122,15 @@ sub writeExpFile {
   return $expFileName;
 }
 
+sub loadSummary {
+  my ($self,$AveragesTable) = @_;
+  
+  my $fileName = $self->getBaseFileName().".out";
+  if (!-e $fileName) {
+    print "Task ".$self->getName()." has not yet been calculated\n";
+  } else {
+    $AveragesTable->loadSummary($fileName,$self->getName());
+  }
+}
+
 1;

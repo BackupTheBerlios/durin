@@ -145,6 +145,18 @@ sub summarize {
       $task->summarize;
     }
 }
+
+sub loadSummary {
+  my ($self,$AveragesTable) = @_;
+  
+  
+  foreach my $task (@{$self->getTasks()}) {
+    $task->loadSummary($AveragesTable); 
+  }
+ 
+  return $AveragesTable;
+}
+
 # End
 
 1;

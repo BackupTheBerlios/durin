@@ -5,7 +5,8 @@
 
 package Durin::Classification::Experimentation::CompleteResultTable;
 
-use base Durin::Components::Data;
+#use base Durin::Components::Data;
+use base Durin::Classification::Experimentation::ResultTable;
 
 use strict;
 use warnings;
