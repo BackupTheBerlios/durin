@@ -5,6 +5,8 @@
 #use Durin::Metadata::ATCreator;
 #use Durin::Classification::System;
 
+$| = 1;
+
 if ($#ARGV < 0)
   {
     print "This script runs an experiment";

@@ -64,7 +64,7 @@ sub run  {
   
   # do something with the result table.
   $resultTable->loadValuesAndAverages();
-  $resultTable->writeSummary(">$resultDir"."$expName/summary.out");
+  $resultTable->writeSummary("$resultDir"."$expName/summary.out");
   #$resultTable->summarizeBayes();
   #$resultTable->
 }
@@ -144,7 +144,7 @@ sub testModels {
   
   foreach my $model (@$models) {
     my $modelApplication = $tester->test($model);
-    $resultTable->addResult($runId,$size,$model,$modelApplication);
+    $resultTable->addResult($runId,$size,$model->getName(),$modelApplication);
   }
 }
 

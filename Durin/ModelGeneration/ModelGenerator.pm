@@ -24,6 +24,26 @@ use Durin::Classification::ClassedTableSchema;
 #use Durin::Metadata::Attribute;
 use Durin::Metadata::ATCreator;
 
+#{
+#  package Durin::ModelGeneration::ModelGenerator::AttributeGenerator;
+  
+#  use base Durin::Basic::NamedObject
+
+#  sub create {
+#    my ($class,$characteristics) = @_;
+    
+    
+#    #my $name = $characteristics->{METHOD_NAME};
+#    #if ("Fixed" eq $name) {
+    
+      
+#  }
+  
+  
+#}
+
+
+
 use strict;
 use warnings;
 
@@ -52,6 +72,31 @@ sub create {
     print "Generating samples from a TAN\n";
     $generator = Durin::TAN::RandomTANGenerator->new();
   }
+  my ($numAttsGen, $numValsGen);
+  {
+    my $attGenCharacteristics = $characteristics->{ATTRIBUTE_GENERATOR};
+    my $valGenCharacteristics = $characteristics->{VALUE_GENERATOR};
+    $numAttsGen = sub {
+      if ("Fixed" eq $attGenCharacteristics->{METHOD_NAME}) {
+	return $attGenCharacteristics->{NUM_ATTRIBUTES};
+      } elsif ("Random" eq $attGenCharacteristics->{METHOD_NAME}) {
+	return int(rand($attGenCharacteristics->{NUM_ATTRIBUTES}-1))+2;
+      }
+    };
+    $numValsGen = sub {
+      if ("Fixed" eq $valGenCharacteristics->{METHOD_NAME}) {
+	return $valGenCharacteristics->{NUM_VALUES};
+      } elsif ("Random" eq $valGenCharacteristics->{METHOD_NAME}) {
+	return int(rand($valGenCharacteristics->{NUM_VALUES}-1))+2;
+      }
+    };
+  }
+  for (my $i = 0 ; $i < 10 ; $i++) {
+    print "Atts: ".&$numAttsGen()."\n";
+    print "Vals: ".&$numValsGen()."\n";
+  }
+  $characteristics->{NUMBER_OF_ATTRIBUTES_GENERATOR} = $numAttsGen;
+  $characteristics->{NUMBER_OF_VALUES_GENERATOR} = $numValsGen;
   $generator->setInput($characteristics);
   return $generator;
 }

@@ -203,27 +203,6 @@ sub summarize {
   $self->setErrorRate($self->computeErrorRate());
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 sub computeAUCBayes {
   my ($self) = @_;
 
@@ -251,10 +230,16 @@ sub computeAUCClassPairBayes {
   my @fullList = ();
   for (my $i = 0 ; $i < scalar @{$self->{INSTANCE_LIST}} ; $i++) {
     my @elem = @{$self->{INSTANCE_LIST}->[$i]};
+    print "Elem contains: ".join(",",@elem)."\n";
     push @elem, @{$self->{INSTANCE_PROBABILITY_LIST}->[$i]};
     push @fullList, \@elem;
   }
   my @pairList = grep {(($_->[0] == $possitiveClass) || ($_->[0] == $negativeClass))} @fullList;
+  foreach my $inst (@pairList)
+    {
+      
+      print $inst->[0].",(".join(",",@{$inst->[1]})."),".$inst->[2].",(".join(",",@{$inst->[3]})."),".$inst->[4]."\n";
+    }
   my @sortedList = sort {$b->[1]->[$possitiveClass] <=> $a->[1]->[$possitiveClass]} @pairList;
   
   my $fp = 0;
@@ -264,19 +249,20 @@ sub computeAUCClassPairBayes {
   my $a = 0;
   my $fprev = -100000000000;
   foreach my $instance (@sortedList) {
-    my $f_i = $instance->[1]->[$possitiveClass];
-    if ($f_i != $fprev) {
-      $a = $a + $self->trap_area($fp,$fpprev,$tp,$tpprev); 
-      $fprev = $f_i;
-      
-      $fpprev = $fp;
-      $tpprev = $tp;
-    }
-    if ($instance->[0] == $possitiveClass) {
-      $tp += $instance->[4]; # Add the probability of the instance instead of one
-    } else {
-      $fp += $instance->[4]; 
-    }
+    #my $f_i = $instance->[1]->[$possitiveClass];
+    #if ($f_i != $fprev) {
+    $a = $a + $self->trap_area($fp,$fpprev,$tp,$tpprev); 
+    #$fprev = $f_i;
+    
+    $fpprev = $fp;
+    $tpprev = $tp;
+    #}
+    #if ($instance->[0] == $possitiveClass) {
+    my $pInstance = $instance->[4];
+    $tp += $instance->[3]->[$possitiveClass]/$pInstance; # Add the probability of the instance instead of one
+    #} else {
+    $fp += $instance->[3]->[$negativeClass]/$pInstance; 
+    #}
   }
   $a = $a + $self->trap_area($fp,$fpprev,$tp,$tpprev);
   if (($tp==0) || ($fp ==0)) {
@@ -318,17 +304,17 @@ sub computeErrorRateBayes {
   my $expectedError = 0;
   my $expectedErrorRate = 0;
   my $predictedClass;
-  my $realProbabilityOfPredictedClass;
+  my $realCondProbabilityOfPredictedClass;
   my $i = 0;
   my $pInstance;
   foreach my $inst (@{$self->{INSTANCE_LIST}})
     {
       $pInstance = $self->{INSTANCE_PROBABILITY_LIST}->[$i]->[1];
       $predictedClass = $inst->[2];
-      $realProbabilityOfPredictedClass = $self->{INSTANCE_PROBABILITY_LIST}->[$i]->[0]->[$predictedClass];
-      $expectedError = $pInstance * (1 - $realProbabilityOfPredictedClass);
+      $realCondProbabilityOfPredictedClass = $self->{INSTANCE_PROBABILITY_LIST}->[$i]->[0]->[$predictedClass] / $pInstance;
+      $expectedError = $pInstance * (1 - $realCondProbabilityOfPredictedClass);
       $i++;
-      print "Predicted: $predictedClass Error expected:$expectedError\n";
+      print "Predicted: $predictedClass , Prob Instance: $pInstance Real Cond Prob Predicted Class: $realCondProbabilityOfPredictedClass  Error expected:$expectedError\n";
       $expectedErrorRate += $expectedError;
     }
   return $expectedErrorRate;
