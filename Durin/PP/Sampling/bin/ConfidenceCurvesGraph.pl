@@ -27,7 +27,7 @@ sub plotConfidenceCurves {
   #pgopen("/XSERVE");
   dev $device;
   
-  pgpap(10,1); 
+  pgpap(5,1); 
   env 0,1, 0.2,1, 0,-2;
   pglab("Frequency","Confidence","Confidence curves"); 
   pgaxis("N", 0,0.2 , 1,0.2 , 0,1, 0.1 , 0,0.5,0,0,1,0);
