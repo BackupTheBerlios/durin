@@ -5,7 +5,7 @@ use Durin::Classification::Registry;
 
 sub BEGIN
 {
-  my @INDUCER_MODULES = qw(Durin::NB::MAPNBInducer Durin::NB::IndifferentNBInducer Durin::NB::BIBLInducer Durin::NB::NBInducer Durin::BMATAN::BMAFGGTANInducer Durin::BMATAN::BMACoherentCoherentTANInducer Durin::TAN::FGGTANInducer Durin::TAN::CoherentCoherentTANInducer Durin::TAN::CoherentMarginalsTANInducer Durin::TAN::FrequencyMarginalsTANInducer Durin::TAN::FrequencyHierarchicalMarginalsTANInducer Durin::TBMATAN::TBMATANInducer Durin::TBMATAN::SSTBMATANInducer);
+  my @INDUCER_MODULES = qw(Durin::NB::MAPNBInducer Durin::NB::IndifferentNBInducer Durin::NB::BIBLInducer Durin::NB::NBInducer Durin::BMATAN::BMAFGGTANInducer Durin::BMATAN::BMACoherentCoherentTANInducer Durin::TAN::FGGTANInducer Durin::TAN::CoherentCoherentTANInducer Durin::TAN::CoherentMarginalsTANInducer Durin::TAN::FrequencyMarginalsTANInducer Durin::TAN::FrequencyHierarchicalMarginalsTANInducer Durin::TBMATAN::TBMATANInducer Durin::TBMATAN::SSTBMATANInducer Durin::TAN::CoherentLaplaceTANInducer Durin::TAN::CoherentFGGTANInducer Durin::TAN::FrequencyCoherentTANInducer Durin::TAN::FrequencyLaplaceTANInducer);
   my ($module);
   print "Loading Inducer system\n";
   foreach $module (@INDUCER_MODULES)

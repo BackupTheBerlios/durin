@@ -24,24 +24,8 @@ sub clone_delta
 sub setCountTable
   {
     my ($self,$ct) = @_;
-    
-    #my @ctArray = @$ct;
-    
+
     $self->{COUNTTABLE} = $ct;
-    #$self->{COUNTTABLE}->getCounter(); = ${$ctArray[0]};
-    #$self->{COUNTCLASS} = $ctArray[1];
-    #$self->{COUNTXCLASS} = $ctArray[2];
-    #$self->{COUNTXYCLASS} = $ctArray[3];
-    #my @classValues = keys %{$ctArray[1]};
-    #$self->{CLASSCARD} = $#classValues + 1;
-    #my $oneclass = $classValues[0];
-    #$self->{ATTRIBUTECARD} = [];
-    #foreach my $hash (@{$ctArray[2]->{$oneclass}})
-    #  {
-#	my @l = keys %$hash;
-#	push @{$self->{ATTRIBUTECARD}},($#l + 1);
-#      }
-    
   }
 
 sub getCountTable

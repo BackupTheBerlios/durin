@@ -108,7 +108,7 @@ sub calculateInf
 	      #print "Pxyz = $Pxyz\n";
 	      if ($Pxyz != 0)
 		{
-		  $infoPartial = $Pxyz * log($PA->getSinergy($class_val,$j,$j_val,$k,$k_val)) / log(2);
+		  $infoPartial = $Pxyz * log($PA->getSinergy($class_val,$j,$j_val,$k,$k_val));
 		}
 	      else
 		{

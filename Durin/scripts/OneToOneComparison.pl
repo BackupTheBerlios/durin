@@ -35,23 +35,23 @@ $inFile->close();
 foreach my $classifier1 (keys %$results) {
   foreach my $classifier2 (keys %$results) {
     significanceTest($results,$classifier1,$classifier2,$percentage);
-   # my $AMB = 0;
-#    my $BMA = 0; 
-#    my $Equal = 0;
-#    for (my $i = 0; $i < scalar(@{$results->{$classifier1}}) ; $i++) {
-#      my $val1 = $results->{$classifier1}->[$i];
-#      my $val2 = $results->{$classifier2}->[$i];
-#      if ($val1 > $val2) {
-#	$BMA++;
-#      } elsif($val1 < $val2) {
-#	$AMB++;
-#      } else {
-#	$Equal++;
-#      }
-#    }
-#    print "$classifier1 better than $classifier2 $AMB times\n";
-#    print "$classifier2 better than $classifier1 $BMA times\n";
-#    print "$classifier1 equal $classifier2 $Equal times\n";
+    my $AMB = 0;
+    my $BMA = 0; 
+    my $Equal = 0;
+    for (my $i = 0; $i < scalar(@{$results->{$classifier1}}) ; $i++) {
+      my $val1 = $results->{$classifier1}->[$i];
+      my $val2 = $results->{$classifier2}->[$i];
+      if ($val1 > $val2) {
+	$BMA++;
+      } elsif($val1 < $val2) {
+	$AMB++;
+      } else {
+	$Equal++;
+      }
+    }
+    print "$classifier1 better than $classifier2 $AMB times\n";
+    print "$classifier2 better than $classifier1 $BMA times\n";
+    print "$classifier1 equal $classifier2 $Equal times\n";
   }
 }
 

@@ -16,12 +16,23 @@ use Durin::TBMATAN::SSTBMATANInducer;
 use Durin::TBMATAN::TBMATANInducer;
 use Durin::ProbClassification::BayesErrorRateCalculator;
 
-my $runs = 5;
+
+my $csvOutputFile = $ARGV[0];
+my $multinomial = $ARGV[1];
+my $runs = $ARGV[2];
+my $learningSampleSize = $ARGV[3];
+my $numAtts = $ARGV[4];
+my $numValues = $ARGV[5];
+my $indepPercentage = $ARGV[6];
+
 my $results = generateModelAndTest($runs);
 my $averagesResultList = $results->[0];
 my $averageResultHash = calculateAverages($averagesResultList);
 printResults($averageResultHash);
-printDetailedResults($results->[1]);
+my $outFile = new IO::File();
+$outFile->open(">$csvOutputFile");
+printDetailedResults($outFile,$results->[1]);
+$outFile->close();
 print "Number: ".scalar(@{$results->[1]});
 
 sub generateModelAndTest {
@@ -31,15 +42,24 @@ sub generateModelAndTest {
   my $totalResultList = [];
   for (my $run = 0 ; $run < $runs ; $run++) {
     print "Started model generation for run $run\n";
-    #my $generator = Durin::Multinomial::MultinomialModelGenerator->new();
-    my $generator = Durin::TAN::RandomTANGenerator->new();
-    $generator->setInput({INDEPENDENCE_PERCENTAGE => 0,
-			  NUMBER_OF_ATTRIBUTES_GENERATOR => sub {return 7;}});
+    my $generator;
+    if ("Multinomial" eq $multinomial) {
+	print "Generating samples from a huge multinomial\n";
+	$generator = Durin::Multinomial::MultinomialModelGenerator->new();
+    } else {
+	print "Generating samples from a TAN\n";
+	$generator = Durin::TAN::RandomTANGenerator->new();
+    }
+    $generator->setInput({
+			  INDEPENDENCE_PERCENTAGE => $indepPercentage,
+			  NUMBER_OF_ATTRIBUTES_GENERATOR => sub {return $numAtts;},
+			  NUMBER_OF_VALUES_GENERATOR => sub {return POSIX::ceil(rand ($numValues-1))+1}
+		      });
     $generator->run();
     my $model = $generator->getOutput()->[0];
     print "Model generated\n";
     
-    my $sizes = [10,10,10,10,10]; 
+    my $sizes = [$learningSampleSize]; 
     my $testingSet = $model->getSchema()->generateCompleteDatasetWithoutClass();
     my $runResultList = generateAndTestDatasets($model,$sizes,$testingSet);
     my $runResultAverages = calculateAverages($runResultList);
@@ -50,7 +70,7 @@ sub generateModelAndTest {
 }
 
 sub printDetailedResults {
-  my ($resultList) = @_;
+  my ($outFile,$resultList) = @_;
   
   my @classifiers = (keys %{$resultList->[0]});
   my $resultsByClassifier = {};
@@ -59,12 +79,11 @@ sub printDetailedResults {
   }
   foreach my $result (@$resultList) {
     foreach my $classifier (@classifiers) {
-      print "A";
       push @{$resultsByClassifier->{$classifier}},$result->{$classifier};
     }
   }
   foreach my $classifier (keys %$resultsByClassifier) {
-    print "$classifier: ".join(',',@{$resultsByClassifier->{$classifier}})."\n";
+    $outFile->print("$classifier: ".join(',',@{$resultsByClassifier->{$classifier}})."\n");
   }
 }
 

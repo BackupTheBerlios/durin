@@ -69,12 +69,10 @@ sub getPXYClass
     if ($attX > $attY)
       {
 	$CXYClass = $self->{COUNTTABLE}->getCountXYClass($classVal,$attX,$attXVal,$attY,$attYVal);
-	# print " A CXYClass{$classVal}[$attX]{$attXVal}[$attY]{$attYVal} = $CXYClass\n";
       }
     else
       {
 	$CXYClass = $self->{COUNTTABLE}->getCountXYClass($classVal,$attY,$attYVal,$attX,$attXVal);
-	# print " B CXYClass{$classVal}[$attX]{$attXVal}[$attY]{$attYVal} = $CXYClass\n";
       }
     
     my $size = $self->{DATASETSIZE};
@@ -125,17 +123,12 @@ sub getSinergy
     if ($attX > $attY)
       {
 	$CXYClass = $self->{COUNTTABLE}->getCountXYClass($classVal,$attX,$attXVal,$attY,$attYVal);
-	# print " A CXYClass{$classVal}[$attX]{$attXVal}[$attY]{$attYVal} = $CXYClass\n";
       }
     else
       {
 	$CXYClass = $self->{COUNTTABLE}->getCountXYClass($classVal,$attY,$attYVal,$attX,$attXVal);
-	# print " B CXYClass{$classVal}[$attX]{$attXVal}[$attY]{$attYVal} = $CXYClass\n";
       }
     
-    #my $cardX = $self->{ATTRIBUTECARD}[$attX];
-    #my $cardY = $self->{ATTRIBUTECARD}[$attY];
-    #my $cardClass = $self->{COUNTTABLE}->getNumClasses();
     my $size = $self->{DATASETSIZE};
     my $denom1 = $self->{COUNTTABLE}->getNumClasses() * $self->{COUNTTABLE}->getNumAttValues($attX) * $self->{COUNTTABLE}->getNumAttValues($attY);
     my $denom2 = $self->{COUNTTABLE}->getNumClasses();
