@@ -4,9 +4,11 @@
 package Durin::Classification::Experimentation::IrvineExperiment;
 
 use base Durin::Classification::Experimentation::CompositeExperiment;
-use Class::MethodMaker get_set => [-java => qw/ Datasets/];
+use Class::MethodMaker 
+  new_hash_with_init => 'new',
+  get_set => [-java => qw/ Datasets/];
 
-
+use Durin::Classification::Experimentation::IrvineTask;
 use Durin::Classification::Experimentation::ResultTable;
 
 use strict;
@@ -15,9 +17,15 @@ use warnings;
 sub init {
   my ($self,%properties) = @_;
   
-  self->SUPER::init(%properties);
+  #print "Initializing Irvine Experiment\n";
+  $self->SUPER::init(%properties);
+  #my $ev_c = Durin::Classification::Experimentation::IrvineTask::EvaluationCharacteristics->new($self->getEvaluationCharacteristics());
+#  $self->setEvaluationCharacteristics($ev_c);
   
-  my $tasks = constructTaskList();
+#  my $ex_c = Durin::Classification::Experimentation::IrvineTask::ExecutionCharacteristics->new($self->getExecutionCharacteristics());
+#  $self->setExecutionCharacteristics($ex_c);
+#  print "B\n";
+  my $tasks = $self->constructTaskList();
   $self->setTasks($tasks);
 }
 
@@ -26,13 +34,17 @@ sub constructTaskList {
   
   my $tasks = [];
   foreach my $dataset_task_info (@{$self->getDatasets()}) {
-    my $task = Durin::Classification::Experimentation::IrvineTask->new($self);
+    my $task = Durin::Classification::Experimentation::IrvineTask->new(%$self);
+    #print "Task initialized\n";
     my $special_options;
     if (!($special_options = $dataset_task_info->[1])) {
       $special_options = {};
     }
-    setDataset($special_options,$dataset_task_info->[0]);
-    $task->add_info($special_options);
+    $task->add_info(%$special_options);
+    $task->setResultDir($self->getBaseFileName());
+    $task->setDataset($dataset_task_info->[0]);
+    $task->setName($dataset_task_info->[0]);
+    $task->setType("IrvineTask");
     push @$tasks,$task;
   }
   return $tasks;

@@ -3,22 +3,24 @@
 #
 # TODO:Still relies on IndComp.pl. Remove that.
 
-package Durin::Classification::Experimentation::IrvineTask::EvaluationCharacteristics;
-require Durin::Classification::Experimentation::Experiment3;
-push @ISA,'Durin::Classification::Experimentation::Experiment3::EvaluationCharacteristics';
-use Class::MethodMaker
-  get_set => [-java => qw/ /];
+#package Durin::Classification::Experimentation::IrvineTask::EvaluationCharacteristics;
+#require Durin::Classification::Experimentation::Experiment3;
+#push @ISA,'Durin::Classification::Experimentation::Experiment3::EvaluationCharacteristics';
+#use Class::MethodMaker
+#  get_set => [-java => qw//];
 
-package Durin::Classification::Experimentation::IrvineTask::ExecutionCharacteristics;
-require Durin::Classification::Experimentation::Experiment3;
-push @ISA,'Durin::Classification::Experimentation::Experiment3::ExecutionCharacteristics';
-use Class::MethodMaker
-  get_set => [-java => qw/ DataDir/];
+#package Durin::Classification::Experimentation::IrvineTask::ExecutionCharacteristics;
+#require Durin::Classification::Experimentation::Experiment3;
+#push @ISA,'Durin::Classification::Experimentation::Experiment3::ExecutionCharacteristics';
+#use Class::MethodMaker
+#  get_set => [-java => qw/ DataDir/];
 
 package Durin::Classification::Experimentation::IrvineTask;
 
 use base Durin::Classification::Experimentation::Experiment3;
-use Class::MethodMaker get_set => [-java => qw/ Dataset/];
+use Class::MethodMaker 
+  new_hash_with_init => 'new',
+  get_set => [-java => qw/ Dataset  Datasets/];
 
 use Durin::Classification::Experimentation::ResultTable;
 
@@ -29,20 +31,21 @@ use warnings;
 
 sub init {
   my ($self,%properties) = @_;
-
-  #$self->SUPER::init(%properties);
   
-  my $ev_c = Durin::Classification::Experimentation::IrvineTask::EvaluationCharacteristics->new($self->getEvaluationCharacteristics());
-  $self->setEvaluationCharacteristics($ev_c);
+  #print "Initializing Irvine task\n";
+  $self->SUPER::init(%properties);
   
-  my $ex_c = Durin::Classification::Experimentation::IrvineTask::ExecutionCharacteristics->new($self->getExecutionCharacteristics());
-  $self->setExecutionCharacteristics($ex_c);
+ # my $ev_c = Durin::Classification::Experimentation::IrvineTask::EvaluationCharacteristics->new($self->getEvaluationCharacteristics());
+#  $self->setEvaluationCharacteristics($ev_c);
+  
+#  my $ex_c = Durin::Classification::Experimentation::IrvineTask::ExecutionCharacteristics->new($self->getExecutionCharacteristics());
+#  $self->setExecutionCharacteristics($ex_c);
 }
 
 sub run {
-  my ($self,$action) = @_;
+  my ($self) = @_;
   
-  my $dataset = $action->getDataset();
+  my $dataset = $self->getDataset();
   
   # Get all the charaateristics of the evaluation
   
@@ -55,9 +58,10 @@ sub run {
   my $discIntervals = $evaluationCharacteristics->getDiscIntervals();
   my $evaluator = $evaluationCharacteristics->getEvaluator();
   
+  my $dataDir = $self->getExecutionCharacteristics()->getDataDir();
+  
   my $inducers = $self->getInducers();
-  my $machine = $self->getMachine();
-  my $dataDir = $self->getDataDir();
+  #my $machine = $self->getMachine();
   my $resultDir = $self->getResultDir();
   my $expName = $self->getName();
   my $DurinDir = $self->getDurinDir();
@@ -69,7 +73,7 @@ sub run {
   my $proportionsString = join(" ",@$proportions); 
   my $inducersString = '"'.join('","',@$inducers).'"';
   my $datasetWithDir = $dataDir.$dataset."/".$dataset.".std";
-  my $resultFile = $resultDir.$expName."/".$dataset;
+  my $resultFile = $self->getBaseFileName();
   
   # Write the experiment file
   my $file = IO::File->new();
@@ -88,11 +92,11 @@ sub run {
 \$outDir = \"$resultFile\";");
   $file->close();
   
-  $self->launchDatasetExperiment($machine,$dataDir,$dataset,$DurinDir,$evaluator,$resultFile);
+  $self->launchDatasetExperiment($dataDir,$dataset,$DurinDir,$evaluator,$resultFile);
 }
 
 sub launchDatasetExperiment {
-  my ($self,$machine,$dataDir,$dataset,$DurinDir,$evaluator,$resultFile) = @_;
+  my ($self,$dataDir,$dataset,$DurinDir,$evaluator,$resultFile) = @_;
 
   #if ($machine eq "local")
   #  {

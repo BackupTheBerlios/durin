@@ -15,14 +15,15 @@ sub createExperiment  {
   my $type = $properties->{Type};
   print "Experiment type: $type\n";
   my $exp;
-  if ($type eq "Irvine") {
+  if ($type eq "IrvineExperiment") {
+    #print "Init\n";
     # Here we should manage the different versions. By now it is only one
-    $exp = new Durin::Classification::Experimentation::IrvineExperiment(%$properties);
-    #$exp->init($properties);
+    $exp = new Durin::Classification::Experimentation::IrvineExperiment(%$properties); }
+  elsif ($type eq "IrvineTask") {
+    $exp = new Durin::Classification::Experimentation::IrvineTask(%$properties);
   } elsif ($type eq "ArtificialExperiment") {
     # Here we should manage the different versions. By now it is only one
     $exp = new Durin::Classification::Experimentation::ArtificialExperiment2(%$properties);
-    #$exp->init($properties);
   } elsif ($type eq "ArtificialTask") {
     $exp = new Durin::Classification::Experimentation::ArtificialTask(%$properties);
   }

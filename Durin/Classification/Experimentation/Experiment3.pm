@@ -8,7 +8,7 @@ use warnings;
 package Durin::Classification::Experimentation::Experiment3::EvaluationCharacteristics;
 use Class::MethodMaker 
   new_hash_with_init => 'new',
-  get_set => [-java => qw/ Runs/];
+  get_set => [-java => qw/ Runs  Evaluator Folds Proportions DiscIntervals DiscMethod/];
 
 sub init {
   my ($self,%properties) = @_;
@@ -16,7 +16,8 @@ sub init {
 
 package Durin::Classification::Experimentation::Experiment3::ExecutionCharacteristics;
 use Class::MethodMaker 
-  new_hash_with_init => 'new';
+  new_hash_with_init => 'new',
+  get_set => [-java => qw/ DataDir Machines/];
 
 sub init {
   my ($self,%properties) = @_;
@@ -40,17 +41,18 @@ use Class::MethodMaker
 
 use File::Spec::Functions;
 use Data::Dumper;
+use File::Path;
 
 sub init {
   my ($self,%properties) = @_;
 
-  my $ev_c = Durin::Classification::Experimentation::Experiment3::EvaluationCharacteristics->new($self->getEvaluationCharacteristics());
+  my $ev_c = Durin::Classification::Experimentation::Experiment3::EvaluationCharacteristics->new(%{$self->getEvaluationCharacteristics()});
   $self->setEvaluationCharacteristics($ev_c);
   
-  my $ex_c = Durin::Classification::Experimentation::Experiment3::ExecutionCharacteristics->new($self->getExecutionCharacteristics());
+  my $ex_c = Durin::Classification::Experimentation::Experiment3::ExecutionCharacteristics->new(%{$self->getExecutionCharacteristics()});
   $self->setExecutionCharacteristics($ex_c);
   
-  my $o_c = Durin::Classification::Experimentation::Experiment3::OutputCharacteristics->new($self->getOutputCharacteristics());
+  my $o_c = Durin::Classification::Experimentation::Experiment3::OutputCharacteristics->new(%{$self->getOutputCharacteristics()});
   $self->setOutputCharacteristics($o_c);
 }
 
@@ -70,12 +72,27 @@ sub getBaseFileName {
 }
 
 sub add_info {
-  my ($self,$hash) = @_;
-  foreach my $key (keys %$hash) {
-    if (!defined $self->{$key}) {
-      $self->{$key} = $hash->{$key};
+  my ($self,%hash) = @_;
+  foreach my $key (keys %hash) {
+    #print "key: $key\n";
+    if (exists $self->{$key}) {
+      if (UNIVERSAL::isa($self->{$key}, "HASH")){
+#	ref $self->{$key} eq "HASH") {
+	#if (ref $hash{$key} eq "HASH") {
+	if ( UNIVERSAL::isa($hash{$key},"HASH")) {
+	  #print "A\n";
+	  add_info($self->{$key},%{$hash{$key}});
+	} else {
+	  #print "B\n";
+	  $self->{$key} = $hash{$key};
+	}
+      } else {
+	#print "Type: ".ref($self->{$key})."\n";
+	$self->{$key} = $hash{$key};
+      }
     } else {
-      add_info($self->{$key},$hash->{$key});
+      #print "D\n";
+      $self->{$key} = $hash{$key};
     }
   }
 }
@@ -83,9 +100,14 @@ sub add_info {
 sub writeExpFile {
   my ($self) = @_;
 
-  my $expFileName = $self->getBaseFileName().".exp";
+  my $expFileName = $self->getBaseFileName().".exp.pm";
   print "Writing: $expFileName\n";
   my $file;
+  mkpath ($self->getResultDir());
+  
+  #if (!-e $self->getResultDir()) {
+  #   mkdir $self->getResultDir();
+  #}
   open($file,">$expFileName");
   $file->print(Dumper($self));
   close($file);

@@ -2,14 +2,14 @@
 # This object is the base for composite experiments that
 # can be run in distributed mode from January 2004 on.
 
-package Durin::Classification::Experimentation::CompositeExperiment::ExecutionCharacteristics;
-require Durin::Classification::Experimentation::Experiment3;
-push @ISA,'Durin::Classification::Experimentation::Experiment3::ExecutionCharacteristics';
-use Class::MethodMaker
-  new_hash_with_init => 'new',
-  get_set => [-java => qw/ Machines /];
+#package Durin::Classification::Experimentation::CompositeExperiment::ExecutionCharacteristics;
+#require Durin::Classification::Experimentation::Experiment3;
+#push @ISA,'Durin::Classification::Experimentation::Experiment3::ExecutionCharacteristics';
+#use Class::MethodMaker
+#  new_hash_with_init => 'new',
+#  get_set => [-java => qw/ Machines /];
 
-sub init {};
+#sub init {};
 package Durin::Classification::Experimentation::CompositeExperiment;
 
 use base Durin::Classification::Experimentation::Experiment3;
@@ -25,11 +25,12 @@ use warnings;
  
 sub init {
   my ($self,%properties) = @_;
-
-  #$self->SUPER::init(%properties);
-  print "Initializing CompositeExperiment\n";
-  my $ex_c = Durin::Classification::Experimentation::CompositeExperiment::ExecutionCharacteristics->new($self->getExecutionCharacteristics());
-  $self->setExecutionCharacteristics($ex_c);
+  #print "AA\n"; 
+  #print "Initializing CompositeExperiment\n";
+  $self->SUPER::init(%properties);
+ 
+  #my $ex_c = Durin::Classification::Experimentation::CompositeExperiment::ExecutionCharacteristics->new(%{$self->getExecutionCharacteristics()});
+#  $self->setExecutionCharacteristics($ex_c);
 }
 
 sub run  {
@@ -88,7 +89,7 @@ sub sendJob {
   my ($self,$task,$machine) = @_;
   
   # Write .exp file
-  $task->getExecutionCharacteristics->setMachines("local");
+  $task->getExecutionCharacteristics()->setMachines("local");
   my $expFileName = $task->writeExpFile();
   
   # Fork

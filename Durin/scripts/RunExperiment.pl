@@ -17,7 +17,7 @@ if ($#ARGV < 0)
 my $inFilePos = 0;
 
 $ExpFileName = $ARGV[$inFilePos];
-$traceFile = $ARGV[$2];
+
 my $exp_chr = do $ExpFileName;
 
 my $exp = Durin::Classification::Experimentation::ExperimentFactory->createExperiment($exp_chr);
