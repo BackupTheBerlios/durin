@@ -71,34 +71,38 @@ sub getBaseFileName {
   return catfile($resultDir,$taskName);
 }
 
-sub add_info {
-  my ($self,%hash) = @_;
-  foreach my $key (keys %hash) {
-    #print "key: $key\n";
-    if (exists $self->{$key}) {
-      if (UNIVERSAL::isa($self->{$key}, "HASH")){
-#	ref $self->{$key} eq "HASH") {
-	#if (ref $hash{$key} eq "HASH") {
-	if (UNIVERSAL::isa($hash{$key},"HASH")) {
-	  #print "A\n";
-	  add_info($self->{$key},%{$hash{$key}});
-	} elsif (UNIVERSAL::isa($hash{$key},"ARRAY")){
-	  print "Copiando lista\n";
-	  my @list = @{$hash{$key}};
-	  $self->{$key} = \@list;
-	} else {
-	  #print "Type: ".ref($self->{$key})."\n";
-	  $self->{$key} = $hash{$key};
-	}
-      } else {
-	#print "Type: ".ref($self->{$key})."\n";
-	$self->{$key} = $hash{$key};
-      }
+sub copy_item {
+    my ($self,$hash,$key) = @_;
+
+    if (ref($hash->{$key}) eq "ARRAY") {
+	print "Copiando lista\n";
+	my @list = @{$hash->{$key}};
+	$self->{$key} = \@list;
     } else {
-      #print "D\n";
-      $self->{$key} = $hash{$key};
+	#print "Type: ".ref($self->{$key})."\n";
+	$self->{$key} = $hash->{$key};
     }
-  }
+}
+
+
+sub add_info {
+    my ($self,%hash) = @_;
+    foreach my $key (keys %hash) {
+	print "key: $key\n";
+	if (exists $self->{$key}) {
+	    if (UNIVERSAL::isa($self->{$key}, "HASH")){
+		if (UNIVERSAL::isa($hash{$key},"HASH")) {
+		    add_info($self->{$key},%{$hash{$key}});
+		} else{
+		    copy_item($self,\%hash,$key);
+		}
+	    } else {
+		copy_item($self,\%hash,$key);
+	    }
+	} else {
+	    copy_item($self,\%hash,$key);
+	}
+    }
 }
 
 sub writeExpFile {
