@@ -29,9 +29,12 @@ do $ExpFileName;
 
 my $interactive = 1;
 
-if ($ARGV[$generatePostcriptPos] == 1)
+if ($#ARGV > 0)
   {
-    $interactive = 0;
+    if ($ARGV[$generatePostcriptPos] == 1)
+      {
+	$interactive = 0;
+      }
   }
 
 my $AveragesTable = Durin::Classification::Experimentation::CompleteResultTable->new();
@@ -132,7 +135,7 @@ sub DrawPictures
     my @listDevices = ();
     
 
-    my $dev = "/XSERVE";
+    my $dev = "\@:0.0/XSERVE";
     if ($interactive)
       {
 	dev $dev;
@@ -146,21 +149,16 @@ sub DrawPictures
       }
     my $i = 0;
     my $numGraphs = scalar(@$models) * (scalar(@$models) - 1) / 2;  
-    my $status = dev $dev;
-    $numGraphs = 1;
-    while (($i < $numGraphs-1) && ($status > 0))
-      {
-	push @listDevices,($status); 
-	$i++;
-	$status = pgopen("$dev");	    
-      }
-    if (($i >= $numGraphs-1))
-      {
-	push @listDevices,($status); 
-      }
-    #print "Created all of them ".join(",",@listDevices)."\n";
+    my $status;
+    if ($interactive) {
+      $status = pgopen("$dev");
+    } else {
+      $status = dev $dev;
+    }
+    push @listDevices,$status; 
     $i = 0;
-    env(0,5,0,5,0,-2); # set world-window size 
+    pgslct($status);
+    env (0,5,0,5,0,-2); # set world-window size 
     foreach my $m1 (@$models)
       {
 	foreach my $m2 (@$models)
@@ -168,11 +166,9 @@ sub DrawPictures
 	    if ($m1 lt $m2)
 	      {
 		if ($interactive) {
-		  pgslct($listDevices[$i % ($#listDevices + 1)]);
+		  #pgslct($listDevices[$i % ($#listDevices + 1)]);
+		  pgslct($status);
 		  DifferencePlot("ER",$m1,$m2,$AveragesTable);
-		  $i++;
-		  pgslct($listDevices[$i % ($#listDevices + 1)]);
-		  $i++;
 		  DifferencePlot("LogP",$m1,$m2,$AveragesTable);
 		} else {
 		  my $id = pgopen("ER$m2-$m1.ps/VCPS");
