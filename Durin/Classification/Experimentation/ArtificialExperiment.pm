@@ -31,20 +31,111 @@ sub clone_delta
 
 sub run  {   
   my ($self) = @_;
+  
+  # Get the list of machines where the experiment should work
 
+  my $machines = $self->getMachines();
+
+  # Create the model generator and get the list of model kinds
+    
+  my $modelGenerationCharateristics = $self->getModelGenerationCharacteristics();
+  my $modelGenerator = Durin::ModelGeneration::ModelGenerator->create($modelGenerationCharateristics);
+  my $modelKinds = $modelGenerator->getModelKinds();
+  
+  if (@$machines) {
+    # We are asked to distribute the work into a list of machines
+    $self->distributeWork($modelKinds,$machines);
+  } else {
+    if ($machines eq "local") {
+      # Execute locally
+      $self->runLocally($modelKinds,$modelGenerator);
+    } else {
+      die "You are giving me a single machine and it is not the local one. Are you sure it is not [myremotemachine]?";
+    }
+  }
+}
+
+
+sub distributeWork {
+  my ($self,$modelKinds,$machines) = @_;
+
+  # Distribute experiments in machines
+  
+  my %controller_pid = {};
+  
+  foreach my $machine (@$machines) {
+    my $pid = $self­>sendJob(shift @$modelKinds,$machine);
+    $controller_pid{$pid} = $machine;
+    if (scalar(@$modelKinds) == 0) {
+      break;
+    }
+  }
+  
+  while (scalar(keys %controller_pid) > 0) {
+    my $pid = wait();
+    my $machine = $controller_pid{$pid};
+    delete $controller_pid{$pid};
+    if (scalar(@$modelKinds) > 0) {
+      my $new_pid = $self­>sendJob(shift @$modelKinds,$machine);
+      $controller_pid{$new_pid} = $machine;
+    }
+  }
+}
+
+sub sendJob {
+  my ($self,$modelKind,$machine) = @_;
+  
+  # Write .exp file
+  my $expFileName = $self->writeExpFile($modelKind);
+  
+  # Fork
+  my $pid = fork();
+  if ($pid == 0) {
+    # If you are the son, ask the machine to do the work and wait for it.
+    print "Model: ".$modelKind->{NAME}."\n";
+    print "Machine to be run at: $machine\n";
+    my $traceFileName = $self->getBaseFileName($modelKind).".trace";
+    my $remote_cmd = '"RunExperiment.pl '.$expFileName.'>& $traceFileName "';
+    my $cmd = "rsh $machine $remote_cmd";
+    print "Command: $cmd";
+    system($cmd);
+    exit;
+  } else { # else return the $pid of the son
+    return $pid;
+  }
+}
+
+sub writeExpFile {
+  my ($self,$modelKind) = @_;
+
+  my expFileName = $self->baseFileName($modelKind).".exp";
+  
+}
+
+sub baseFileName {
+  my ($self,$modelKind) = @_;
+  
+  my $resultDir = $self->getResultDir();
+  my $expName = $self->getName();
+  
+  return "$resultDir"."$expName/". $modelKind->{NAME};
+}
+
+sub runLocally {
+  my ($self,$modelKinds,$modelGenerator)  = @_;
+  
+  foreach my $modelKind (@$modelKinds) {
+    $self->runFixedModelKindExperiment($modelKind,$modelGenerator);
+  }
+}
+  
+sub runFixedModelKindExperiment {
+  my ($self,$modelKind,$modelGenerator) = @_;
   
   my $runs = $self->getRuns();
   my $inducers = $self->getInducers();
-  my $resultDir = $self->getResultDir();
-  my $expName = $self->getName();
-  my $modelGenerationCharateristics = $self->getModelGenerationCharacteristics();
   my $learningSampleSizes = $self->getLearningSampleSizes();
   my $evaluationCharacteristics = $self->getEvaluationCharacteristics();
-  #my $inducedWidths = $self->getInducedWidths();
-  
-  # Create the model generator
-  
-  my $modelGenerator = Durin::ModelGeneration::ModelGenerator->create($modelGenerationCharateristics);
   
   # Construct the inducer list
   
@@ -53,26 +144,20 @@ sub run  {
   # Create the tester
   
   my $tester = Durin::Classification::Experimentation::ModelTester->create($evaluationCharacteristics);
-  #$self->constructTester($evaluationCharacteristics);
   
   # Create the table where we store the results
   
   my $resultTable = Durin::Classification::Experimentation::ResultTable->new();
   
-  # For each kind of model specified in the $modelGenerationCharacteristics
-  my $modelKinds = $modelGenerator->getModelKinds();
-  for my $modelKind (@$modelKinds) {
-    for (my $run = 0; $run < $runs ; $run++) {
-      $self->executeRun($run,$modelGenerator,$modelKind,$inducerList,$learningSampleSizes,$tester,$resultTable);
-    }
-    # do something with the result table.
-    $resultTable->loadValuesAndAverages();
-    $resultTable->writeSummary("$resultDir"."$expName/".$modelKind->{NAME}.".out");
-    #$resultTable->summarizeBayes();
-    #$resultTable->
+  for (my $run = 0; $run < $runs ; $run++) {
+    $self->executeRun($run,$modelGenerator,$modelKind,$inducerList,$learningSampleSizes,$tester,$resultTable);
   }
+  # do something with the result table.
+  $resultTable->loadValuesAndAverages();
+  my $outFileName = $self->baseFileName($modelKind).".out";
+  $resultTable->writeSummary($outFileName);
 }
-  
+
 sub constructInducerList {
   my ($self,$inducerNamesList) = @_;
   
@@ -83,8 +168,6 @@ sub constructInducerList {
     }
   return $inducers;
 }
-
-
 
 sub executeRun {
   my ($self,$runId,$modelGenerator,$modelKind,$inducerList,$learningSampleSizes,$tester,$resultTable) = @_;

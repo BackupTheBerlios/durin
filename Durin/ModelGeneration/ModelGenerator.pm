@@ -44,7 +44,7 @@ sub clone_delta {
 sub create {
   my ($class,$characteristics) = @_;
 
-  my $name = $characteristics->{METHOD_NAME};
+  my $name = $characteristics->{Type};
   my $generator;
   
   if ("Multinomial" eq $name) {
@@ -149,18 +149,18 @@ sub generateModel($) {
 sub setModelKind {
   my ($self,$modelKind) = @_;
   
-  $self->{OPTIONS} = $self->getInput()->{OPTIONS};
-  foreach my $option (keys %{$modelKind->{OPTIONS}}) {
-    $self->{OPTIONS}->{$option} = $modelKind->{OPTIONS}->{$option};
+  $self->{Options} = $self->getInput()->{Options};
+  foreach my $option (keys %{$modelKind->{Options}}) {
+    $self->{Options}->{$option} = $modelKind->{Options}->{$option};
   }
 }
 
 sub getModelKinds {
   my ($self) = @_;
   
-  my $options = $self->getInput()->{OPTIONS};
-  my $kinds = [{OPTIONS =>{},
-		NAME => "results"}];
+  my $options = $self->getInput()->{Options};
+  my $kinds = [{Options =>{},
+		Name => "results"}];
   
   foreach my $opt_name (keys %$options) {  
     my $newKinds = [];
@@ -169,22 +169,22 @@ sub getModelKinds {
       #print "Value: $option_value\n";
       if (!@$option_value) {
 	my $newKind;
-	my %newOptions = %{$kind->{OPTIONS}};
+	my %newOptions = %{$kind->{Options}};
 	$newOptions{$opt_name} = undef;
-	my $newName = $kind->{NAME}.".".$opt_name;
+	my $newName = $kind->{Name}.".".$opt_name;
 	#print "Model kind A: $newName\n";
-	$newKind = {OPTIONS => \%newOptions,
-		    NAME => $newName};
+	$newKind = {Options => \%newOptions,
+		    Name => $newName};
 	push @$newKinds,$newKind;
       } else { 
 	foreach my $opt_value (@{$options->{$opt_name}}) {
 	  my $newKind;
-	  my %newOptions = %{$kind->{OPTIONS}};
+	  my %newOptions = %{$kind->{Options}};
 	  $newOptions{$opt_name} = $opt_value;
-	  my $newName = $kind->{NAME}.".".$opt_name."=".$opt_value;
+	  my $newName = $kind->{Name}.".".$opt_name."=".$opt_value;
 	  # print "Model kind B: $newName\n";
-	  $newKind = {OPTIONS => \%newOptions,
-		      NAME => $newName};
+	  $newKind = {Options => \%newOptions,
+		      Name => $newName};
 	  push @$newKinds,$newKind;
 	}
       }
@@ -195,10 +195,10 @@ sub getModelKinds {
  # foreach my $nNodes (@{$options->{nNodes}}) {
 #    foreach my $maxIW (@{$options->{maxIW}}) {
 #      foreach my $nVal (@{$options->{nVal}}) {
-#	my $kind = {OPTIONS => {nNodes => $nNodes,
+#	my $kind = {Options => {nNodes => $nNodes,
 #				maxIW => $maxIW,
 #				nVal => $nVal},
-#		    NAME =>	"$nNodes.$maxIW.$nVal"
+#		    Name =>	"$nNodes.$maxIW.$nVal"
 #		   };
 #	push @$kinds,$kind;
 #      }
@@ -217,7 +217,7 @@ sub generateSchema {
   #my $valGen = $self->{NUMBER_OF_VALUES_GENERATOR};
   my ($att,$attType,$attVals,$attValList);
   #my $numAtts = &$attGen();
-  my $numAtts = $self->{OPTIONS}->{nNodes};
+  my $numAtts = $self->{Options}->{nNodes};
   my $schema = Durin::Classification::ClassedTableSchema->new();
   foreach my $i (1..$numAtts) {
     $att = Durin::Metadata::Attribute->new(); 
@@ -225,7 +225,7 @@ sub generateSchema {
     $attType = Durin::Metadata::ATCreator->create("Categorical");
     
     #$attVals = &$valGen();
-    $attVals = $self->{OPTIONS}->{nVal};
+    $attVals = $self->{Options}->{nVal};
     $attValList = $self->generateValList($attVals);
     $attType->setRest(join(':',@$attValList));
     $att->setType($attType);

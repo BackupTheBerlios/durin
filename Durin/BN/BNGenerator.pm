@@ -45,7 +45,7 @@ sub init($$) {
 sub generateModel {
   my ($self) = @_;
   
-  my $fileName = $self->generateRandomBN($self->{OPTIONS});
+  my $fileName = $self->generateRandomBN($self->{Options});
   my $BN = $self->loadBNFromFile($fileName);
 
   return $BN;
