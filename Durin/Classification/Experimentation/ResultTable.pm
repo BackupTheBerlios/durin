@@ -47,6 +47,13 @@ sub addResult
     $self->{RESULTSCLASSIFIEDS}->{$runId}->{$trainProportion}->{$modelName} = $modelApplication;
   }
 
+sub getResult
+  {
+    my ($self,$runId,$trainProportion,$modelName) = @_;
+
+    return $self->{RESULTSCLASSIFIEDS}->{$runId}->{$trainProportion}->{$modelName};
+  }
+
 sub getResults
   {
     my ($self) = @_;

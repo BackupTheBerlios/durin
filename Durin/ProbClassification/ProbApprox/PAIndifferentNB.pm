@@ -38,6 +38,7 @@ sub setCountTable
       {
 	if ($i != $classAttNumber)
 	  {
+	    print "Attribute $i has ".$ct->getNumAttValues($i)." values\n";
 	    $self->{DATASETSIZE} += $ct->getNumAttValues($i);
 	  }
       }

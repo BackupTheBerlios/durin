@@ -67,7 +67,7 @@ sub getPXCondClass
   {
     my ($self,$classVal,$attX,$attXVal) = @_;
     
-    my $size = $self->{DATASETSIZE};
+    #my $size = $self->{DATASETSIZE};
 
     my $denom1 = $self->{COUNTTABLE}->getNumAttValues($attX);
     
