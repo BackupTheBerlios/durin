@@ -81,6 +81,42 @@ sub getPXYClass
     return ($CXYClass +  $size / $denom) / ($self->{COUNTTABLE}->getCount() + $size );
   }
 
+sub getPClassCondX
+  {
+    my ($self,$classVal,$attX,$attXVal) = @_;
+    
+    my $size = $self->{DATASETSIZE};
+    my $denom1 = $self->{COUNTTABLE}->getNumClasses() * $self->{COUNTTABLE}->getNumAttValues($attX);
+    my $denom2 = $self->{COUNTTABLE}->getNumAttValues($attX);
+    
+    return ($self->{COUNTTABLE}->getCountXClass($classVal,$attX,$attXVal) +  $size / $denom1) / ($self->{COUNTTABLE}->getCountX($attX,$attXVal) +  $size / $denom2);  
+  }
+
+
+sub getPClassCondXY
+  {
+    my ($self,$classVal,$attX,$attXVal,$attY,$attYVal) = @_;
+    
+    my $CXYClass;
+    
+    if ($attX > $attY)
+      {
+	$CXYClass = $self->{COUNTTABLE}->getCountXYClass($classVal,$attX,$attXVal,$attY,$attYVal);
+	# print " A CXYClass{$classVal}[$attX]{$attXVal}[$attY]{$attYVal} = $CXYClass\n";
+      }
+    else
+      {
+	$CXYClass = $self->{COUNTTABLE}->getCountXYClass($classVal,$attY,$attYVal,$attX,$attXVal);
+	# print " B CXYClass{$classVal}[$attX]{$attXVal}[$attY]{$attYVal} = $CXYClass\n";
+      }
+    
+    my $size = $self->{DATASETSIZE};
+    my $denom1 = $self->{COUNTTABLE}->getNumClasses() * $self->{COUNTTABLE}->getNumAttValues($attX) * $self->{COUNTTABLE}->getNumAttValues($attY);
+    my $denom2 = $self->{COUNTTABLE}->getNumAttValues($attY) * $self->{COUNTTABLE}->getNumAttValues($attX);
+    
+    return ($CXYClass +  $size / $denom1)/ ($self->{COUNTTABLE}->getCountXY($attX,$attXVal,$attY,$attYVal) +  $size / $denom2);  
+  }
+
 sub getPXCondClass
   {
     my ($self,$classVal,$attX,$attXVal) = @_;

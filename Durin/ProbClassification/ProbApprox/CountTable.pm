@@ -114,9 +114,49 @@ sub setSchema
 	      }
 	    
 	  }
+      } 
+
+    # Att pidls
+    
+    $self->{COUNTX} = [];
+    foreach my $att (0..$num_atts-1)
+      {
+	my @att_values = @{$schema->getAttributeByPos($att)->getType()->getValues()};
+	my $num_att_values = scalar(@att_values);
+	my $array = zeroes $num_att_values;
+	push @{$self->{COUNTX}},$array;
+      }
+    
+    if ($self->{ORDER} > 1)
+      {
+	# Att x Att pidls
+	
+	$self->{COUNTXY} = undef;
+	
+	foreach my $att1 (0..$num_atts-1)
+	  {
+	    if ($att1 != $class_attno)
+	      {
+		my @att_values1 = @{$schema->getAttributeByPos($att1)->getType()->getValues()};
+		#print join(',',@att_values1)."\n";
+		my $num_att_values1 = scalar(@att_values1);
+		#print "Num att values = $num_att_values1\n";
+		foreach my $att2 (0..$att1-1)
+		  {
+		    if ($att2 != $class_attno)
+		      {
+			my @att_values2 = @{$schema->getAttributeByPos($att2)->getType()->getValues()};
+			my $num_att_values2 = scalar(@att_values2);
+			my $array = zeroes $num_att_values1,$num_att_values2;
+			$self->{COUNTXY}->[$att1][$att2] = $array;
+		      }
+		  }
+	      }
+	    
+	  }
       }
   }
-  
+
 sub addObservation
   {
     my ($self,$row) = @_;
@@ -151,6 +191,8 @@ sub addObservation
 	    $j_val = $$row[$j];
 	    $j_val_index = $self->{INDEXES}->[$j]->{$j_val};
 	    
+	    my $pdlx = $self->{COUNTX}->[$j];
+	    $pdlx->set($j_val_index,$pdlx->at($j_val_index)+1);
 	    #$temp = $self->{COUNTXCLASS}->[$j]->slice("$j_val_index,$class_val_index");
 	    #$temp++;
 	    $pdl = $self->{COUNTXCLASS}->[$j];
@@ -165,6 +207,8 @@ sub addObservation
 			$k_val = $$row[$k];
 			$k_val_index = $self->{INDEXES}->[$k]->{$k_val};
 			
+			my $pdlxy = $self->{COUNTXY}->[$j][$k];
+			$pdlxy->set($j_val_index,$k_val_index,$pdlxy->at($j_val_index,$k_val_index)+1);
 			#$pdl = 
 			#    $temp = $self->{COUNTXYCLASS}->[$j][$k]->slice("$j_val_index,$k_val_index,$class_val_index");
 			#    $temp++;
@@ -200,6 +244,15 @@ sub getCount
     return $self->{COUNT};
   }
 
+sub getCountX {
+  my ($self,$x,$x_val) = @_;
+
+  my $x_val_index = $self->{INDEXES}->[$x]->{$x_val};
+  
+  my $temp = $self->{COUNTX}->[$x]->at($x_val_index);
+  return $temp;
+}
+
 sub getCountXClass
   {
     my ($self,$class_val,$x,$x_val) = @_;
@@ -213,6 +266,29 @@ sub getCountXClass
     return $temp;
   }
   
+sub getCountXY {
+  my ($self,$x,$x_val,$y,$y_val) = @_;
+  
+  if ($x==$y) {
+    die "Durin::CountTable::getCountXYClass \$x equal \$y\n";
+  }
+  if ($x < $y) {
+    my $tmp = $x;
+    $x = $y;
+    $y = $tmp;
+    $tmp = $x_val;
+    $x_val = $y_val;
+    $y_val = $tmp;
+  }
+  
+  my $x_val_index = $self->{INDEXES}->[$x]->{$x_val};
+  my $y_val_index = $self->{INDEXES}->[$y]->{$y_val};
+  
+  my $temp = $self->{COUNTXY}->[$x][$y]->at($x_val_index,$y_val_index);  
+  #print $temp;
+  return $temp;
+}
+
 sub getCountXYClass
   {
     my ($self,$class_val,$x,$x_val,$y,$y_val) = @_;
