@@ -31,7 +31,7 @@ my $generatePostcriptPos = 1;
 my $ER = 1;
 my $LOGP = 2;
 
-$ExpFileName = $ARGV[$inFilePos];
+my $ExpFileName = $ARGV[$inFilePos];
 
 our $exp;
 
@@ -85,7 +85,7 @@ sub calculateDatasetIntersection {
   
   my $datasetsAandB = [];
   my $datasetsHash = {};
-  %count = ();
+  my %count = ();
   foreach my $element (@$datasetsA, @$datasetsB) { $count{$element}++ }
   foreach my $element (keys %count) {
     if ($count{$element} > 1) {
@@ -125,7 +125,7 @@ sub preparateDifferencePlot {
   my $x = sequence($numDatasets);
   my $zeroLine = zeroes($numDatasets);
   my $plotList = [];
-  $color = 2;
+  my $color = 2;
 
   my ($min,$max,$subsOrdIndx,$names,$line_styles,$colours) = @{CalculateMinMax($plotType,$modelA,$modelB,$datasetsHash,$AveragesTable)};
 
@@ -189,7 +189,7 @@ sub CalculateMinMax {
     print "$subs , $max\n";
     my $j=0;
     foreach my $i ($subsOrdIndx->listindices()) {
-      $name = $datasetList->[$subsOrdIndx->at(($i))];
+      my $name = $datasetList->[$subsOrdIndx->at(($i))];
       if ($datasets->{$name}) {
 	if ($max < $subs->at($subsOrdIndx->at(($i)))) {
 	  $max = $subs->at($subsOrdIndx->at(($i)));
