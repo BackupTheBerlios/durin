@@ -277,7 +277,7 @@ sub makestring($)
 sub calculateLambda {
   my ($self) = @_;
   
-  my $lambda = 2*2*2;
+  my $lambda = 2*2*2*2;
   
   my $class_attno = $self->getClassPos();
   my $class_att = $self->getAttributeByPos($class_attno);
@@ -292,7 +292,7 @@ sub calculateLambda {
       foreach $k (0..$j-1) {
 	if ($k!=$class_attno) {
 	  my $num_k_values = scalar @{$self->getAttributeByPos($k)->getType()->getValues()};
-	  my $product = $num_k_values*$num_j_values*$num_classes;
+	  my $product = $num_k_values * $num_j_values * $num_classes;
 	  $lambda = $product if $product > $lambda;
 	}
       }
