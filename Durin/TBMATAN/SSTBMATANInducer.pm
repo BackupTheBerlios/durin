@@ -46,7 +46,7 @@ sub run
   my $table = $input->{TABLE};
   my $schema = $table->getMetadata()->getSchema();
   my $lambda = $schema->calculateLambda();
-  
+  print "Assuming Lambda = ".$lambda."\n";
   #print "Starting counting\n";
  # my $bc = Durin::ProbClassification::ProbApprox::Counter->new();
 #  {
