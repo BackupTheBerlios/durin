@@ -5,11 +5,10 @@
 
 package Durin::Classification::Experimentation::CompleteResultTable;
 
-use Durin::Components::Data;
-
-@ISA = (Durin::Components::Data);
+use base Durin::Components::Data;
 
 use strict;
+use warnings;
 
 use PDL;
 
@@ -39,10 +38,10 @@ sub addResult
   {
     my ($self,$dataset,$idNum,$foldNum,$trainProportion,$modelName,$modelApplication) = @_;
     
-#    if (!(exists $self->{PROPORTIONS}->{$trainProportion}))
-#      {
-#	$self->{PROPORTIONS}->{$trainProportion} = undef;
-#      }
+    if (!(exists $self->{PROPORTIONS}->{$trainProportion}))
+      {
+	$self->{PROPORTIONS}->{$trainProportion} = undef;
+      }
     if (!(exists $self->{DATASETS}->{$dataset}))
       {
 	#my $datasetIndex = scalar(@{$self->getDatasets()}) ;
@@ -97,11 +96,20 @@ sub getDatasets
     return $self->{DATASETSLIST};
   }
 
+sub compressRuns {
+  my ($self) = @_;
+
+  my $proportionList = $self->getProportions();
+  foreach my $proportion (@$proportionList) {
+    print "Processing proportion: $proportion\n";
+    $self->compressRunsByProportion($proportion);
+  }
+}
 # Calculate averages and std. deviations over the different runs.
 
-sub compressRuns 
+sub compressRunsByProportion 
   {
-    my ($self,$trainProportion) = @_;
+    my ($self,$proportion) = @_;
     
     my $models = $self->getModels();
     my $datasets = $self->getDatasets(); 
@@ -109,10 +117,10 @@ sub compressRuns
     my $dim2 = scalar(@$datasets);
     #print "Models: $dim1, Datasets: $dim2\n";
 
-    $self->{PDLERAVERAGETABLE} = zeroes $dim1,$dim2;
-    $self->{PDLERSTDEVTABLE} = zeroes $dim1,$dim2;
-    $self->{PDLLOGPAVERAGETABLE} = zeroes $dim1,$dim2;
-    $self->{PDLLOGPSTDEVTABLE} = zeroes $dim1,$dim2;
+    $self->{$proportion}->{PDLERAVERAGETABLE} = zeroes $dim1,$dim2;
+    $self->{$proportion}->{PDLERSTDEVTABLE} = zeroes $dim1,$dim2;
+    $self->{$proportion}->{PDLLOGPAVERAGETABLE} = zeroes $dim1,$dim2;
+    $self->{$proportion}->{PDLLOGPSTDEVTABLE} = zeroes $dim1,$dim2;
     
     my $modelIndex;
     foreach my $model (@$models)
@@ -123,7 +131,7 @@ sub compressRuns
 	  {
 	    $datasetIndex = $self->{DATASETS}->{$dataset};
 	    #print "Model: $model Dataset: $dataset\n";
-	    my $vect = $self->{RESULTSCLASSIFIEDS}->{$dataset}->{$model}->{$trainProportion};
+	    my $vect = $self->{RESULTSCLASSIFIEDS}->{$dataset}->{$model}->{$proportion};
 	    #print join(",",keys %$vect)."\n";
 	 
 	    my @IdNums = (keys %$vect);
@@ -160,10 +168,10 @@ sub compressRuns
 	    my ($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = stats($ERList);
 	    my ($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = stats($LogPList);
 	    #print "Average: $ERAverage\n";
-	    set $self->{PDLERAVERAGETABLE},$modelIndex,$datasetIndex,$ERAverage;
-	    set $self->{PDLERSTDEVTABLE},$modelIndex,$datasetIndex,sqrt($ERRMS);
-	    set $self->{PDLLOGPAVERAGETABLE},$modelIndex,$datasetIndex,$LogPAverage;
-	    set $self->{PDLLOGPSTDEVTABLE},$modelIndex,$datasetIndex,sqrt($LogPRMS);
+	    set $self->{$proportion}->{PDLERAVERAGETABLE},$modelIndex,$datasetIndex,$ERAverage;
+	    set $self->{$proportion}->{PDLERSTDEVTABLE},$modelIndex,$datasetIndex,sqrt($ERRMS);
+	    set $self->{$proportion}->{PDLLOGPAVERAGETABLE},$modelIndex,$datasetIndex,$LogPAverage;
+	    set $self->{$proportion}->{PDLLOGPSTDEVTABLE},$modelIndex,$datasetIndex,sqrt($LogPRMS);
 	    #$datasetIndex++;
 	  }
 	#$modelIndex++;
@@ -175,34 +183,24 @@ sub compressRuns
 
 sub getAvERDatasets
   {
-    my ($self,$model)  = @_;
+    my ($self,$model,$proportion)  = @_;
     
     my $modelIndex = $self->{MODELS}->{$model};
     
-    my $pdl = $self->{PDLERAVERAGETABLE}->slice("($modelIndex),:");
-    #my @l = list $pdl;
-    #my $i = 0;
-    #foreach my $dataset (@{$self->getDatasets()})
-    #  {
-#	print "Model: $model. Dataset: $dataset. Results:".$l[$i]."\n";
-#	$i ++;
-#      }
+    my $pdl = $self->{$proportion}->{PDLERAVERAGETABLE}->slice("($modelIndex),:");
+   
     return $pdl;
   }
 
 sub getAvLogPDatasets
   {
-    my ($self,$model)  = @_;
+    my ($self,$model,$proportion)  = @_;
     
     my $modelIndex = $self->{MODELS}->{$model};
     
-    my $pdl = $self->{PDLLOGPAVERAGETABLE}->slice("($modelIndex),:");
-    #my @l = list $pdl;
-    #my $i = 0;
-    #foreach my $dataset (@{$self->getDatasets()})
-    #  {
-#	print "Model: $model. Dataset: $dataset. Results:".$l[$i]."\n";
-#	$i ++;
-#      }
+    my $pdl = $self->{$proportion}->{PDLLOGPAVERAGETABLE}->slice("($modelIndex),:");
+   
     return $pdl;
   }
+
+1;

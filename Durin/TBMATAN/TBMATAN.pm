@@ -5,7 +5,7 @@ use Durin::Classification::Model;
 use base "Durin::Classification::Model";
 
 use Class::MethodMaker
-  get_set => [ -java => qw/CountTable BetaMatrix EquivalentSampleSize InternalNQuoteUC InternalNQuoteUVC ReductionFactor WuvMatrix/];
+  get_set => [ -java => qw/CountTable BetaMatrix EquivalentSampleSize InternalNQuoteUC InternalNQuoteUVC ReductionFactor WuvMatrix MarinaMeilaFormula/];
 
 
 use Durin::Utilities::MathUtilities;
@@ -51,7 +51,7 @@ sub setCountTableAndInitialize  {
   }
     
   $self->setReductionFactor(-$self->CalculateLnWuv($row_to_classify,$class_val,$att1,$att2));
-  print "Reduction factor:".$self->getReductionFactor()."\n";
+  #print "Reduction factor:".$self->getReductionFactor()."\n";
 
   # And calculate the Wuv
 
@@ -96,7 +96,11 @@ sub initializeWuvMatrix {
 	if ($node_v != $class_attno) {
 	  if ($node_v != $node_u) {
 	    my $lnWuv =  $self->CalculateLnWuvConstant($node_u,$node_v);
-	    print "Wuv constant($node_u,$node_v) = $lnWuv\n";
+	    if ($self->getMarinaMeilaFormula())
+	      {
+		$lnWuv = 0;
+	      }
+	    #print "Wuv constant($node_u,$node_v) = $lnWuv\n";
 	    $WuvMatrix->set($node_u,$node_v,$lnWuv);
 	    $WuvMatrix->set($node_v,$node_u,$lnWuv);
 	  }
@@ -139,9 +143,9 @@ sub initializeArithmeticPrecision {
     }
   }
   my $maxDiff = abs($max - $min);
-  my $precision = ($maxDiff / log 2) + 30;
-  print "Max:$max Min:$min MaxDiff:$maxDiff Precision (in bits): $precision\n";
-  ntl::RR_SetPrecision($precision);
+  my $precision = 2*(($maxDiff / log 2) + 30);
+  #print "Max:$max Min:$min MaxDiff:$maxDiff Precision (in bits): $precision\n";
+  ntl::RR_SetPrecision(($precision>64)?$precision:64);
 
   print "NTL precision fixed to:".ntl::RR_precision()."\n";
   #$self->setPrecision($precision);
@@ -173,7 +177,7 @@ sub initializeSampleSize {
     if ($node_u != $class_attno) {
       my $card_u = $schema->getAttributeByPos($node_u)->getType()->getCardinality();
       my $nQuoteUCVal = $nquotec/$card_u;
-      print "nQuoteUC($node_u) = $nQuoteUCVal\n";
+      #print "nQuoteUC($node_u) = $nQuoteUCVal\n";
       $nQuoteUC->set($node_u,$nQuoteUCVal);
       for (my $node_v = 0 ; $node_v < $schema->getNumAttributes() ; $node_v++) {
 	if ($node_v != $class_attno) {
@@ -181,7 +185,7 @@ sub initializeSampleSize {
 	    # Calculate nQuoteUVC
 	    my $card_v = $schema->getAttributeByPos($node_v)->getType()->getCardinality();
 	    my $nQuoteUVCVal = $nQuoteUCVal/$card_v ;
-	    print "nQuoteUVC($node_u,$node_v) = $nQuoteUVCVal\n";
+	    #print "nQuoteUVC($node_u,$node_v) = $nQuoteUVCVal\n";
 	    $nQuoteUVC->set($node_u,$node_v,$nQuoteUVCVal);
 	  }
 	}
@@ -207,7 +211,7 @@ sub getNQuoteUC {
 sub predict {
   my ($self,$row_to_classify) = @_;
 
-  my ($schema,$class_attno,$class_att,@class_values,$class_val,%Prob);
+  my ($schema,$class_attno,$class_att,@class_values,$class_val,%ProbRR,%Prob,);
 
   $schema = $self->getSchema();
   $class_attno = $schema->getClassPos();
@@ -215,40 +219,45 @@ sub predict {
   @class_values = @{$class_att->getType()->getValues()};
 
   foreach $class_val (@class_values) {
-    $Prob{$class_val} = $self->CalculateValueProportionalToPClass($row_to_classify,$class_val);
+    $ProbRR{$class_val} = $self->CalculateValueProportionalToPClass($row_to_classify,$class_val);
   }
   
   # Normalization of probabilities & calculation of the most probable class
   foreach $class_val (@class_values)
     {
-      print "P($class_val) = ",ntl::RR_GetDoubleValue($Prob{$class_val}),",";
+      #print "P($class_val) = ",ntl::RR_GetDoubleValue($ProbRR{$class_val}),",";
     }
-  print "\n After normalization:\n";
+  #print "\n After normalization:\n";
 
   my $sum = ntl::new_RR(); 
   my $max = 0;
   my $probMax = ntl::new_RR();
   foreach $class_val (@class_values) {
-    if (ntl::RR_LessOrEqual($probMax,$Prob{$class_val})) {
-      ntl::RR_SetValue($probMax,$Prob{$class_val});
+    if (ntl::RR_LessOrEqual($probMax,$ProbRR{$class_val})) {
+      ntl::RR_SetValue($probMax,$ProbRR{$class_val});
       $max = $class_val;
     }
-    ntl::RR_add($sum,$Prob{$class_val}); 
+    ntl::RR_add($sum,$ProbRR{$class_val}); 
   }
   if ($sum != 0) {
     foreach $class_val (@class_values) {
-      ntl::RR_div($Prob{$class_val}, $sum); 
+      ntl::RR_div($ProbRR{$class_val}, $sum); 
     }
   } else {
     foreach $class_val (@class_values) {
-      ntl::RR_SetDoubleValue($Prob{$class_val}, 1 / ($#class_values + 1)); 
+      ntl::RR_SetDoubleValue($ProbRR{$class_val}, 1 / ($#class_values + 1)); 
     }
   }
   foreach $class_val (@class_values) {
-    $Prob{$class_val} = ntl::RR_GetDoubleValue($Prob{$class_val});
-    print "P($class_val) = ",$Prob{$class_val},",";
+    $Prob{$class_val} = ntl::RR_GetDoubleValue($ProbRR{$class_val});
+    ntl::delete_RR($ProbRR{$class_val});
+    #print "P($class_val) = ",$Prob{$class_val},",";
   }
-  print "\n";
+  #print "\n";
+  
+  # Clean up memory
+  ntl::delete_RR($probMax);
+  ntl::delete_RR($sum);
   return ([\%Prob,$max]);
 }
 
@@ -262,38 +271,17 @@ sub CalculateValueProportionalToPClass {
 
   my ($lnW,$productNucs) = @{$self->CalculatelnWMatrixAndProductNucs($row_to_classify,$class_val)};
   
-  print "lnW: $lnW\n";
+  #print "lnW: $lnW\n";
   
   #print "lnW2: $lnW2\n";
   my $factor = $self->getReductionFactor();
   $lnW = $lnW + $factor;
-  
-  print "lnW after adding $factor:$lnW\n";
-
-  my $W = exp $lnW;
-  
-  for (my $i = 0 ; $i < $schema->getNumAttributes()-1 ; $i++) {
-    $W->set($i,$i,0);
-  }
-  
-  print "W = $W\n";
-
-  # We have calculated W. Let's do some checks
-
-  #print "W(1,2) = ".$W->at(1,2)." and W(2,1)=".$W->at(2,1)."\n";
-
-  
-  if ((abs($W->at(1,2)-$W->at(2,1)) / $W->at(1,2))>0.01) {
-    die "There are big differences in W calculation\n";
-  }
-  
-  my $betas = $self->getBetaMatrix();
-  $W = $W * $betas;
-
 
   # From here on we should work in high precission
+  
+  my $prob = $self->ComputeProb($lnW,$productNucs);
 
-  my $prob = $self->ComputeProb($W,$productNucs);
+  ntl::delete_RR($productNucs);
   #my $det = $self->ComputeQDeterminant($W);
   #my $detlow = $self->ComputeQDeterminantWithLowPrecision($W);
 
@@ -352,44 +340,71 @@ sub CalculatelnWMatrixAndProductNucs {
 }
 
 sub ComputeProb {
-  my ($self,$W,$productNucs) = @_;
+  my ($self,$lnW,$productNucs) = @_;
 
-  my $det = $self->ComputeQDeterminant($W);
+  my $det = $self->ComputeQDeterminant($lnW);
   ntl::RR_mul($det,$productNucs);
-
+  
   return $det;
 }
 
+
 sub ComputeQDeterminant {
-  my ($self,$W) = @_;
+  my ($self,$lnW) = @_;
 
   my $schema = $self->getSchema();
-
+  
   # Copy the matrix to a high precision one, and simultaneously make the Q transformation
+  my $betas = $self->getBetaMatrix();
 
   my $m = ntl::new_mat_RR();
   my $QMatrixSize = $schema->getNumAttributes()-2;
   ntl::mat_RR_SetDims($m,$QMatrixSize,$QMatrixSize);
 
   # Copy the matrix
-
+  my $RR = ntl::new_RR();
+  my $tmp = ntl::new_RR();
+  my $sumVecRR = ntl::new_vec_RR();
+  ntl::vec_RR_SetLength($sumVecRR,$schema->getNumAttributes()-2); 
+  ntl::RR_SetDoubleValue($RR,0);	
+  for (my $node = 0 ; $node < $schema->getNumAttributes()-2 ; $node++) {
+    ntl::vec_RR_SetElement($sumVecRR,$node,$RR);
+  }
   for (my $node_u = 0 ; $node_u < $schema->getNumAttributes()-2 ; $node_u++) {
     for (my $node_v = 0 ; $node_v < $schema->getNumAttributes()-2 ; $node_v++) {
-      my $RR = ntl::new_RR();
-      ntl::RR_SetDoubleValue($RR,-$W->at($node_u,$node_v));
+      if ($node_u == $node_v) 
+	{
+	  ntl::RR_SetDoubleValue($RR,0);
+	}
+      else
+	{
+	  ntl::RR_SetDoubleValue($tmp,$lnW->at($node_u,$node_v));
+	  ntl::RR_exp($RR,$tmp);
+	  ntl::RR_mulDouble($RR,-($betas->at($node_u,$node_v)));
+	}
+      my $sumItem = ntl::vec_RR_GetElement($sumVecRR,$node_u);
+      ntl::RR_sub($sumItem,$RR);
       ntl::mat_RR_SetElement($m,$node_u,$node_v,$RR);
     }
   }
-  
-  for (my $node = 0 ; $node < $schema->getNumAttributes()-2 ; $node++) {
-    ntl::mat_RR_SetElement($m,$node,$node,$self->SumRow($m,$W,$node));
+  #ntl::delete_RR($RR);
+  my $node_v = $schema->getNumAttributes()-2;
+  for (my $node_u = 0 ; $node_u < $schema->getNumAttributes()-2 ; $node_u++) {
+    ntl::RR_SetDoubleValue($tmp,$lnW->at($node_u,$node_v));
+    ntl::RR_exp($RR,$tmp);
+    ntl::RR_mulDouble($RR,-($betas->at($node_u,$node_v)));
+    my $sumItem = ntl::vec_RR_GetElement($sumVecRR,$node_u);
+    ntl::RR_sub($sumItem,$RR);
+    ntl::mat_RR_SetElement($m,$node_u,$node_u,$sumItem);
   }
   
-  printMatrix($m);
+  #printMatrix($m);
   
-  my $RR = ntl::mat_RR_determinant($m);
-  print "Determinant exponent: ".ntl::RR_exponent($RR)."\n";
-  ntl::mat_RR_kill($m);
+  $RR = ntl::mat_RR_determinant($m);
+  #print "Determinant exponent: ".ntl::RR_exponent($RR)."\n";
+  ntl::delete_RR($tmp);
+  ntl::delete_vec_RR($sumVecRR);
+  ntl::delete_mat_RR($m);
   #my $det = ntl::RR_GetDoubleValue($RR);
    
   return $RR;
@@ -448,7 +463,7 @@ sub ComputeQDeterminantWithLowPrecision {
   
   my $finalW = $W->slice("0:$d0,0:$d1");
 
-  print "Imprecise matrix to calculate determinant: $finalW\n";
+  #print "Imprecise matrix to calculate determinant: $finalW\n";
   #print "finalW size is :".$finalW->getdim(0)." x ".$finalW->getdim(1)."\n";
   
   #print "W(1,2) = ".$W->at(1,2)." and W(2,1)=".$W->at(2,1)."\n";

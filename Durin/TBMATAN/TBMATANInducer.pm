@@ -60,9 +60,11 @@ sub run
   $TBMATAN->setSchema($table->getMetadata()->getSchema());
   $TBMATAN->setBetaMatrix($betas);
   $TBMATAN->setName($self->getName());
-  $TBMATAN->setEquivalentSampleSizeAndInitialize(
-						 $self->CalculateEquivalentSampleSize(
-										      $table->getMetadata()->getSchema())/100);
+  $TBMATAN->setMarinaMeilaFormula(0);
+  #$TBMATAN->setEquivalentSampleSizeAndInitialize(
+  #$self->CalculateEquivalentSampleSize(
+  #$table->getMetadata()->getSchema())/100);
+  $TBMATAN->setEquivalentSampleSizeAndInitialize(10);
   $TBMATAN->setCountTableAndInitialize($bc->getOutput);
   $self->setOutput($TBMATAN);
 }

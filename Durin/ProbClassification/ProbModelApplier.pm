@@ -44,10 +44,12 @@ sub run
 			    $PMA->addPClass($distrib->{$realClass});
 			    if ($realClass eq $class)
 			      {
+				#print "OK\n";
 				$PMA->increaseOKs();
 			      }
 			    else
 			      {
+				#print "Error\n";
 				$PMA->increaseWrongs();
 			      }
 			    

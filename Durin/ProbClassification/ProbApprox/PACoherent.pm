@@ -17,7 +17,7 @@ sub clone_delta
 { 
     my ($class,$self,$source) = @_;
     
-    die "Durin::ProbClassification::ProbApprox::PALaplace clone not implemented";
+    die "Durin::ProbClassification::ProbApprox::PACoherent clone not implemented";
     #   $self->setMetadata($source->getMetadata()->clone());
   }
 
