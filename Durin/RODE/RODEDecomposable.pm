@@ -246,6 +246,7 @@ sub N_uv  {
   my $v_val_index = $self->getIndexes()->[$v]->{$v_val};
   print STDERR  "D\n";
   my $temp = $self->getN_uv()->[$u][$v]->at($u_val_index,$v_val_index,$class_val_index);  
+  print STDERR "E\n";
   #print $temp;
   return $temp;
 }
