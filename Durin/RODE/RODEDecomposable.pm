@@ -260,12 +260,12 @@ sub refineNs {
   my $class_attno = $self->getClassAttIndex();
 
   for(my $node_u = 0 ; $node_u < $num_atts ; $node_u++) {
-    if ($node_u != $class_attno)  { 
+    if ($node_u != $class_attno)  {
       $self->getN_u()->[$node_u] += $ct->getXClassTable($node_u);
-    }
-    for(my $node_v = 0 ; $node_v < $node_u; $node_v++) {
-      if ($node_v != $class_attno)  { 
-	$self->getN_uv()->[$node_u][$node_v] += $ct->getXYClassTable($node_u,$node_v);
+      for(my $node_v = 0 ; $node_v < $node_u; $node_v++) {
+        if ($node_v != $class_attno)  { 
+	  $self->getN_uv()->[$node_u][$node_v] += $ct->getXYClassTable($node_u,$node_v);
+        }
       }
     }
   }
