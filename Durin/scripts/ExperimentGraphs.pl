@@ -39,95 +39,11 @@ if ($#ARGV > 0)
       }
   }
 
-my $AveragesTable = Durin::Classification::Experimentation::CompleteResultTable->new();
-my $mainDir = $ENV{PWD};
-$destinationDir = $exp->getResultDir().$exp->getName();
-print $destinationDir."\n";
-chdir $destinationDir;
-foreach my $task (@{$exp->getTasks()})
-  {
-    my $dataset = $task->getDataset();
-    if (-e "$dataset.out")
-      {
-	print "Taking info from to dataset $dataset\n";
-	Process($dataset,$AveragesTable);
-      } 
-    else
-      {
-	print "Dataset $dataset has not yet been calculated\n";
-      }
-  }
-chdir $mainDir;
-
+my $AveragesTable = $exp->loadResultsFromFiles();
 $AveragesTable->compressRuns();
 DrawPictures($exp,$AveragesTable);
-
 print "Done\n";
 
-sub Process
-  {
-    my ($dataset,$AveragesTable) = @_;
-    
-    my $file = new IO::File;
-    $file->open("<$dataset.out") or die "Unable to open $dataset.out\n";
-    
-    # read the headers (the field names)
-    my $line = $file->getline();
-    my @decompLine = split(/,/,$line);
-    if (!($decompLine[0] eq "Fold"))
-      {
-	die "File $dataset.out has not the format required\n";
-      }
-    
-    my $i = 2;
-    my $modelList = ();
-    while ($i < $#decompLine)
-      {
-	push @$modelList,(substr($decompLine[$i],2));
-	$i += 4;
-      }
-    
-    #my $resultTable = Durin::Classification::Experimentation::ResultTable->new();
-    do 
-      {
-	$line = $file->getline();
-	my @array = split(/,/,$line);
-	$i = 0;
-	my $runId = $array[0];
-	my $proportion = $array[1];
-	#print "Proportion: $proportion\n";
-	foreach $modelName (@$modelList)
-	  {
-	    my $OKs = $array[$i * 4 + 2];
-	    my $Wrongs = $array[$i * 4 + 3];
-	    my $PLog = $array[$i *4 + 5];
-	    #print "Next One: $modelName $runId $OKs $Wrongs $PLog\n";
-	    #getc;
-	    my $PMA = Durin::ProbClassification::ProbModelApplication->new();
-	    $PMA->setNumOKs($OKs);
-	    $PMA->setNumWrongs($Wrongs);
-	    $PMA->setLogP($PLog);
-
-	    # Check for CV results
-	    
-	    my ($idNum,$foldNum);
-	    if ($runId =~ /(.*)\.(.*)/)
-	      {
-		$idNum = $1;
-		$foldNum = $2;
-	      }
-	    else
-	      {
-		$idNum = $runId;
-		$foldNum = 0;
-	      }
-	    $AveragesTable->addResult($dataset,$idNum,$foldNum,$proportion,$modelName,$PMA);
-	    $i++; 
-	  }
-      }
-    until ($file->eof()); 
-    $file->close();
-  }
 
 sub DrawPictures
   {
@@ -169,6 +85,7 @@ sub DrawPictures
 	    #pgslct($listDevices[$i % ($#listDevices + 1)]);
 	    pgslct($status);
 	    DifferencePlot("ER",$m1,$m2,$exp,$AveragesTable);
+	    pgslct($status);
 	    DifferencePlot("LogP",$m1,$m2,$exp,$AveragesTable);
 	  } else {
 	    my $id = pgopen("ER$m2-$m1.ps/VCPS");
@@ -232,7 +149,7 @@ sub preparateDifferencePlot {
   $color = 2;
 
   
-  my ($min,$max,$subsOrdIndx,$names,$line_styles,$colours) = @{CalculateMinMax($plotType,$modelA,$modelB,$datasetsAandB,$AveragesTable)};
+  my ($min,$max,$subsOrdIndx,$names,$line_styles,$colours) = @{CalculateMinMax($plotType,$modelA,$modelB,$datasetsHash,$AveragesTable)};
   
   my $margin = ($max-$min) * 0.1;
   my $step = ($max-$min) * 0.1; 
@@ -275,7 +192,7 @@ sub GetPlotTitle {
 }
 
 sub CalculateMinMax {
-  my ($plotType,$modelA,$modelB,$datasetsAandB,$AveragesTable) = @_;
+  my ($plotType,$modelA,$modelB,$datasets,$AveragesTable) = @_;
 
   my $min = exp(1000);
   my $max = -exp(1000);
@@ -287,20 +204,43 @@ sub CalculateMinMax {
   my @colours = ();
   my @line_styles= ();
   my @names = ();
+  my $datasetList = $AveragesTable->getDatasets();
   foreach my $proportion (@$proportionList) {
     $subs = CalculateSubs($plotType,$modelA,$modelB,$AveragesTable,$proportion);
     $subsOrdIndx = $subs->qsorti;
-    $min = Durin::Utilities::MathUtilities::min(min($subs),$min);
-    $max = Durin::Utilities::MathUtilities::max(max($subs),$max);
+    print "$subs , $max\n";
+    my $j=0;
+    foreach my $i ($subsOrdIndx->listindices()) {
+      $name = $datasetList->[$subsOrdIndx->at(($i))];
+      if ($datasets->{$name}) {
+	if ($max < $subs->at($subsOrdIndx->at(($i)))) {
+	  $max = $subs->at($subsOrdIndx->at(($i)));
+	} 
+	if ($min > $subs->at($subsOrdIndx->at(($i)))){
+	  $min = $subs->at($subsOrdIndx->at(($i)));
+	}
+      }  
+    }
+    #$min = Durin::Utilities::MathUtilities::min(min($subs),$min);
+    #$max = Durin::Utilities::MathUtilities::max(max($subs),$max);
     push @names,($proportion*100)." %";
     push @colours,$color++;
     push @line_styles,'Solid';
   }
   
+  print "Min:$min Max:$max\n";
+  if ($min < -100) {
+    $min = -100
+  }
+  if ($max > 100) {
+    $max = 100;
+  }
+
   #print "Subs = $subs SubsOrdIndx : $subsOrdIndx \n";
   return [$min,$max,$subsOrdIndx,\@names,\@line_styles,\@colours];
 }
  
+
 sub CalculateSubs {
   my ($plotType,$modelA,$modelB,$AveragesTable,$proportion) = @_;
   

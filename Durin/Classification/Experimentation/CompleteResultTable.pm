@@ -82,8 +82,6 @@ sub getModels
   {
     my ($self) = @_;
     
-    #my @list = (keys %{$self->{MODELS}});
-    #return \@list;
     return $self->{MODELSLIST};
   }
 
@@ -91,8 +89,6 @@ sub getDatasets
   {
     my ($self) = @_;
 
-    #my @list = (keys %{$self->{DATASETS}});
-    #return \@list;
     return $self->{DATASETSLIST};
   }
 
@@ -133,12 +129,12 @@ sub compressRunsByProportion
 	    $datasetIndex = $self->{DATASETS}->{$dataset};
 	    print "Model: $model Dataset: $dataset\n";
 	    my $vect = $self->{RESULTSCLASSIFIEDS}->{$dataset}->{$model}->{$proportion};
-	    print join(",",keys %$vect)."\n";
+	    #print join(",",keys %$vect)."\n";
 	    
 	    my @IdNums = (keys %$vect);
 	    my ($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax);
 	    my ($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax);
-	    print $#IdNums."\n";
+	    print "It has been run ".($#IdNums+1)." times\n";
 	    if ($#IdNums != -1)
 	      {
 		my $ERList = zeroes $#IdNums+1;
@@ -152,6 +148,7 @@ sub compressRunsByProportion
 		    #print join(",",keys %$run)."\n";
 		    
 		    my @numFolds = (keys %$run);
+		    print "Run $idNum has ".($#numFolds+1)." folds \n";
 		    my $runERList =  zeroes $#numFolds+1;
 		    my $runLogPList = zeroes $#numFolds+1;
 		    my $foldNumIndex = 0;
@@ -160,24 +157,24 @@ sub compressRunsByProportion
 		      {
 			#print "Position: $foldNumIndex\n";
 			#print "ER:".$run->{$foldNum}->getErrorRate()."\n";
-			set $runERList,$foldNumIndex,$run->{$foldNum}->getErrorRate();
+			set $runERList,$foldNumIndex,$run->{$foldNum}->getErrorRate()*100;
 			set $runLogPList,$foldNumIndex,$run->{$foldNum}->getLogP();
 			$foldNumIndex++;
 		      }
-		    my ($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = stats($runERList);
-		    my ($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = stats($runLogPList);
+		    ($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = stats($runERList);
+		    ($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = stats($runLogPList);
 		    
 		    set $ERList,$runIndex,$ERAverage;
 		    set $LogPList,$runIndex,$LogPAverage;
 		    $runIndex++;
 		  }
-		($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = stats($ERList);
-		($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = stats($LogPList);
-	      }
-	    else
-	      {
-		($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = (0,0,0,0);
-		($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = (0,0,0,0);
+		if ($#IdNums != 0) {
+		  ($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = stats($ERList);
+		  ($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = stats($LogPList);
+		}
+	      } else {
+		($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = (-1,0,-1,-1,-1);
+		($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = (-1,0,-1,-1,-1);
 	      }
 	    #print "Average: $ERAverage\n";
 	    set $self->{$proportion}->{PDLERAVERAGETABLE},$modelIndex,$datasetIndex,$ERAverage;
@@ -193,6 +190,111 @@ sub compressRunsByProportion
     #print "$model ER: $piddleA\n"
   }
 
+sub getMinimumERForDatasetAndProportion {
+  my ($self,$dataset,$proportion) = @_;
+
+  my $pdl = $self->getAvERModels($dataset,$proportion);
+  my $nelem = $pdl->nelem();
+
+  #  print "num elems:$nelem\n";
+  my $i = 0;
+  my $min = exp(10000);
+  while ($i < $nelem)
+    {
+      my $val = $pdl->at($i);
+      #print "Val:$val\n";
+      if ($val != -1) {
+	if ($val < $min)
+	  {
+	    $min = $val;
+	  }
+      }
+      $i++;
+    }
+  return $min;
+}
+
+sub getMinimumLogPForDatasetAndProportion {
+  my ($self,$dataset,$proportion) = @_;
+  
+  my $pdl = $self->getAvLogPModels($dataset,$proportion);
+  my $nelem = $pdl->nelem();
+
+  #print "num elems:$nelem\n";
+  my $i = 0;
+  my $min = exp(10000);
+  while ($i < $nelem)
+    {
+      my $val = $pdl->at($i);
+      #print "Val:$val\n";
+      if ($val != -1) {
+	if ($val < $min)
+	  {
+	    $min = $val;
+	  }
+      }
+      $i++;
+    }
+  return $min;
+}
+
+sub HasModelMinimumERForDatasetAndProportion {
+  my ($self,$model,$dataset,$proportion) = @_;
+
+  my $min = $self->getMinimumERForDatasetAndProportion($dataset,$proportion);
+  return ($min == $self->getAvER($model,$dataset,$proportion));
+}
+
+sub HasModelMinimumLogPForDatasetAndProportion {
+  my ($self,$model,$dataset,$proportion) = @_;
+  
+  my $min = $self->getMinimumLogPForDatasetAndProportion($dataset,$proportion);
+  return ($min == $self->getAvLogP($model,$dataset,$proportion));
+}
+  
+sub getAvER {
+  my ($self,$model,$dataset,$proportion) = @_;
+  my $modelIndex = $self->{MODELS}->{$model};
+  my $datasetIndex = $self->{DATASETS}->{$dataset};
+  
+  return $self->{$proportion}->{PDLERAVERAGETABLE}->at($modelIndex,$datasetIndex);
+}
+
+sub getStDevER {
+  my ($self,$model,$dataset,$proportion) = @_;
+  my $modelIndex = $self->{MODELS}->{$model};
+  my $datasetIndex = $self->{DATASETS}->{$dataset};
+  
+  return $self->{$proportion}->{PDLERSTDEVTABLE}->at($modelIndex,$datasetIndex);
+}
+
+sub getAvLogP {
+  my ($self,$model,$dataset,$proportion) = @_;
+  my $modelIndex = $self->{MODELS}->{$model};
+  my $datasetIndex = $self->{DATASETS}->{$dataset};
+  
+  return $self->{$proportion}->{PDLLOGPAVERAGETABLE}->at($modelIndex,$datasetIndex);
+}
+
+sub getStDevLogP {
+  my ($self,$model,$dataset,$proportion) = @_;
+  my $modelIndex = $self->{MODELS}->{$model};
+  my $datasetIndex = $self->{DATASETS}->{$dataset};
+  
+  return $self->{$proportion}->{PDLLOGPSTDEVTABLE}->at($modelIndex,$datasetIndex);
+}
+
+sub getAvERModels
+  {
+    my ($self,$dataset,$proportion)  = @_;
+    
+    my $datasetIndex = $self->{DATASETS}->{$dataset};
+    
+    my $pdl = $self->{$proportion}->{PDLERAVERAGETABLE}->slice(":,($datasetIndex)");
+   
+    return $pdl;
+  }
+
 sub getAvERDatasets
   {
     my ($self,$model,$proportion)  = @_;
@@ -200,6 +302,17 @@ sub getAvERDatasets
     my $modelIndex = $self->{MODELS}->{$model};
     
     my $pdl = $self->{$proportion}->{PDLERAVERAGETABLE}->slice("($modelIndex),:");
+   
+    return $pdl;
+  }
+
+sub getAvLogPModels
+  {
+    my ($self,$dataset,$proportion)  = @_;
+    
+    my $datasetIndex = $self->{DATASETS}->{$dataset};
+    
+    my $pdl = $self->{$proportion}->{PDLLOGPAVERAGETABLE}->slice(":,($datasetIndex)");
    
     return $pdl;
   }
