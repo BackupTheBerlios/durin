@@ -274,14 +274,14 @@ sub classify
 sub predict {
   my ($self,$row_to_classify) = @_;
   
-  my ($schema,$class_attno,$class_att,@class_values,$class_val,%Prob,);
+  my %Prob;
 
   my $schema = $self->getSchema();
   my $class_attno = $schema->getClassPos();
   my $class_att = $schema->getAttributeByPos($class_attno);
   my @class_values = @{$class_att->getType()->getValues()};
   my $num_atts = $schema->getNumAttributes();
-  foreach $class_val (@class_values) {
+  foreach my $class_val (@class_values) {
     $Prob{$class_val} = 0.0;
     for(my $node_u = 0 ; $node_u < $num_atts ; $node_u++) {
       if ($node_u != $class_attno)  {
