@@ -2,7 +2,8 @@
 
 # This scripts generates the comparison graphs for an experiment using gnuplot
 
-use IO::File;
+
+
 use Durin::Classification::Experimentation::ResultTable;
 use Durin::Classification::Experimentation::CompleteResultTable;
 use Durin::ProbClassification::ProbModelApplication;
@@ -11,6 +12,10 @@ use PDL::Graphics::PGPLOT;
 use PDL;
 use PGPLOT;
 use PDL::Primitive;
+use IO::File;
+use File::Temp;
+use Text::Template;
+use Env;
 
 if ($#ARGV < 0)
   {
@@ -39,38 +44,36 @@ sub DrawPictures
     my ($exp,$AveragesTable) = @_;
     
     my $models = $AveragesTable->getModels();
+    my $proportionList = $AveragesTable->getProportions();
     
     foreach my $m1 (@$models) {
       foreach my $m2 (@$models) {
 	if (!($m1 eq $m2)) {
-	  ComparisonPlot("ER",$m1,$m2,$exp,$AveragesTable);
-	  ComparisonPlot("LogP",$m1,$m2,$exp,$AveragesTable);
-	  ComparisonPlot("AUC",$m1,$m2,$exp,$AveragesTable);
+	  # Determine the datasets where both models have been run
+	  
+	  my ($datasets,$datasetsHash) = @{calculateDatasetIntersection($m1,$m2,$exp)};
+	  
+	  ComparisonPlot("ER",$m1,$m2,$exp,$AveragesTable,$datasets,$datasetsHash,$proportionList);
+	  ComparisonPlot("LogP",$m1,$m2,$exp,$AveragesTable,$datasets,$datasetsHash,$proportionList);
+	  ComparisonPlot("AUC",$m1,$m2,$exp,$AveragesTable,$datasets,$datasetsHash,$proportionList);
 	}
       }
     }
   }
 
 sub ComparisonPlot {
-  my ($plotType,$modelA,$modelB,$exp,$AveragesTable) = @_;
+  my ($plotType,$modelA,$modelB,$exp,$AveragesTable,$datasets,$datasetsHash,$proportionList) = @_;
   
-  my $proportionList = $AveragesTable->getProportions();
-  #my ($datasets,$x,$subsOrdIndx,$colours) = preparateDifferencePlot($plotType,$modelA,$modelB,$exp,$AveragesTable,$proportionList->[0]);
-
-  # Determine the datasets where both models have been run
-
-  my $datasets = calculateDatasetIntersection($modelA,$modelB,$exp);
- 
-  my $i = 0;
+  #my $i = 0;
   foreach my $proportion (@$proportionList) {
-    ComparisonPlotByProportion($plotType,$modelA,$modelB,$datasets,$AveragesTable,$x,$subsOrdIndx,$proportion,$colours->[$i]);
-    $i++;
+    ComparisonPlotByProportion($plotType,$modelA,$modelB,$datasets,$datasetsHash,$AveragesTable,$proportion);
+    # $i++;
   }
 }
 
 sub calculateDatasetIntersection {
   my ($modelA,$modelB,$exp) = @_;
-
+  
   my $datasetsA = $exp->getDatasetsByInducer($modelA);
   print "Datasets for inducer $modelA -> [".join(',',@$datasetsA)."]\n";
   
@@ -213,7 +216,7 @@ sub CalculateMinMax {
 }
  
 
-sub CalculateSubs {
+sub geModelResults {
   my ($plotType,$modelA,$modelB,$AveragesTable,$proportion) = @_;
   
   #print "Proportion: $proportion\n";
@@ -225,26 +228,51 @@ sub CalculateSubs {
     } elsif ($plotType eq "ER") {
       $piddleA = $AveragesTable->getAvERDatasets($modelA,$proportion);
       $piddleB = $AveragesTable->getAvERDatasets($modelB,$proportion);
+    } elsif ($plotType eq "AUC") {
+      $piddleA = $AveragesTable->getAvAUCDatasets($modelA,$proportion);
+      $piddleB = $AveragesTable->getAvAUCatasets($modelB,$proportion);
     }
-  my $subs = (($piddleA - $piddleB) / ($piddleA+0.00000001)) * 100;
-  
-  return $subs;
+  return [$piddleA,$piddleB];
 }
 
-sub DifferencePlotByProportion {
-  my ($plotType,$modelA,$modelB,$datasets,$AveragesTable,$x,$subsOrdIndx,$proportion,$color) = @_;
+sub ComparisonPlotByProportion {
+  my ($plotType,$modelA,$modelB,$datasets,$datasetsHash,$AveragesTable,$proportion) = @_;
   
-  my $subs = CalculateSubs($plotType,$modelA,$modelB,$AveragesTable,$proportion);
-  my $selectedSubs = zeroes(scalar(keys %$datasets));
-  my $datasetList = $AveragesTable->getDatasets();
-  my $j=0;
-  foreach my $i ($subsOrdIndx->listindices()) {
-    $name = $datasetList->[$subsOrdIndx->at(($i))];
-    if ($datasets->{$name}) {
-      set $selectedSubs,$j,$subs->at($subsOrdIndx->at(($i)));
-      $j++;
+  # get Model A and B results
+  my ($piddleA,$piddleB) = @{getModelResults($plotType,$modelA,$modelB,$AveragesTable,$proportion)};
+  
+  # transform plot data into string
+  my $data = "";
+  my $i = 0;
+  foreach my $dataset (@$datasets){
+    if ($datasetsHash->{$dataset}) {
+      $data = $data."".$piddleA->at($i)." ".$piddleB->at($i)."\n";
     }
-  }  
-  points $x,$selectedSubs,{COLOR => $color,SYMBOL=>STAR,PLOTLINE=>1};
+    $i++;
+  }
+  $data = $data."e\n";
+  
+  # generate gnuplot file
+  
+  my $tmpFile = File::Temp->new(DIR=>'/tmp',
+				SUFFIX => '.gnuplot');
+  
+  my $template = Text::Template->new(SOURCE => "$DURIN_HOME/scripts/plog.gnuplot.tmpl")
+    or die "Couldn't construct template: $Text::Template::ERROR";
+  
+  my %vars = (x_size => 2,
+	      y_size => 2,
+	      x_range_min => 0,
+	      x_range_max => 50,
+	      y_range_min => 0,
+	      y_range_max => 50,
+	      output => "$modelA-$modelB-$plotType.eps",
+	      data => $data
+	     );
+  
+  my $result = $template->fill_in(HASH => \%vars);
+
+  print $tmpFile $result;
+  system "gnuplot ".$tmpFile->filename;
 }
   
