@@ -9,7 +9,7 @@ use Durin::Components::Process;
 use strict;
 
 use Durin::ProbClassification::ProbApprox::Counter;
-use Durin::TAN::GraphConstructor;
+use Durin::TAN::InfoGraphConstructor;
 
 #use Durin::TAN::Kruskal;
 use Durin::Algorithms::Kruskal;
@@ -65,7 +65,7 @@ sub run($)
   $PAGC->setCountTable($self->{COUNTING_TABLE});
   $PATAN->setCountTable($self->{COUNTING_TABLE});
   
-  my $gcons = Durin::TAN::GraphConstructor->new();
+  my $gcons = Durin::TAN::InfoGraphConstructor->new();
   {
     my ($Input);
     $Input->{PROBAPPROX} = $PAGC;
@@ -84,12 +84,12 @@ sub run($)
   $kruskal->run();
   my $UTree = $kruskal->getOutput()->{TREE};
   
-  # print "The undirected spanning tree is:\n";
-  #my @edges = @{$UTree->getEdges()};
-  #foreach my $p (@edges)
-  #  {
-  #  print ${@$p}[0],",",${@$p}[1], "\n";
-  #}
+   print "The undirected spanning tree is:\n";
+  my @edges = @{$UTree->getEdges()};
+  foreach my $p (@edges)
+    {
+    print ${@$p}[0],",",${@$p}[1], "\n";
+  }
   
   my $Tree = $UTree->makeDirected();
   
