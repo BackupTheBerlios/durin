@@ -254,7 +254,7 @@ sub CalculateSubs {
       $piddleA = $AveragesTable->getAvERDatasets($modelA,$proportion);
       $piddleB = $AveragesTable->getAvERDatasets($modelB,$proportion);
     }
-  my $subs = (($piddleA - $piddleB) / $piddleA) * 100;
+  my $subs = (($piddleA - $piddleB) / ($piddleA+0.00000001)) * 100;
   
   return $subs;
 }

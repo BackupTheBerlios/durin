@@ -98,18 +98,27 @@ sub run($) {
     {
       my $weight = $Tree->getWeight();
       print "Spanning tree with weight $weight and edges:\n";
-      #my @edges = @{$Tree->getEdges()};
-      #foreach my $p (@edges)
-      #  {
-      #    print "[$p->[0],$p->[1],$p->[2]]\n";
-      #  }
+      my @edges = @{$Tree->getEdges()};
+      foreach my $p (@edges)
+        {
+          print "[$p->[0],$p->[1],$p->[2]]\n";
+      }
     }
   
   # Calculate the parameters of the resulting decomposable distribution
   
   my $distrib = Durin::TAN::DecomposableDistribution->createPrior($schema,$lambda);
-  $distrib->setCountingTable($self->getCountingTable());
+  $distrib->setCountingTable($self->{COUNTING_TABLE});
   
+  # Find the minimum weight in the set
+  my $maxWeight = 0;
+  foreach my $UTree (@$Trees) {
+      my $thisWeight = $UTree->getWeight();
+      if ($maxWeight < $thisWeight) {
+	  $maxWeight = $thisWeight;
+      }
+      print "This = $thisWeight, Max = $maxWeight\n";
+  }
   my $BMA = Durin::ProbClassification::BMA->new();
   foreach my $UTree (@$Trees) {
     my $UTAN = Durin::TAN::UTAN->new();
@@ -117,21 +126,11 @@ sub run($) {
     $UTAN->setDecomposableDistribution($distrib);
     $UTAN->setTree($UTree);
     $UTAN->setName($self->getName());
-    $BMA->addWeightedModel($UTAN,exp($UTree->getWeigth()));
-    
-    
-    
-    #$Input->{MODEL} = $TAN;
-    
-    #$MA->setInput($Input);
-    #$MA->run();
-    #my $acc_data = $MA->getOutput();
-    #my $weight = ($acc_data->[0])/($acc_data->[0] + $acc_data->[1]);
-    #print "GOOD: ",$acc_data->[0]," BAD: ",$acc_data->[1]," weight: $weight\n";
-    
-  }
+    $BMA->addWeightedModel($UTAN,exp($UTree->getWeight()-$maxWeight));
+}
   $BMA->normalizeWeights();
   $BMA->setSchema($table->getMetadata()->getSchema());
+  $BMA->setName($self->getName());
   $self->setOutput($BMA); 
 }
 	

@@ -142,7 +142,8 @@ sub generateAndTestDataset {
   print "Started learning\n";
   
   my $inducerList = [Durin::TAN::UTANInducer->new(),
-		     Durin::TAN::FGGTANInducer->new(),
+		     Durin::TAN::FrequencyLaplaceTANInducer->new(),
+		     #Durin::TAN::FGGTANInducer->new(),
 		     #Durin::DFAN::MAPDFANInducer->new(),
 		     #Durin::TAN::DecomposableLaplaceTANInducer->new(),
 		     #Durin::TAN::DecomposableCoherentTANInducer->new(),

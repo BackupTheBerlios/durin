@@ -75,7 +75,7 @@ sub compareModels {
 
   if ($m1BetterThanm2>$m2BetterThanm1) {
     print "$m1 > $m2: $m1BetterThanm2 - $m2 > $m1: $m2BetterThanm1\n";
-  } elsif ($m1BetterThanm2<$m2BetterThanm1) {
+  } elsif ($m1BetterThanm2<=$m2BetterThanm1) {
     print "$m2 > $m1: $m2BetterThanm1 - $m1BetterThanm2\n";
   }
 }
@@ -124,7 +124,10 @@ sub compareModelsInDatasetAndProportion {
   my $results2 = $AveragesTable->getResultsByDatasetModelAndProportion($dataset,$m2,$proportion);
   my $ERdifference = [];
   my $i = 0 ;
+  print "m1=$m1\nm2=$m2\n";
   foreach my $result1 (@$results1) {
+    #print "Result1: $result1\n";
+    #print "result2 = ".$results2->[$i]." \n";
     push @$ERdifference,(&$comparisonFunc($result1) - &$comparisonFunc($results2->[$i]));
     $i++;
   }
@@ -135,7 +138,7 @@ sub compareModelsInDatasetAndProportion {
   #print "n:$n  U: $UValue c:$U99\n";
   my $result = 0;
   if ($UValue>$U99) {
-    #print "$dataset: $m2 sign. better than $m1 at $percentage%\n";
+    print "$dataset: $m2 sign. better than $m1 at $percentage%\n";
     $result = 1;
   } else {
     #print "No sign. difference\n";

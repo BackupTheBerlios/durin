@@ -13,8 +13,8 @@ sub new_delta
     my ($class,$self) = @_;
     
     $self->{INDUCER} = Durin::NB::NBInducer->new();
-    $self->setName("MAPNB");
-  }
+    $self->setName("MLNB");
+}
 
 sub clone_delta
 { 
