@@ -51,19 +51,21 @@ sub run
 			  {
 			    my ($row) = @_;
 			    
-			    my $realClass = $row->[$class_attno];
 			    my ($distrib,$class) = @{$model->predict($row)};
 			    
 			    #print "Class Prob:",$distrib->{$class},"\n";
 			    #print "Real class:",$realClass,"\n";
-			    my $realClassIndx = $classType->getValuePosition($realClass);
 			    my $predictedClassIndx = $classType->getValuePosition($class);
 			    my $probList = $self->makeListFromHash($classValues,$distrib); 
-			    if ($Bayes) { 
-			      my ($relativeDistrib,$maxClass,$absoluteDistrib,$sum) = @{$realModel->predict($row)}; 
+			    
+			    if ($Bayes) {
+			      my ($relativeDistrib,$realClass,$absoluteDistrib,$sum) = @{$realModel->predict($row)};
+			      my $realClassIndx = $classType->getValuePosition($realClass);
 			      my $realProbList = $self->makeListFromHash($classValues,$absoluteDistrib); 
 			      $AUCMA->addInstanceBayes($realClassIndx,$realProbList,$sum,$probList,$predictedClassIndx);
 			    } else {
+			      my $realClass = $row->[$class_attno];
+			      my $realClassIndx = $classType->getValuePosition($realClass);
 			      $AUCMA->addInstance($realClassIndx,$probList,$predictedClassIndx);
 			    }
 			  });

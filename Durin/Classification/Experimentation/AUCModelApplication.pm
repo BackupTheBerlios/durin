@@ -64,7 +64,7 @@ sub computeAUC {
   #print "NumClasses: $numClasses\n";
   for (my $i = 0; $i < $numClasses ; $i++) {
     for (my $j = 0; $j < $numClasses ; $j++) {
-      if ($i != $j) {
+      if ($i > $j) {
 	#print "Computing AUC($i, $j)\n";
 	my $thisAUC = $self->computeAUCClassPair($i,$j);
 	#print "AUC($i, $j) = $thisAUC\n";
@@ -73,7 +73,7 @@ sub computeAUC {
     }
   }
   
-  $AUC = $AUC /($numClasses*($numClasses-1));
+  $AUC = ($AUC * 2) /($numClasses*($numClasses-1));
     
   return $AUC;
 }
@@ -212,15 +212,15 @@ sub computeAUCBayes {
   #print "NumClasses: $numClasses\n";
   for (my $i = 0; $i < $numClasses ; $i++) {
     for (my $j = 0; $j < $numClasses ; $j++) {
-      if ($i != $j) {
-	print "Computing AUC($i, $j)\n";
+      if ($i > $j) {
+	print "Computing Bayes AUC($i, $j)\n";
 	my $thisAUC = $self->computeAUCClassPairBayes($i,$j);
 	print "AUC($i, $j) = $thisAUC\n";
 	$AUC += $thisAUC;
       }
     }
   }
-  $AUC = $AUC /($numClasses*($numClasses-1));
+  $AUC = ($AUC * 2) /($numClasses*($numClasses-1));
   return $AUC;
 }
 
@@ -230,16 +230,16 @@ sub computeAUCClassPairBayes {
   my @fullList = ();
   for (my $i = 0 ; $i < scalar @{$self->{INSTANCE_LIST}} ; $i++) {
     my @elem = @{$self->{INSTANCE_LIST}->[$i]};
-    print "Elem contains: ".join(",",@elem)."\n";
+    #print "Elem contains: ".join(",",@elem)."\n";
     push @elem, @{$self->{INSTANCE_PROBABILITY_LIST}->[$i]};
     push @fullList, \@elem;
   }
   my @pairList = grep {(($_->[0] == $possitiveClass) || ($_->[0] == $negativeClass))} @fullList;
-  foreach my $inst (@pairList)
-    {
-      
-      print $inst->[0].",(".join(",",@{$inst->[1]})."),".$inst->[2].",(".join(",",@{$inst->[3]})."),".$inst->[4]."\n";
-    }
+  #foreach my $inst (@pairList)
+  #  {
+  #    
+  #    print $inst->[0].",(".join(",",@{$inst->[1]})."),".$inst->[2].",(".join(",",@{$inst->[3]})."),".$inst->[4]."\n";
+  #  }
   my @sortedList = sort {$b->[1]->[$possitiveClass] <=> $a->[1]->[$possitiveClass]} @pairList;
   
   my $fp = 0;
@@ -314,7 +314,7 @@ sub computeErrorRateBayes {
       $realCondProbabilityOfPredictedClass = $self->{INSTANCE_PROBABILITY_LIST}->[$i]->[0]->[$predictedClass] / $pInstance;
       $expectedError = $pInstance * (1 - $realCondProbabilityOfPredictedClass);
       $i++;
-      print "Predicted: $predictedClass , Prob Instance: $pInstance Real Cond Prob Predicted Class: $realCondProbabilityOfPredictedClass  Error expected:$expectedError\n";
+      #print "Predicted: $predictedClass , Prob Instance: $pInstance Real Cond Prob Predicted Class: $realCondProbabilityOfPredictedClass  Error expected:$expectedError\n";
       $expectedErrorRate += $expectedError;
     }
   return $expectedErrorRate;

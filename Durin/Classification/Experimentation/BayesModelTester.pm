@@ -22,9 +22,15 @@ sub new_delta
 sub clone_delta
   { 
     my ($class,$self,$source) = @_;
-    
+
     #   $self->setMetadata($source->getMetadata()->clone());
   }
+
+sub clear {
+  my ($self) = @_;
+
+  $self->setSample(undef);
+}
 
 sub init {
   my ($self,$characteristics) = @_;
@@ -36,6 +42,7 @@ sub init {
   } elsif (Sample eq $name) {
     $self->setType(Sample);
   }
+  $self->setSample(undef);
 }
 
 sub test {
@@ -43,7 +50,7 @@ sub test {
   
   my $input = $self->getInput();
   
-  
+
   # Get the sample  over which the Bayes error rate is going to be approximated
   #if (defined $input->{SAMPLE}) {
   
@@ -77,6 +84,13 @@ sub summarize {
   } else {
     $resultTable->summarize();
   }
+}
+
+sub setRealModel {
+  my ($self,$model)= @_;
+
+  $self->clear();
+  $self->SUPER::setRealModel($model);
 }
 
 1;

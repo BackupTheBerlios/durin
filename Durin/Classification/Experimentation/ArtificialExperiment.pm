@@ -90,29 +90,18 @@ sub executeRun {
   $modelGenerator->run();
   my $model = $modelGenerator->getOutput()->[0];
   print "Model generated\n";
-  
   $tester->setRealModel($model);
   foreach my $size (@$learningSampleSizes) {
     print "Starting dataset generation\n";
-    
     my $trainingSet = $model->generateDataset($size);
-    
     print "Dataset generated\n";
-    
     print "Started learning\n";
-    
     my $learntModels = $self->learnModels($inducerList,$trainingSet);
-
     print "Models have been learnt\n";
-
     print "Started testing\n";
-    
     $self->testModels($runId,$size,$learntModels,$tester,$resultTable);
-    
     print "Testing finished\n";
-    
     print "Summarizing testing info\n";
-    
     $tester->summarize($resultTable);
   }
 }

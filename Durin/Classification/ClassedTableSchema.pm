@@ -77,7 +77,9 @@ sub generateCompleteDatasetWithoutClass {
       my @tmp =  @$row;
       $row = \@tmp;
     }
+    #print "Bef\n";
     $self->increaseAndGenerateObservation($actualValueIndexes,$attTypes,$row);
+    #print "Aft\n";
   } while ($self->stillMoreObservations($actualValueIndexes));
   $dataset->close();
   
