@@ -16,6 +16,7 @@ package Durin::Classification::Model;
 =over
 
 =cut
+
 use base Durin::Components::Data;
 
 #@ISA = (Durin::Components::Data);

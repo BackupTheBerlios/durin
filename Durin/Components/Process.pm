@@ -18,9 +18,9 @@ package Durin::Components::Process;
 
 # This has to be continued further.
 
-use Durin::Basic::MIManager;
+use base Durin::Basic::MIManager;
 
-@ISA = (Durin::Basic::MIManager);
+#@ISA = (Durin::Basic::MIManager);
 
 use strict;
 

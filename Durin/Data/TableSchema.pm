@@ -206,6 +206,56 @@ sub stillMoreObservations {
   return ($actualValueIndexes->[0] != -1);
 }
 
+sub generateAllConfigurations {
+  my ($self,$attIndexes)  = @_;
+
+  my $attTypes = [];
+  my $actualValueIndexes = [];
+  my $row = [];
+  foreach my $attIndex (@$attIndexes) {
+    my $att = $self->getAttributeByPos($attIndex);
+    my $attType = $att->getType();
+    push @$attTypes,$attType;
+    push @$actualValueIndexes,0;
+    push @$row,$attType->getValue(0);
+  }
+  my @configurations = ();
+  do { 
+    push @configurations,$row;
+    my @tmp =  @$row;
+    $row = \@tmp;
+    $self->increaseAndGenerateConfigurations($attIndexes,$actualValueIndexes,$attTypes,$row);
+  } while ($self->stillMoreConfigurations($actualValueIndexes));
+  return \@configurations;
+} 
+
+sub increaseAndGenerateConfigurations {
+  my ($self,$attIndexes,$actualValueIndexes,$attTypes,$row)  = @_;
+  
+  my $actualAttPos = scalar(@$attIndexes)-1;
+  my $carry = 1;
+  while ($carry && ($actualAttPos >= 0)) {
+    my $actualValueIndex = $actualValueIndexes->[$actualAttPos];
+    if ($actualValueIndex == $attTypes->[$actualAttPos]->getCardinality()-1) {
+      $actualValueIndex = 0;
+    } else {
+      $actualValueIndex++;
+      $carry = 0;
+    }
+    $actualValueIndexes->[$actualAttPos] = $actualValueIndex;
+    $row->[$actualAttPos] =  $attTypes->[$actualAttPos]->getValue($actualValueIndex);
+    $actualAttPos--;
+  }
+  if ($carry) {
+    $actualValueIndexes->[0] = -1;
+  }
+}
+
+sub stillMoreConfigurations {
+  my ($self,$actualValueIndexes)  = @_;
+  return ($actualValueIndexes->[0] != -1);
+}
+
 sub makestring($)
 {
     my $self = shift;

@@ -1,9 +1,10 @@
 package Durin::ModelGeneration::ModelGenerator;
 
-use Durin::Components::Process;
-use Durin::Basic::NamedObject;
+#use Durin::Components::Process;
+#use Durin::Basic::NamedObject;
 
-@ISA = qw(Durin::Components::Process Durin::Basic::NamedObject);
+#@ISA = qw(Durin::Components::Process Durin::Basic::NamedObject);
+use base qw(Durin::Components::Process Durin::Basic::NamedObject);
 
 # This is the base class for model generators.
 # Model generators are processes that randomly

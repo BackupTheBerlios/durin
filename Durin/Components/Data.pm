@@ -17,7 +17,8 @@ package Durin::Components::Data;
 use Durin::Basic::NamedObject;
 use Durin::FlexibleIO::Externalizable;
 
-@ISA = qw(Durin::Basic::NamedObject Durin::FlexibleIO::Externalizable);
+#@Durin::Components::Data::ISA = qw(Durin::Basic::NamedObject Durin::FlexibleIO::Externalizable);
+use base qw(Durin::Basic::NamedObject Durin::FlexibleIO::Externalizable);
 
 use strict;
 
@@ -78,4 +79,7 @@ sub getName
       return $self->{METADATA}->getName();
   }
 
+1;
+
 =back
+

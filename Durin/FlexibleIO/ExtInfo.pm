@@ -6,12 +6,13 @@
 
 package Durin::FlexibleIO::ExtInfo;
 
-use Durin::Basic::MIManager;
+#use Durin::Basic::MIManager;
+
+#@ISA = (Durin::Basic::MIManager);
+use base Durin::Basic::MIManager;
+use strict;
 use Durin::FlexibleIO::DataTypeMappingRegistry;
 
-@ISA = (Durin::Basic::MIManager);
-
-use strict;
 #use Durin::FlexibleIO::IORegistry;
 use Durin::FlexibleIO::DeviceCreator;
 

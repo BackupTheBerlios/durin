@@ -1,8 +1,8 @@
 package Durin::Metadata::ATUnknown;
 
-use Durin::Metadata::AttributeType;
+use base Durin::Metadata::AttributeType;
 
-@ISA = (Durin::Metadata::AttributeType);
+#@ISA = (Durin::Metadata::AttributeType);
 
 use strict;
 

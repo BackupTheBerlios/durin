@@ -1,8 +1,8 @@
 package Durin::FlexibleIO::IOHandler;
 
-use Durin::Basic::MIManager;
+use base Durin::Basic::MIManager;
 
-@ISA = (Durin::Basic::MIManager);
+#@ISA = (Durin::Basic::MIManager);
 
 use strict;
 

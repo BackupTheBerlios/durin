@@ -28,7 +28,7 @@ even if they appear completely empty.
 
 =cut
 
-@ISA = ();
+#@ISA = ();
 
 use strict;
 

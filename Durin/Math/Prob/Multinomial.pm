@@ -1,8 +1,8 @@
 package Durin::Math::Prob::Multinomial;
 
-use Durin::Basic::MIManager;
+use base Durin::Basic::MIManager;
 
-@ISA = (Durin::Basic::MIManager);
+#@ISA = (Durin::Basic::MIManager);
 
 #use Class::MethodMaker get_set => [-java => qw/ Dimensions Cardinalities/];
 
@@ -255,15 +255,15 @@ sub sampleVector {
 sub multidimensionalize {
   my ($self,$index)  = @_;
 
-#  print "Multidimensionalizing: $index\n";
+  #print "Multidimensionalizing: $index\n";
   my $prod = $self->{PROD_DIMENSIONS};
   my $m_indx = [];
-  foreach my $dim (@{$self->getCardinalities()})
-    {
-      $prod /= $dim;
-      push @$m_indx,$index % $dim;
-      $index = $index / $dim;
-    }
+  foreach my $dim (@{$self->getCardinalities()}) {
+    #print "Dim = $dim\n";
+    $prod /= $dim;
+    push @$m_indx,$index % $dim;
+    $index = $index / $dim;
+  }
   return $m_indx;
 }
       

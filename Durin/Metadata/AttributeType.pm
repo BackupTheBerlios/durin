@@ -1,8 +1,8 @@
 package Durin::Metadata::AttributeType;
 
-use Durin::Components::Metadata;
+use base Durin::Components::Metadata;
 
-@ISA = (Durin::Components::Metadata);
+#@ISA = (Durin::Components::Metadata);
 
 use strict;
 

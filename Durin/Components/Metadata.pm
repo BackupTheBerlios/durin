@@ -1,8 +1,8 @@
 package Durin::Components::Metadata;
 
-use Durin::Basic::NamedObject;
+use base Durin::Basic::NamedObject;
 
-@ISA = (Durin::Basic::NamedObject);
+#@ISA = (Durin::Basic::NamedObject);
 
 use strict;
 use Durin::FlexibleIO::ExtInfo;
@@ -88,3 +88,5 @@ sub getOutExtInfo
     
     return $self->{OUT_EXT_INFO};    
   }
+
+1;

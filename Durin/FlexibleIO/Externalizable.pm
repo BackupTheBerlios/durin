@@ -2,9 +2,9 @@ package Durin::FlexibleIO::Externalizable;
 
 # It externalizes an object i,e. puts it into a given dispositive with a given format.
 
-use Durin::Basic::MIManager;
+use base Durin::Basic::MIManager;
 
-@ISA = (Durin::Basic::MIManager);
+#@ISA = (Durin::Basic::MIManager);
 
 use Durin::FlexibleIO::IORegistry;
 use Durin::FlexibleIO::IOHandler;
@@ -74,3 +74,5 @@ sub write
       }
     return $result;
   }
+
+1;
