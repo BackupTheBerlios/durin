@@ -105,6 +105,7 @@ sub compressRuns {
     $self->compressRunsByProportion($proportion);
   }
 }
+
 # Calculate averages and std. deviations over the different runs.
 
 sub compressRunsByProportion 
@@ -130,43 +131,54 @@ sub compressRunsByProportion
 	foreach my $dataset (@$datasets)
 	  {
 	    $datasetIndex = $self->{DATASETS}->{$dataset};
-	    #print "Model: $model Dataset: $dataset\n";
+	    print "Model: $model Dataset: $dataset\n";
 	    my $vect = $self->{RESULTSCLASSIFIEDS}->{$dataset}->{$model}->{$proportion};
-	    #print join(",",keys %$vect)."\n";
-	 
+	    print join(",",keys %$vect)."\n";
+	    
 	    my @IdNums = (keys %$vect);
-	    my $ERList = zeroes $#IdNums+1;
-	    my $LogPList = zeroes $#IdNums+1;
-	    my $runIndex = 0;
-	    #print "Number of runs: ",$#IdNums + 1,"\n";
-	    foreach my $idNum (@IdNums)
+	    my ($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax);
+	    my ($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax);
+	    print $#IdNums."\n";
+	    if ($#IdNums != -1)
 	      {
-		# Here we treat CV results.
-		my $run = $vect->{$idNum};
-		#print join(",",keys %$run)."\n";
-	 
-		my @numFolds = (keys %$run);
-		my $runERList =  zeroes $#numFolds+1;
-		my $runLogPList = zeroes $#numFolds+1;
-		my $foldNumIndex = 0;
-		#print "Number of folds = ",$#numFolds + 1,"\n";
-		foreach my $foldNum (@numFolds)
+		my $ERList = zeroes $#IdNums+1;
+		my $LogPList = zeroes $#IdNums+1;
+		my $runIndex = 0;
+		#print "Number of runs: ",$#IdNums + 1,"\n";
+		foreach my $idNum (@IdNums)
 		  {
-		    #print "Position: $foldNumIndex\n";
-		    #print "ER:".$run->{$foldNum}->getErrorRate()."\n";
-		    set $runERList,$foldNumIndex,$run->{$foldNum}->getErrorRate();
-		    set $runLogPList,$foldNumIndex,$run->{$foldNum}->getLogP();
-		    $foldNumIndex++;
+		    # Here we treat CV results.
+		    my $run = $vect->{$idNum};
+		    #print join(",",keys %$run)."\n";
+		    
+		    my @numFolds = (keys %$run);
+		    my $runERList =  zeroes $#numFolds+1;
+		    my $runLogPList = zeroes $#numFolds+1;
+		    my $foldNumIndex = 0;
+		    #print "Number of folds = ",$#numFolds + 1,"\n";
+		    foreach my $foldNum (@numFolds)
+		      {
+			#print "Position: $foldNumIndex\n";
+			#print "ER:".$run->{$foldNum}->getErrorRate()."\n";
+			set $runERList,$foldNumIndex,$run->{$foldNum}->getErrorRate();
+			set $runLogPList,$foldNumIndex,$run->{$foldNum}->getLogP();
+			$foldNumIndex++;
+		      }
+		    my ($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = stats($runERList);
+		    my ($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = stats($runLogPList);
+		    
+		    set $ERList,$runIndex,$ERAverage;
+		    set $LogPList,$runIndex,$LogPAverage;
+		    $runIndex++;
 		  }
-		my ($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = stats($runERList);
-		my ($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = stats($runLogPList);
-		
-		set $ERList,$runIndex,$ERAverage;
-		set $LogPList,$runIndex,$LogPAverage;
-		$runIndex++;
+		($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = stats($ERList);
+		($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = stats($LogPList);
 	      }
-	    my ($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = stats($ERList);
-	    my ($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = stats($LogPList);
+	    else
+	      {
+		($ERAverage,$ERRMS,$ERMedian,$ERMin,$ERMax) = (0,0,0,0);
+		($LogPAverage,$LogPRMS,$LogPMedian,$LogPMin,$LogPMax) = (0,0,0,0);
+	      }
 	    #print "Average: $ERAverage\n";
 	    set $self->{$proportion}->{PDLERAVERAGETABLE},$modelIndex,$datasetIndex,$ERAverage;
 	    set $self->{$proportion}->{PDLERSTDEVTABLE},$modelIndex,$datasetIndex,sqrt($ERRMS);

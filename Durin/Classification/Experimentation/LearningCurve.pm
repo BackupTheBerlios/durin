@@ -7,6 +7,7 @@ use Durin::Components::Process;
 @ISA = (Durin::Components::Process);
 
 use strict;
+use Time::HiRes;
 
 sub new_delta
   {
@@ -59,13 +60,19 @@ sub run
 	my @sampleResult = ();
 	foreach my $inducer (@inducerList)
 	  {
+	    
+	    my $startTime = [Time::HiRes::gettimeofday];
 	    {
 	      my $input = {};
 	      $input->{TABLE} = $newTrain;
 	      $inducer->setInput($input);
 	    }
 	    $inducer->run();
+	    my $endLearningTime = [Time::HiRes::gettimeofday];
+	    my $learningTime = Time::HiRes::tv_interval($startTime,$endLearningTime);
 	    my $model = $inducer->getOutput();
+	    print "Run: $runId % Train: ",$trainProportion," Inducer: ",$model->getName(),"\n";
+	    print "Learning time: $learningTime\n";
 	    # We should provide control over the references.
 	    # $inducer->setOutput(undef);
 	    {
@@ -74,8 +81,10 @@ sub run
 	      $input->{MODEL} = $model;
 	      $applier->setInput($input);
 	    }
-	    print "Run: $runId % Train: ",$trainProportion," Inducer: ",$model->getName(),"\n";
 	    $applier->run();
+	    my $endClassificationTime = [Time::HiRes::gettimeofday];
+	    my $classificationTime = Time::HiRes::tv_interval($endLearningTime,$endClassificationTime);
+	    print "Classification time: $classificationTime\n";
 	    $resultTable->addResult($runId,$trainProportion,$model->getName(),$applier->getOutput());
 	  }  
       } 

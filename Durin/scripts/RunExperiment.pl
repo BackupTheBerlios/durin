@@ -12,6 +12,8 @@ my $inFilePos = 0;
 
 $ExpFileName = $ARGV[$inFilePos];
 
+our $exp;
+
 do $ExpFileName;
 
 $exp->run();

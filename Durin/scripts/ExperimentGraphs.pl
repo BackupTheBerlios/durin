@@ -25,6 +25,8 @@ my $LOGP = 2;
 
 $ExpFileName = $ARGV[$inFilePos];
 
+our $exp;
+
 do $ExpFileName;
 
 my $interactive = 1;
@@ -39,12 +41,12 @@ if ($#ARGV > 0)
 
 my $AveragesTable = Durin::Classification::Experimentation::CompleteResultTable->new();
 my $mainDir = $ENV{PWD};
-$destinationDir = $resultDir.$ExpName;
+$destinationDir = $exp->getResultDir().$exp->getName();
 print $destinationDir."\n";
 chdir $destinationDir;
-foreach my $datasetInfo (@list)
+foreach my $task (@{$exp->getTasks()})
   {
-    my $dataset = $datasetInfo->[0];
+    my $dataset = $task->getDataset();
     if (-e "$dataset.out")
       {
 	print "Taking info from to dataset $dataset\n";
@@ -58,7 +60,7 @@ foreach my $datasetInfo (@list)
 chdir $mainDir;
 
 $AveragesTable->compressRuns();
-DrawPictures($AveragesTable);
+DrawPictures($exp,$AveragesTable);
 
 print "Done\n";
 
@@ -129,12 +131,11 @@ sub Process
 
 sub DrawPictures
   {
-    my ($AveragesTable) = @_;
+    my ($exp,$AveragesTable) = @_;
     
     my $models = $AveragesTable->getModels();
     my @listDevices = ();
     
-
     my $dev = "\@:0.0/XSERVE";
     if ($interactive)
       {
@@ -159,59 +160,79 @@ sub DrawPictures
     $i = 0;
     pgslct($status);
     env (0,5,0,5,0,-2); # set world-window size 
-    foreach my $m1 (@$models)
-      {
-	foreach my $m2 (@$models)
-	  {
-	    if ($m1 lt $m2)
-	      {
-		if ($interactive) {
-		  #pgslct($listDevices[$i % ($#listDevices + 1)]);
-		  pgslct($status);
-		  DifferencePlot("ER",$m1,$m2,$AveragesTable);
-		  DifferencePlot("LogP",$m1,$m2,$AveragesTable);
-		} else {
-		  my $id = pgopen("ER$m2-$m1.ps/VCPS");
-		  pgslct($id);
-		  DifferencePlot("ER",$m1,$m2,$AveragesTable);
-		  pgclos();
-		  $i++;
-		  $id = pgopen("LogP$m2-$m1.ps/VCPS");
-		  pgslct($id);
-		  $i++;
-		  DifferencePlot("LogP",$m1,$m2,$AveragesTable);
-		  pgclos();
-		}
-	      }
+
+    
+    foreach my $m1 (@$models) {
+      foreach my $m2 (@$models) {
+	if (!($m1 eq $m2)) {
+	  if ($interactive) {
+	    #pgslct($listDevices[$i % ($#listDevices + 1)]);
+	    pgslct($status);
+	    DifferencePlot("ER",$m1,$m2,$exp,$AveragesTable);
+	    DifferencePlot("LogP",$m1,$m2,$exp,$AveragesTable);
+	  } else {
+	    my $id = pgopen("ER$m2-$m1.ps/VCPS");
+	    pgslct($id);
+	    DifferencePlot("ER",$m1,$m2,$exp,$AveragesTable);
+	    pgclos();
+	    $i++;
+	    $id = pgopen("LogP$m2-$m1.ps/VCPS");
+	    pgslct($id);
+	    $i++;
+	    DifferencePlot("LogP",$m1,$m2,$exp,$AveragesTable);
+	    pgclos();
 	  }
+	}
       }
+    }
   }
 
 sub DifferencePlot {
-  my ($plotType,$modelA,$modelB,$AveragesTable) = @_;
+  my ($plotType,$modelA,$modelB,$exp,$AveragesTable) = @_;
   
   my $proportionList = $AveragesTable->getProportions();
-  my ($x,$subsOrdIndx,$colours) = preparateDifferencePlot($plotType,$modelA,$modelB,$AveragesTable,$proportionList->[0]);
+  my ($datasets,$x,$subsOrdIndx,$colours) = preparateDifferencePlot($plotType,$modelA,$modelB,$exp,$AveragesTable,$proportionList->[0]);
  
   my $i = 0;
   foreach my $proportion (@$proportionList) {
-    DifferencePlotByProportion($plotType,$modelA,$modelB,$AveragesTable,$x,$subsOrdIndx,$proportion,$colours->[$i]);
+    DifferencePlotByProportion($plotType,$modelA,$modelB,$datasets,$AveragesTable,$x,$subsOrdIndx,$proportion,$colours->[$i]);
     $i++;
   }
 }
 
 sub preparateDifferencePlot {
-  my ($plotType,$modelA,$modelB,$AveragesTable,$proportion) = @_;
+  my ($plotType,$modelA,$modelB,$exp,$AveragesTable,$proportion) = @_;
+
+  # Determine the datasets where both inducers have been run
   
-  my $numDatasets = scalar(@{$AveragesTable->getDatasets()});
+  my $datasetsA = $exp->getDatasetsByInducer($modelA);
+  print "Datasets for inducer $modelA -> [".join(',',@$datasetsA)."]\n";
   
+  my $datasetsB = $exp->getDatasetsByInducer($modelB);
+  print "Datasets for inducer $modelB -> [".join(',',@$datasetsA)."]\n";
+  
+  
+  my $datasetsAandB = [];
+  my $datasetsHash = {};
+  %count = ();
+  foreach my $element (@$datasetsA, @$datasetsB) { $count{$element}++ }
+  foreach my $element (keys %count) {
+    if ($count{$element} > 1) {
+      push @$datasetsAandB, $element;
+      $datasetsHash->{$element} = 1;
+    }
+  }
+  my $numDatasets = scalar(@$datasetsAandB);
+
+  print "Num datasets: $numDatasets -> [".join(',',@$datasetsAandB)."]\n";
+
   my $x = sequence($numDatasets);
   my $zeroLine = zeroes($numDatasets);
   my $plotList = [];
   $color = 2;
 
   
-  my ($min,$max,$subsOrdIndx,$names,$line_styles,$colours) = @{CalculateMinMax($plotType,$modelA,$modelB,$AveragesTable)};
+  my ($min,$max,$subsOrdIndx,$names,$line_styles,$colours) = @{CalculateMinMax($plotType,$modelA,$modelB,$datasetsAandB,$AveragesTable)};
   
   my $margin = ($max-$min) * 0.1;
   my $step = ($max-$min) * 0.1; 
@@ -228,15 +249,17 @@ sub preparateDifferencePlot {
   my $tick = 0;
   my $name;
   my $datasetList = $AveragesTable->getDatasets();
-  foreach my $i ($subsOrdIndx->listindices())
-    {
-      $name = $datasetList->[$subsOrdIndx->at(($i))];
+  print "SubsOrdIndx = $subsOrdIndx\n";
+  foreach my $i ($subsOrdIndx->listindices()) {
+    $name = $datasetList->[$subsOrdIndx->at(($i))];
+    if ($datasetsHash->{$name}) {
       pgtick(0,$min,$numDatasets-1,$min,$tick/($numDatasets-1),.5,.5,1,60,$name);
       $tick++;
     }
+  }
   legend $names, 1, $max-$margin, {LineStyle => $line_styles, Colour => $colours};
   line $x,$zeroLine,{COLOR => $color++};
-  return ($x,$subsOrdIndx,$colours);
+  return ($datasetsHash,$x,$subsOrdIndx,$colours);
 }
 
 sub GetPlotTitle {
@@ -250,26 +273,9 @@ sub GetPlotTitle {
       return "Improvement in error rate of ".$modelB." over ".$modelA." (in percent)";
     }
 }
-sub CalculateSubs {
-  my ($plotType,$modelA,$modelB,$AveragesTable,$proportion) = @_;
-  
-  #print "Proportion: $proportion\n";
-  my ($piddleA,$piddleB);
-  if ($plotType eq "LogP")
-    {
-      $piddleA = $AveragesTable->getAvLogPDatasets($modelA,$proportion);
-      $piddleB = $AveragesTable->getAvLogPDatasets($modelB,$proportion);
-    } elsif ($plotType eq "ER") {
-      $piddleA = $AveragesTable->getAvERDatasets($modelA,$proportion);
-      $piddleB = $AveragesTable->getAvERDatasets($modelB,$proportion);
-    }
-  my $subs = (($piddleA - $piddleB) / $piddleA) * 100;
-  
-  return $subs;
-}
 
 sub CalculateMinMax {
-  my ($plotType,$modelA,$modelB,$AveragesTable) = @_;
+  my ($plotType,$modelA,$modelB,$datasetsAandB,$AveragesTable) = @_;
 
   my $min = exp(1000);
   my $max = -exp(1000);
@@ -295,11 +301,38 @@ sub CalculateMinMax {
   return [$min,$max,$subsOrdIndx,\@names,\@line_styles,\@colours];
 }
  
+sub CalculateSubs {
+  my ($plotType,$modelA,$modelB,$AveragesTable,$proportion) = @_;
+  
+  #print "Proportion: $proportion\n";
+  my ($piddleA,$piddleB);
+  if ($plotType eq "LogP")
+    {
+      $piddleA = $AveragesTable->getAvLogPDatasets($modelA,$proportion);
+      $piddleB = $AveragesTable->getAvLogPDatasets($modelB,$proportion);
+    } elsif ($plotType eq "ER") {
+      $piddleA = $AveragesTable->getAvERDatasets($modelA,$proportion);
+      $piddleB = $AveragesTable->getAvERDatasets($modelB,$proportion);
+    }
+  my $subs = (($piddleA - $piddleB) / $piddleA) * 100;
+  
+  return $subs;
+}
 
 sub DifferencePlotByProportion {
-  my ($plotType,$modelA,$modelB,$AveragesTable,$x,$subsOrdIndx,$proportion,$color) = @_;
+  my ($plotType,$modelA,$modelB,$datasets,$AveragesTable,$x,$subsOrdIndx,$proportion,$color) = @_;
   
   my $subs = CalculateSubs($plotType,$modelA,$modelB,$AveragesTable,$proportion);
-  points $x,$subs->index($subsOrdIndx),{COLOR => $color,SYMBOL=>STAR,PLOTLINE=>1};
+  my $selectedSubs = zeroes(scalar(keys %$datasets));
+  my $datasetList = $AveragesTable->getDatasets();
+  my $j=0;
+  foreach my $i ($subsOrdIndx->listindices()) {
+    $name = $datasetList->[$subsOrdIndx->at(($i))];
+    if ($datasets->{$name}) {
+      set $selectedSubs,$j,$subs->at($subsOrdIndx->at(($i)));
+      $j++;
+    }
+  }  
+  points $x,$selectedSubs,{COLOR => $color,SYMBOL=>STAR,PLOTLINE=>1};
 }
   

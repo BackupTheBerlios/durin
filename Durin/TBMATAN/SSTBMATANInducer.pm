@@ -11,6 +11,7 @@ use strict;
 use warnings;
 
 use Durin::TBMATAN::ATBMATAN;
+use Durin::TBMATAN::BaseTBMATAN;
 
 sub new_delta
 {
@@ -57,7 +58,9 @@ sub run
   
   my $SSTBMATAN = Durin::TBMATAN::ATBMATAN->new();
   
-  $SSTBMATAN->setStructureStubborn(1);
+  my $stubbornness = Durin::TBMATAN::BaseTBMATAN::HardMinded;
+  #print "$jar\n";
+  $SSTBMATAN->setStructureStubbornness($stubbornness);
   $SSTBMATAN->setSchema($table->getMetadata()->getSchema());
   $SSTBMATAN->setBetaMatrix($betas);
   $SSTBMATAN->setName($self->getName());
