@@ -55,7 +55,7 @@ sub open
       }
     #$extInfo->makestring();
   
-    $extInfo->getDevice()->open($access) or die "Data::FileTable:Unable to open ExtInfo\n"; 
+    $extInfo->getDevice()->open($access) or die "Durin::Data::FileTable:Unable to open ExtInfo\n"; 
     $self->{FILE_HANDLE} = $extInfo->getDevice();
   }
 

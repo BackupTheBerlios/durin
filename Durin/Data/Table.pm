@@ -24,7 +24,7 @@ sub setMetadata($$)
 {
     my ($self,$metadata) = @_;
     
-    if (!$metadata->isa("Metadata::Table"))
+    if (!$metadata->isa("Durin::Metadata::Table"))
     {
 	die "Metadata for Durin::Data::MemoryTable should be derived from Durin::Metadata::Table\n";
     }

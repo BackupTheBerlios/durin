@@ -39,7 +39,7 @@ sub setInFileName
       }
     if (!defined $metadata->getInExtInfo())
       {
-	my $extInfo = Durin::FlexibleIO::ExtInfo->create("Components::Data Standard [FlexibleIO::File $fileName]");
+	my $extInfo = Durin::FlexibleIO::ExtInfo->create("Durin::Components::Data Standard [FlexibleIO::File $fileName]");
 	$metadata->setInExtInfo($extInfo);
       }
   }
@@ -56,7 +56,7 @@ sub setOutFileName
       }
     if (!defined $metadata->getOutExtInfo())
       {
-	my $extInfo = Durin::FlexibleIO::ExtInfo->create("Components::Data Standard [FlexibleIO::File $fileName]");
+	my $extInfo = Durin::FlexibleIO::ExtInfo->create("Durin::Components::Data Standard [FlexibleIO::File $fileName]");
 	$metadata->setOutExtInfo($extInfo);
       }
   }
