@@ -3,7 +3,7 @@ package Durin::Data::IO::FTIOMineset;
 use Durin::FlexibleIO::IOHandler;
 
 @ISA = (Durin::FlexibleIO::IOHandler);
-$IO_CLASS = "Data::FileTable";
+$IO_CLASS = "Durin::Data::FileTable";
 $IO_FORMAT = "Mineset";
 
 use strict;
@@ -73,7 +73,7 @@ sub read
   {
     my ($class,$disp) = @_;
 
-    #die "Data::FTIOMineset: NYI\n";
+    #die "Durin::Data::FTIOMineset: NYI\n";
     
     $disp->useNames();
     $disp->open("<");
@@ -87,7 +87,7 @@ sub read
     
     #if ($disp->getline() ne "Format: Durin::Data::FTIOMineset\n")
     #{
-#	die "Data::FTIOMineset Incorrect format\n";
+#	die "Durin::Data::FTIOMineset Incorrect format\n";
 #    }
 #    my $name = Durin::Utilities::StringUtilities::removeEnter($disp->getline());
 

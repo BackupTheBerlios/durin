@@ -3,7 +3,7 @@ package Durin::Data::IO::FTIOXML;
 use Durin::Components::IO::DataXML;
 
 @ISA = (Durin::Components::IO::DataXML);
-$IO_CLASS = "Data::FileTable";
+$IO_CLASS = "Durin::Data::FileTable";
 $IO_FORMAT = "XML";
 
 use strict;
@@ -41,9 +41,9 @@ sub write
     # type
 
     my $type= $doc->createAttribute("type");
-    #$type->appendChild($doc->createTextNode("Data::FileTable"));
+    #$type->appendChild($doc->createTextNode("Durin::Data::FileTable"));
     #$item->appendChild($type);
-    $type->setValue("Data::FileTable");
+    $type->setValue("Durin::Data::FileTable");
     $item->setAttributeNode($type);
     
 
@@ -146,7 +146,7 @@ sub readFromXML
     
     #if ($disp->getline() ne "Format: Durin::Data::FTIOStandard\n")
     #{
-#	die "Data::FTIOStandard Incorrect format\n";
+#	die "Durin::Data::FTIOStandard Incorrect format\n";
 #    }
 #    my $name = Durin::Utilities::StringUtilities::removeEnter($disp->getline());
 

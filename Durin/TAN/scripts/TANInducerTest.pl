@@ -4,10 +4,11 @@ use Durin::Data::MemoryTable;
 use IO::File;
 use Durin::TAN::TANInducer;
 
-$file_name = $ARGV[0];
+my $inFileName = $ARGV[0]; 
 $file = new IO::File;
-$file->open("<$file_name") or die "No pude\n";
+$file->open("<$inFileName") or die "Unable to open input file: $inFileName\n";
 my $table = Durin::Data::FileTable->read($file);
+
 $file->close();
 
 print "CTS loaded\n";

@@ -3,7 +3,7 @@ package Durin::Data::IO::FTIOStandard;
 use Durin::FlexibleIO::IOHandler;
 
 @ISA = (Durin::FlexibleIO::IOHandler);
-$IO_CLASS = "Data::FileTable";
+$IO_CLASS = "Durin::Data::FileTable";
 $IO_FORMAT = "Standard";
 
 use strict;
@@ -73,7 +73,7 @@ sub read
 
     if ($disp->getline() ne "Format: Durin::Data::FTIOStandard\n")
     {
-	die "Data::FTIOStandard Incorrect format\n";
+	die "Durin::Data::FTIOStandard Incorrect format\n";
     }
     my $name = Durin::Utilities::StringUtilities::removeEnter($disp->getline());
 

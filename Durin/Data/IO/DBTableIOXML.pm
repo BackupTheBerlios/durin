@@ -3,7 +3,7 @@ package Durin::Data::IO::DBTableIOXML;
 use Durin::Components::IO::DataXML;
 
 @ISA = (Durin::Components::IO::DataXML);
-$IO_CLASS = "Data::DBTable";
+$IO_CLASS = "Durin::Data::DBTable";
 $IO_FORMAT = "XML";
 
 use strict;
@@ -38,7 +38,7 @@ sub write
     # type
 
     my $type= $doc->createAttribute("type");
-    $type->setValue("Data::DBTable");
+    $type->setValue("Durin::Data::DBTable");
     $item->setAttributeNode($type);
     
     # metadata
@@ -136,7 +136,7 @@ sub readFromXML
     
     #if ($disp->getline() ne "Format: Durin::Data::FTIOStandard\n")
     #{
-#	die "Data::FTIOStandard Incorrect format\n";
+#	die "Durin::Data::FTIOStandard Incorrect format\n";
 #    }
 #    my $name = Durin::Utilities::StringUtilities::removeEnter($disp->getline());
 

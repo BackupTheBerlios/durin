@@ -4,7 +4,7 @@ use Durin::Data::MemoryTable;
 use IO::File;
 use Durin::ProbClassification::ProbApprox::Counter;
 use Durin::TAN::GraphConstructor;
-use Durin::TAN::Kruskal;
+use Durin::Algorithms::Kruskal;
 use Durin::DataStructures::Graph;
 
 $file_name = $ARGV[0];
@@ -28,7 +28,7 @@ $gcons->setInput($Input);
 $gcons->run();
 my $graph = $gcons->getOutput();
 
-my $kruskal = Durin::TAN::Kruskal->new();
+my $kruskal = Durin::Algorithms::Kruskal->new();
 $kruskal->setInput($graph);
 $kruskal->run();
 my $UTree = $kruskal->getOutput();
