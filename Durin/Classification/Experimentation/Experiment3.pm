@@ -79,11 +79,14 @@ sub add_info {
       if (UNIVERSAL::isa($self->{$key}, "HASH")){
 #	ref $self->{$key} eq "HASH") {
 	#if (ref $hash{$key} eq "HASH") {
-	if ( UNIVERSAL::isa($hash{$key},"HASH")) {
+	if (UNIVERSAL::isa($hash{$key},"HASH")) {
 	  #print "A\n";
 	  add_info($self->{$key},%{$hash{$key}});
-	} else {
+	} elsif (UNIVERSAL::isa($hash{$key},"ARRAY")){
 	  #print "B\n";
+	  $self->{$key} = \@{$hash{$key}};
+	} else {
+	  #print "Type: ".ref($self->{$key})."\n";
 	  $self->{$key} = $hash{$key};
 	}
       } else {
