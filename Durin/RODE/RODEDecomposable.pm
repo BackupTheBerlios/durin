@@ -75,9 +75,9 @@ sub refineAlphas {
     }
   }
   
-  if ($self->getStructureStubbornness() eq HardMinded) {
-    $log_ro_u = $self->softenRos($log_ro_u);
-  }
+  #if ($self->getStructureStubbornness() eq HardMinded) {
+  #  $log_ro_u = $self->softenRos($log_ro_u);
+  #}
   
   my $alphas = $self->getAlphas();
   for(my $node_u = 0 ; $node_u < $schema->getNumAttributes() ; $node_u++) {
@@ -209,18 +209,19 @@ sub initializeSampleSize {
 
 sub N_u {
   my ($self,$u,$u_val,$class_val) = @_;
-  
+  print "A\n";
   my $class_attno = $self->getClassAttIndex();
   my $class_val_index = $self->getIndexes()->[$class_attno]->{$class_val};
   my $u_val_index = $self->getIndexes()->[$u]->{$u_val};
   my $temp = $self->getN_u()->[$u]->at($u_val_index,$class_val_index);
-  
+  print "B\n";
   return $temp;
 }
 
 sub N_uv  {
   my ($self,$u,$v,$u_val,$v_val,$class_val) = @_;
   
+  print"C\n";
   if ($u==$v) {
     die "Durin::RODEDecomposable::getCountXYClass \$x equal \$y\n";
   }
@@ -237,6 +238,7 @@ sub N_uv  {
   my $class_val_index = $self->getIndexes()->[$class_attno]->{$class_val};
   my $u_val_index = $self->getIndexes()->[$u]->{$u_val};
   my $v_val_index = $self->getIndexes()->[$v]->{$v_val};
+  print "D\n";
   my $temp = $self->getN_uv->[$u][$v]->at($u_val_index,$v_val_index,$class_val_index);  
   #print $temp;
   return $temp;
@@ -247,7 +249,7 @@ sub refineNs {
   
   my $schema = $self->getSchema();
   my $num_atts = $schema->getNumAttributes();
-  my $ct = $self->getCountingTable();
+  my $ct = $self->getCountTable();
   my $class_attno = $self->getClassAttIndex();
 
   for(my $node_u = 0 ; $node_u < $num_atts ; $node_u++) {
