@@ -53,11 +53,11 @@ sub run
     $method->setInput($input);
     $method->run();
     my $discretization = $method->getOutput();
-    print "Discretization:\n";
-    foreach my $d (@$discretization)
-      {
-	print (join(",",@$d),"\n");
-      }
+    #print "Discretization:\n";
+    #foreach my $d (@$discretization)
+    #  {
+    #	print (join(",",@$d),"\n");
+    #  }
     my $inputDA;
       
     $inputDA->{TABLE} = $input->{TABLE};

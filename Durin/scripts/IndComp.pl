@@ -53,7 +53,14 @@ $file->open("<$inFileName") or die "Unable to open input file: $inFileName\n";
 my $table_total = Durin::Data::FileTable->read($file);
 $file->close();
 
-printExperimentalConditions($percentage,$table_total,$numRepeats,$numFolds,$discOptions,$proportionList,$inducerNamesList);
+my $inducerList = [];
+foreach my $inducerName (@$inducerNamesList)
+  {
+    push @$inducerList,Durin::Classification::Registry->getInducer($inducerName);
+  }
+
+
+printExperimentalConditions($percentage,$table_total,$numRepeats,$numFolds,$discOptions,$proportionList,$inducerList);
 
 if (scalar (@proportionList) == 0)
   {
@@ -70,7 +77,7 @@ my $CVLC2 = Durin::Classification::Experimentation::CVLearningCurve2->new();
 my $thisRepetition;
 for ($thisRepetition = 0; $thisRepetition < $numRepeats ; $thisRepetition++)
   {
-    doRun($thisRepetition,$percentage,$table_total,$numFolds,$resultTable,$discOptions,$proportionList,$inducerNamesList);
+    doRun($thisRepetition,$percentage,$table_total,$numFolds,$resultTable,$discOptions,$proportionList,$inducerList);
   }
 
 # Write the output file
@@ -181,7 +188,7 @@ foreach my $proportion (@$proportionList)
 $file->close();
 
 sub doRun {
-  my ($thisRepetition,$percentage,$table_total,$numFolds,$resultTable,$discOptions,$proportionList,$inducerNamesList) = @_;
+  my ($thisRepetition,$percentage,$table_total,$numFolds,$resultTable,$discOptions,$proportionList,$inducerList) = @_;
   
   my $table;
   $table = $table_total;
@@ -209,12 +216,6 @@ sub doRun {
       }
     my $LCInput;
     $LCInput->{PROPORTIONLIST} = \@proportionList;
-
-    my $inducerList = [];
-    foreach my $inducerName (@$inducerNamesList)
-      {
-	push @$inducerList,Durin::Classification::Registry->getInducer($inducerName);
-      }
     $LCInput->{INDUCERLIST} = $inducerList;
     $LCInput->{APPLIER} = Durin::ProbClassification::ProbModelApplier->new();
     $input->{LC} = $LCInput;
@@ -224,12 +225,21 @@ sub doRun {
 
 
 sub printExperimentalConditions {
-  my ($percentage,$table_total,$numRepeats,$numFolds,$discOptions,$proportionList,$inducerNamesList) = @_;
+  my ($percentage,$table_total,$numRepeats,$numFolds,$discOptions,$proportionList,$inducerList) = @_;
   
   print "\nRunning inducer comparison using cross validation with learning curve\n";
   print "-------------------------------------------\n";
   print "Dataset: ".$table_total->getName()."\n";
-  print "Inducers compared: ",join(",",@$inducerNamesList)."\n";
+  print "Inducers compared: \n";
+  #,join(",",@$inducerNamesList)."\n";
+  foreach my $inducer (@$inducerList) {
+    print $inducer->getName()."\n";
+    my $details = $inducer->getDetails();
+    foreach my $key (keys %$details) {
+      print $key." = ".$details->{$key}."\n";
+    }
+  }
+  
   if ($percentage==1) {
     print "Applying no sampling prior to cross validation\n";
   } else {

@@ -40,13 +40,34 @@ sub run
     $input->{GC}->{PROBAPPROX} = $PA1;
     my $PA2 = Durin::ProbClassification::ProbApprox::PACoherent->new();
     $input->{TAN}->{PROBAPPROX} = $PA2;
-    $input->{MTANG} = Durin::BMATAN::FirstMTANGenerator->new();
+    #$input->{MTANG} = Durin::BMATAN::FirstMTANGenerator->new();
+    $input->{MTANG} = Durin::BMATAN::MultipleTANGenerator->new();
+    
     $inducer->setInput($input);
   }
   $inducer->run(); 
   my $BMAModel = $inducer->getOutput();
   $BMAModel->setName("BMACCFTAN");
   $self->setOutput($BMAModel);
+}
+
+sub getDetails {
+  my ($self) = @_;
+  my $details = $self->SUPER::getDetails();
+  
+  $details->{"Probability approximation for GC"} = "PACoherent";
+  $details->{"Probability approximation for TAN"} = "PACoherent";
+  my $PACoherentDetails = Durin::ProbClassification::ProbApprox::PACoherent->getDetails();
+  foreach my $key (keys %$PACoherentDetails) {
+    $details->{$key} = $PACoherentDetails->{$key};
+  } 
+  $details->{"Multiple TAN generator"} = "MultipleTANGenerator";
+  my $MTANDetails = Durin::BMATAN::MultipleTANGenerator->getDetails();
+  foreach my $key (keys %$MTANDetails) {
+    $details->{$key} = $MTANDetails->{$key};
+  }
+
+  return $details;
 }
 
 1;

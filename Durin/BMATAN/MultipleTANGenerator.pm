@@ -80,16 +80,16 @@ sub run
     $kkruskal->run();
     my $Trees = $kkruskal->getOutput()->{TREELIST};
     
-    foreach my $Tree (@$Trees)
-      {
-	my $weight = $Tree->getWeight();
-	print "Spanning tree with weight $weight and edges:\n";
-	my @edges = @{$Tree->getEdges()};
-	foreach my $p (@edges)
-	  {
-	    print "[$p->[0],$p->[1],$p->[2]]\n";
-	  }
-      }
+    #foreach my $Tree (@$Trees)
+    #  {
+    #   my $weight = $Tree->getWeight();
+	#print "Spanning tree with weight $weight and edges:\n";
+	#my @edges = @{$Tree->getEdges()};
+	#foreach my $p (@edges)
+	#  {
+	#    print "[$p->[0],$p->[1],$p->[2]]\n";
+	#  }
+    #  }
     
     my @TANList = ();
     foreach my $Tree (@$Trees)
@@ -113,5 +113,9 @@ sub run
       } 
     $self->setOutput(\@TANList);
   }
+
+sub getDetails {
+  return {};
+}
 
 1;

@@ -10,7 +10,7 @@ sub new_delta
 {     
     my ($class,$self) = @_;
     
-    print "Creating memory table\n";
+    #print "Creating memory table\n";
     $self->{ROW_ARRAY} = [];
 }
 

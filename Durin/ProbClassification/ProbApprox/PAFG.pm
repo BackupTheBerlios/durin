@@ -11,15 +11,20 @@ sub new_delta
     my ($class,$self) = @_;
     
     $self->{COUNTTABLE} = undef; 
+    $self->{NZERO} = $self->getNZero();
   }
 
 sub clone_delta
   { 
     my ($class,$self,$source) = @_;
     
-    die "Durin::ProbClassification::ProbApprox::PALaplace clone not implemented";
+    die "Durin::ProbClassification::ProbApprox::PAFG clone not implemented";
     #   $self->setMetadata($source->getMetadata()->clone());
   }
+
+sub getNZero {
+  return 5;
+}
 
 sub setCountTable
   {
@@ -83,9 +88,8 @@ sub setCountTable
 #	    #print " $att, $value  -> ".$self->{COUNTX}[$att]{$value}."\n";;
 #	  }
 #      }
-    print "Finished\n";
-    
-    $self->{NZERO} = 5;
+    #print "Finished\n";
+   
   }
 
 sub getCountTable
@@ -158,6 +162,12 @@ sub getPYCondXClass
     return $num / $denom;  
   }
 
+sub getDetails()
+  {
+    my ($class) = @_;
+    
+    return {"PAFG softening constant"=> $class->getNZero()};
+  }
 #sub getSinergy
 #  {
 #    my ($self,$classVal,$attX,$attXVal,$attY,$attYVal) = @_;

@@ -45,4 +45,18 @@ sub run
   $self->setOutput($model);
 }
 
+sub getDetails {
+  my ($self) = @_;
+  my $details = $self->SUPER::getDetails();
+  
+  $details->{"Probability approximation for GC"} = "PACoherent";
+  $details->{"Probability approximation for TAN"} = "PACoherent";
+  my $PACoherentDetails = Durin::ProbClassification::ProbApprox::PACoherent->getDetails();
+  foreach my $key (keys %$PACoherentDetails) {
+    $details->{$key} = $PACoherentDetails->{$key};
+  } 
+ 
+  return $details;
+}
+
 1;

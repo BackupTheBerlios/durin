@@ -39,7 +39,7 @@ sub run($)
   my $PAGC = $input->{GC}->{PROBAPPROX};
   my $PATAN = $input->{TAN}->{PROBAPPROX};
   
-  print "Starting counting\n";
+  #print "Starting counting\n";
   my $bc = Durin::ProbClassification::ProbApprox::Counter->new();
   {
     my $input = {};
@@ -50,7 +50,7 @@ sub run($)
   #$bc->setInput($table);
   $bc->run();
 
-  print "Done with counting\n";
+  #print "Done with counting\n";
   #  my @tablesRef = @{$bc->getOutput()};
   
   $PAGC->setCountTable($bc->getOutput());

@@ -49,4 +49,27 @@ sub run
   $self->setOutput($BMAModel);
 }
 
+sub getDetails {
+  my ($self) = @_;
+  my $details = $self->SUPER::getDetails();
+  
+  $details->{"Probability approximation for GC"} = "PAFrequency";
+  $details->{"Probability approximation for TAN"} = "PAFG";
+  my $PAFGDetails = Durin::ProbClassification::ProbApprox::PAFG->getDetails();
+  foreach my $key (keys %$PAFGDetails) {
+    $details->{$key} = $PAFGDetails->{$key};
+  }
+  $details->{"Multiple TAN generator"} = "MultipleTANGenerator";
+  my $MTANDetails = Durin::BMATAN::MultipleTANGenerator->getDetails();
+  foreach my $key (keys %$MTANDetails) {
+    $details->{$key} = $MTANDetails->{$key};
+  }
+  my $inducerDetails = Durin::BMATAN::BMATANInducer->getDetails();
+  foreach my $key (keys %$inducerDetails) {
+    $details->{$key} = $inducerDetails->{$key};
+  }
+
+  return $details;
+}
+
 1;

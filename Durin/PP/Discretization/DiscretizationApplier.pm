@@ -39,12 +39,12 @@ sub run
 
     if (exists $Input->{OUTPUT_TABLE})
       {
-	print "Taking the table\n";
+	#print "Taking the table\n";
 	$newTable = $Input->{OUTPUT_TABLE};
       }
     else
       {
-	print "Creating the table\n";
+	#print "Creating the table\n";
 	$newTable = Durin::Data::FileTable->new();
       }
     
@@ -71,7 +71,7 @@ sub run
     if (defined $newTable->getMetadata())
       {
 	$metadata = $newTable->getMetadata();
-	print "Taking the metadata\n";
+	#print "Taking the metadata\n";
 	if (!defined $metadata->getName())
 	  {
 	    $metadata->setName("D".$table->getMetadata()->getName());
@@ -79,9 +79,9 @@ sub run
       }
     else
       {
-	print "MD = ",$table->getMetadata()."\n";
+	#print "MD = ",$table->getMetadata()."\n";
         $metadata = $table->getMetadata()->new();
-	print "Creating the metadata",$table->getMetadata()->getName()," \n";
+	#print "Creating the metadata",$table->getMetadata()->getName()," \n";
 	$metadata->setName("D".$table->getMetadata()->getName());
       }
     

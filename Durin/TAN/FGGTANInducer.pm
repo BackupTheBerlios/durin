@@ -46,4 +46,18 @@ sub run
   $self->setOutput($model);
 }
 
+sub getDetails {
+  my ($self) = @_;
+  my $details = $self->SUPER::getDetails();
+  
+  $details->{"Probability approximation for GC"} = "PAFrequency";
+  $details->{"Probability approximation for TAN"} = "PAFG";
+  my $PAFGDetails = Durin::ProbClassification::ProbApprox::PAFG->getDetails();
+  foreach my $key (keys %$PAFGDetails) {
+    $details->{$key} = $PAFGDetails->{$key};
+  }
+  return $details;
+}
+    
+
 1;

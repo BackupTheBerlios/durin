@@ -1,3 +1,5 @@
+#CARE!!!!! PROBABLY OBSOLETE
+
 # Runs Kruskal for finding a k maximum weighted spanning tree
 
 package Durin::BMATAN::FirstMTANGenerator;

@@ -26,4 +26,12 @@ sub run($)
   die "Pure virtual Durin::Classification::Inducer::run\n";
 }
 
+# Returns a hash with inducer details
+sub getDetails($) {
+  my ($class) = @_;
+
+  my $details = {}; 
+  return $details;
+}
+
 1;

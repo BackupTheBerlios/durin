@@ -11,6 +11,7 @@ sub new_delta
   my ($class,$self) = @_;
   
   $self->{COUNTTABLE} = undef; 
+  $self->{DATASETSIZE} = $self->getLambda();
 }
 
 sub clone_delta
@@ -20,6 +21,10 @@ sub clone_delta
     die "Durin::ProbClassification::ProbApprox::PACoherent clone not implemented";
     #   $self->setMetadata($source->getMetadata()->clone());
   }
+
+sub getLambda {
+  return 10;
+}
 
 sub setCountTable
   {
@@ -45,8 +50,7 @@ sub setCountTable
     #    push @{$self->{ATTRIBUTECARD}},($#l + 1);
     #    $self->{DATASETSIZE} += ($#l + 1);
     #  } 
-    $self->{DATASETSIZE} = 10;
-    print "Selection of lambda for probability estimation: ",$self->{DATASETSIZE},"\n";
+    #print "Selection of lambda for probability estimation: ",$self->{DATASETSIZE},"\n";
     #my $i = 0;
     #foreach my $card (@{$self->{ATTRIBUTECARD}})
     #  {
@@ -57,12 +61,12 @@ sub setCountTable
   }
 
 # Fixes the lambda for probability approximation
-sub setLambda
-  {
-     my ($self,$lambda) = @_;
-    
-     $self->{DATASETSIZE} = $lambda;
-  }
+#sub setLambda
+#  {
+#     my ($self,$lambda) = @_;
+#    
+#     $self->{DATASETSIZE} = $lambda;
+# }
 
 sub getCountTable
   {
@@ -164,4 +168,11 @@ sub getSinergy
     my $Numerator = ($CXYClass +  $size / $denom1) * ($self->{COUNTTABLE}->getCountClass($classVal) +  $size / $denom2);
     my $Denominator =  ($self->{COUNTTABLE}->getCountXClass($classVal,$attX,$attXVal) + $size / $denom3) * ($self->{COUNTTABLE}->getCountXClass($classVal,$attY,$attYVal) + $size / $denom4); 
     return $Numerator/$Denominator;  
+  }
+
+sub getDetails()
+  {
+    my ($class) = @_;
+    
+    return {"PACoherent softening constant"=> $class->getLambda()};
   }

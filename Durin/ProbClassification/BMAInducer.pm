@@ -42,10 +42,10 @@ sub run($)
   my $BMA = Durin::ProbClassification::BMA->new();
   foreach my $model (@$modelList)
     {
-      print $weightsRef->{$model},",";
+      #print $weightsRef->{$model},",";
       $BMA->addWeightedModel($model,$weightsRef->{$model});
     }
-  print "\n";
+  #print "\n";
   $BMA->normalizeWeights();
   $BMA->setSchema($table->getMetadata()->getSchema());
   $self->setOutput($BMA);

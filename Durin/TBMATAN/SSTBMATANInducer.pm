@@ -28,6 +28,13 @@ sub clone_delta
  #   $self->setMetadata($source->getMetadata()->clone());
 }
 
+sub getStubbornness {
+  return Durin::TBMATAN::BaseTBMATAN::HardMinded;
+}
+
+sub getLambda {
+  return 10;
+}
 
 sub run
 {
@@ -58,7 +65,7 @@ sub run
   
   my $SSTBMATAN = Durin::TBMATAN::ATBMATAN->new();
   
-  my $stubbornness = Durin::TBMATAN::BaseTBMATAN::HardMinded;
+  my $stubbornness = $self->getStubbornness();
   #print "$jar\n";
   $SSTBMATAN->setStructureStubbornness($stubbornness);
   $SSTBMATAN->setSchema($table->getMetadata()->getSchema());
@@ -67,7 +74,7 @@ sub run
   #$TBMATAN->setEquivalentSampleSizeAndInitialize(
   #$self->CalculateEquivalentSampleSize(
   #$table->getMetadata()->getSchema())/100);
-  $SSTBMATAN->setEquivalentSampleSizeAndInitialize(10);
+  $SSTBMATAN->setEquivalentSampleSizeAndInitialize($self->getLambda());
   $SSTBMATAN->setCountTableAndInitialize($bc->getOutput);
   
   $self->setOutput($SSTBMATAN);
@@ -95,4 +102,10 @@ sub CalculateEquivalentSampleSize {
   return $sum * $class_card;
 }
 
+sub getDetails()
+  {
+    my ($class) = @_;
+    return {"Softening constant" => $class->getLambda(),
+	    "Stubborness" => $class->getStubbornness()};
+  }
 1;

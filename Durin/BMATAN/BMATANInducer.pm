@@ -23,6 +23,10 @@ sub clone_delta
  #   $self->setMetadata($source->getMetadata()->clone());
 }
 
+sub getNumTrees {
+  return 10;
+}
+
 sub run($)
 {
   my ($self) = @_;
@@ -36,7 +40,7 @@ sub run($)
     $input->{TABLE} = $table;
     $input->{GC} = $self->getInput()->{GC};
     $input->{TAN} = $self->getInput()->{TAN};
-    $input->{K} = 10;
+    $input->{K} = $self->getNumTrees();
     $MTG->setInput($input);
   }
   $MTG->run();
@@ -50,6 +54,12 @@ sub run($)
   }
   $BMAI->run();
   $self->setOutput($BMAI->getOutput());
+}
+
+sub getDetails {
+  my ($class) = @_;
+
+  return {"Number of trees averaged" => $class->getNumTrees()};
 }
 
 1;

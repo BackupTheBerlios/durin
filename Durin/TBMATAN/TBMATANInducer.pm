@@ -27,6 +27,9 @@ sub clone_delta
  #   $self->setMetadata($source->getMetadata()->clone());
 }
 
+sub getLambda {
+  return 10;
+}
 
 sub run
 {
@@ -63,7 +66,7 @@ sub run
   #$TBMATAN->setEquivalentSampleSizeAndInitialize(
   #$self->CalculateEquivalentSampleSize(
   #$table->getMetadata()->getSchema())/100);
-  $TBMATAN->setEquivalentSampleSizeAndInitialize(10);
+  $TBMATAN->setEquivalentSampleSizeAndInitialize($self->getLambda());
   $TBMATAN->setCountTableAndInitialize($bc->getOutput);
   $self->setOutput($TBMATAN);
 }
@@ -90,4 +93,10 @@ sub CalculateEquivalentSampleSize {
   return $sum * $class_card;
 }
 
+sub getDetails()
+  {
+    my ($class) = @_;
+    
+    return {"TBMATAN softening constant" => $class->getLambda()};
+  }
 1;

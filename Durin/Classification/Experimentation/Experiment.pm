@@ -183,6 +183,7 @@ sub launchDatasetExperiment {
 
   if ($machine eq "local")
     {
+      # If it has to be run locally
       # Get to the place where the dataset is
       
       chdir $dataDir."/".$dataset;
@@ -196,7 +197,14 @@ sub launchDatasetExperiment {
       print "Finished execution for dataset ".$dataset."\n";
     }
   else {
-    print "Machine to be executed: $machine\n";
+    # If the user indicated a machine where the experiments should be run
+    # we use rsh to send the task to the machine
+    
+    print "Machine to be executed in: $machine\n";
+    my $command = "\"cd $dataDir"."$dataset; perl -w $DurinDir"."scripts/IndComp.pl $resultFile.exp > $resultFile.trace\" & ";
+    $command = "rsh $machine $command";
+    print "Command: $command\n";
+    system($command);
   }
 }
 
