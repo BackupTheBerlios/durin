@@ -316,7 +316,7 @@ sub ProcessResultFile {
   my $modelList = ();
   while ($i < $#decompLine) {
     push @$modelList,(substr($decompLine[$i],2));
-    $i += 4;
+    $i += 3;
   }
   
   #my $resultTable = Durin::Classification::Experimentation::ResultTable->new();

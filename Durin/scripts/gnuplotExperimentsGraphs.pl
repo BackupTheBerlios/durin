@@ -55,7 +55,7 @@ sub DrawPictures
 	  # Determine the datasets where both models have been run
 	  
 	  my ($datasets,$datasetsHash) = @{calculateDatasetIntersection($m1,$m2,$exp)};
-	  
+	  print "$m1-$m2\n";
 	  ComparisonPlot("ER",$m1,$m2,$exp,$AveragesTable,$datasets,$datasetsHash,$proportionList);
 	  ComparisonPlot("LogP",$m1,$m2,$exp,$AveragesTable,$datasets,$datasetsHash,$proportionList);
 	  ComparisonPlot("AUC",$m1,$m2,$exp,$AveragesTable,$datasets,$datasetsHash,$proportionList);
@@ -260,7 +260,7 @@ sub ComparisonPlotByProportion {
   my $tmpFile = File::Temp->new(DIR=>'/tmp',
 				SUFFIX => '.gnuplot');
   
-  my $template = Text::Template->new(SOURCE => "$DURIN_HOME/scripts/plog.gnuplot.tmpl")
+  my $template = Text::Template->new(SOURCE => "$DURIN_HOME/scripts/plot.gnuplot.tmpl")
     or die "Couldn't construct template: $Text::Template::ERROR";
   
   my %vars = (x_size => 2,
@@ -272,9 +272,9 @@ sub ComparisonPlotByProportion {
 	      output => "$modelA-$modelB-$plotType.eps",
 	      data => $data
 	     );
-  
+  print "Template:".$template."\n";
   my $result = $template->fill_in(HASH => \%vars);
-
+  die "$Text::Template::ERROR\n"  if (!defined $result);
   print $tmpFile $result;
   system "gnuplot ".$tmpFile->filename;
 }
