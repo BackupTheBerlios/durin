@@ -14,6 +14,6 @@ $ExpFileName = $ARGV[$inFilePos];
 
 our $exp;
 
-do $ExpFileName;
-
+my $exp_chr = do $ExpFileName;
+my $exp = Durin::Classification::Experimentation::ExperimentFactory->createExperiment($exp_chr);
 $exp->summarize();
