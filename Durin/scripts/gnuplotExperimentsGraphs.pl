@@ -17,6 +17,9 @@ use File::Temp;
 use Text::Template;
 use Env;
 
+use strict;
+use warnings;
+
 if ($#ARGV < 0)
   {
     print "This script generates comparison graphs for the results of an experiment using gnuplot";
@@ -230,7 +233,7 @@ sub getModelResults {
       $piddleB = $AveragesTable->getAvERDatasets($modelB,$proportion);
     } elsif ($plotType eq "AUC") {
       $piddleA = $AveragesTable->getAvAUCDatasets($modelA,$proportion);
-      $piddleB = $AveragesTable->getAvAUCatasets($modelB,$proportion);
+      $piddleB = $AveragesTable->getAvAUCDatasets($modelB,$proportion);
     }
   return [$piddleA,$piddleB];
 }
