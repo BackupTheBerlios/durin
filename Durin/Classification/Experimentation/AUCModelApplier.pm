@@ -34,6 +34,7 @@ sub run
     my $AUCMA = Durin::Classification::Experimentation::AUCModelApplication->new();
     my $classType = $schema->getClass()->getType();
     my $classValues = $classType->getValues();
+    $AUCMA->setNumClasses(scalar @$classValues);
     $table->open();
     $table->applyFunction(sub 
 			  {

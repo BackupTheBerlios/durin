@@ -5,8 +5,10 @@ package Durin::Classification::Experimentation::AUCModelApplication;
 use Durin::Classification::Experimentation::ModelApplication;
 use Durin::Utilities::MathUtilities;
 @ISA = (Durin::Classification::Experimentation::ModelApplication);
+use Class::MethodMaker get_set => [-java => qw/ AUC LogP ErrorRate NumClasses/];
 
 use strict;
+use warnings;
 
 sub new_delta 
 {     
@@ -22,16 +24,11 @@ sub clone_delta
   die "Durin::Classification::Experimentation::AUCModelApplication::clone not implemented\n";
 }
 
-#sub initializeClassValues {
-#  my ($self,$classValues) = @_;
-#  
-#  $self->{CLASS_VALUES} = $classValues;
-#}
-
 sub addInstance
   {
     my ($self,$realClass,$distrib,$class) = @_;
     
+    #print "Adding $realClass,".join(",",@$distrib).",$class\n";
     push @{$self->{INSTANCE_LIST}},[$realClass,$distrib,$class];
   }
 
@@ -40,7 +37,6 @@ sub write {
 
   my $file = new IO::File;
   $file->open(">$outFileName") or die "Unable to open input file: $outFileName\n";
-  my $classValues = $self->{CLASS_VALUES};
   foreach my $instance (@{$self->{INSTANCE_LIST}})
     {
       my ($realClass,$probList,$predictedClass) = @$instance;
@@ -49,21 +45,45 @@ sub write {
   $file->close();
 }
 
+
+sub computeAUC {
+  my ($self) = @_;
+
+  my $AUC = 0;
+ 
+  my $numClasses = $self->getNumClasses();
+  #print "NumClasses: $numClasses\n";
+  for (my $i = 0; $i < $numClasses ; $i++) {
+    for (my $j = 0; $j < $numClasses ; $j++) {
+      if ($i != $j) {
+	#print "Computing AUC($i, $j)\n";
+	my $thisAUC = $self->computeAUCClassPair($i,$j);
+	#print "AUC($i, $j) = $thisAUC\n";
+	$AUC += $thisAUC;
+      } 
+    }
+  }
+  
+  $AUC = $AUC /($numClasses*($numClasses-1));
+    
+  return $AUC;
+}
+
 sub computeAUCClassPair {
   my ($self, $possitiveClass, $negativeClass) = @_;
  
-  my $possitiveClassPosition = $possitiveClass+1;
+  
   my @pairList = grep {(($_->[0] == $possitiveClass) || ($_->[0] == $negativeClass))} @{$self->{INSTANCE_LIST}};
   my @sortedList = sort {$b->[1]->[$possitiveClass] <=> $a->[1]->[$possitiveClass]} @pairList;
-  foreach my $inst (@pairList)
-    {
-      print $inst->[0].",".join(",",@{$inst->[1]})."\n";
-    }
-  print "And sorted\n";
-  foreach my $inst (@sortedList)
-    {
-       print $inst->[0].",".join(",",@{$inst->[1]})."\n";
-    }
+ # foreach my $inst (@{$self->{INSTANCE_LIST}})
+#    {
+#      print $inst->[0].",".join(",",@{$inst->[1]})."\n";
+#    }
+#  print "And sorted\n";
+#  foreach my $inst (@sortedList)
+#    {
+#       print $inst->[0].",".join(",",@{$inst->[1]})."\n";
+#    }
   
   my $fp = 0;
   my $tp = 0;
@@ -72,7 +92,7 @@ sub computeAUCClassPair {
   my $a = 0;
   my $fprev = -100000000000;
   foreach my $instance (@sortedList) {
-    my $f_i = $instance->[1]->[$possitiveClassPosition];
+    my $f_i = $instance->[1]->[$possitiveClass];
     if ($f_i != $fprev) {
       $a = $a + $self->trap_area($fp,$fpprev,$tp,$tpprev); 
       $fprev = $f_i;
@@ -99,10 +119,65 @@ sub trap_area {
   return ($base * $height);
 }
 
-sub computeAUC {
+sub readFromFile {
+  my ($self,$fileName) = @_;
+  
+  print "Reading model application from $fileName\n";
+  my $file = IO::File->new;
+  $file->open("<$fileName");
+  my @lines = readline $file;
+  my @line = ();
+  foreach my $line (@lines) {
+    @line = split(/,/,$line);
+    my $realClass = $line[0];
+    my $predictedClass = $line[(scalar @line) - 1];
+    pop @line;
+    shift @line;
+    my @new_line = @line;
+    $self->addInstance($realClass,\@new_line,$predictedClass);
+  }
+  $self->setNumClasses(scalar @line);
+}
+
+sub computeLogP {
+  my ($self) = @_;
+  
+  my $LogP = 0;
+  foreach my $inst ( @{$self->{INSTANCE_LIST}})
+    {
+      my $PClass = $inst->[1]->[$inst->[0]];
+      if ($PClass <= 0)
+	{
+	  print "A probability evaluated to 0 or even less. Just another illogical prediction\n";
+	  $LogP += 15000000; # Just something big
+	}
+      else
+	{
+	  $LogP -= Durin::Utilities::MathUtilities::log10($PClass);
+	}
+    }
+  return $LogP;
+}
+
+sub computeErrorRate {
+  my ($self) = @_;
+  
+  my $Errors = 0;
+  my $Total = 0;
+  foreach my $inst ( @{$self->{INSTANCE_LIST}})
+    {
+      $Total++;
+      if ($inst->[2] != $inst->[0]) {
+	$Errors++;
+      }
+    }
+  return ($Errors/$Total);
+}
+
+sub summarize {
   my ($self) = @_;
 
-  my $AUC = $self->computeAUCClassPair(0,1);
-  
-  return $AUC;
+  $self->setAUC($self->computeAUC());
+  $self->setLogP($self->computeLogP());
+  $self->setErrorRate($self->computeErrorRate());
 }

@@ -20,6 +20,7 @@ package Durin::Classification::Experimentation::Experiment2;
 use base Durin::Components::Process;
 use Class::MethodMaker get_set => [-java => qw/ Name DataDir ResultDir DurinDir Tasks Folds Runs Proportions DiscMethod DiscIntervals Inducers Dataset LaTexTablePrefix Machine Evaluator/];
 
+use Durin::Classification::Experimentation::ResultTable;
 use strict;
 use warnings;
 
@@ -364,5 +365,31 @@ sub checkModel {
     }
     return $contained;
 }
+
+sub summarize {
+  my ($self) = @_;
+  
+  foreach my $task (@{$self->getTasks()})
+    {
+      $self->summarizeTask($task);
+    }
+}
+
+sub summarizeTask {
+  my ($self,$action) = @_;
+
+  my $dataset = $action->getDataset();
+  my $resultDir = $self->getResultDir();
+  my $expName = $self->getName();
+  my $resultFile = $resultDir.$expName."/".$dataset;
+  
+  my $resultTable = Durin::Classification::Experimentation::ResultTable->new();
+  print "Reading data from dataset $dataset\n";
+  $resultTable->readFromFile($resultFile);
+  print "Summarizing dataset $dataset\n";
+  $resultTable->summarize();
+  $resultTable->writeSummary("$resultFile.out");
+}
+
 
 1;

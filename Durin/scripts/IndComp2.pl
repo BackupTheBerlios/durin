@@ -96,35 +96,11 @@ for ($thisRepetition = 0; $thisRepetition < $numRepeats ; $thisRepetition++)
   }
 
 # Write the output files
+$resultTable->write($outDir);
 
-if (!(-d $outDir)) {
-  mkdir $outDir;
-}
-for (my $thisRepetition = 0; $thisRepetition < $numRepeats ; $thisRepetition++) {
-  my $repDirName =  $outDir."/$thisRepetition";
-  if (!(-d $repDirName)) {
-    mkdir $repDirName;
-  }
-  for (my $thisFold = 0; $thisFold < $numFolds ; $thisFold++) {
-    my $foldDirName =  $repDirName."/$thisFold";
-    if (!(-d $foldDirName)) {
-      mkdir $foldDirName;
-    }
-    my $runId = $thisRepetition.".".$thisFold;
-    foreach my $proportion (@proportionList) {
-      my $propDirName =  $foldDirName."/$proportion";
-      if (!(-d $propDirName)) {
-	mkdir $propDirName;
-      }
-      my $modelList = $resultTable->getModels();
-      foreach my $model (@$modelList)
-	{
-	  my $AUCModelApplication = $resultTable->getResult($runId,$proportion,$model);
-	  $AUCModelApplication->write("$propDirName/$model.out");
-	}
-    }
-  }
-}
+
+
+
 
 
 
