@@ -99,8 +99,10 @@ http://www.jclark.com/xml/expat.html
 
 =item PDL 
 
- The Perl Data Language 
+The Perl Data Language 
 http://pdl.perl.org/
+
+= item Class::MethodMaker
 
 =head1 USAGE
 

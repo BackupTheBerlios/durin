@@ -122,7 +122,7 @@ sub addObservation
     my ($class_val,$j,$j_val,$k,$k_val,$j_val_index,$k_val_index);
     
     $self->{COUNT}++;
-    #print "I have counted: ", $self->{COUNT}, "\n";
+    print "I have counted: ", $self->{COUNT}, "\n";
     
     my $class_attno = $self->{CLASS_ATT_NUMBER};
     my $num_atts = $self->{NUM_ATTRIBUTES};
@@ -214,12 +214,33 @@ sub getCountXClass
 sub getCountXYClass
   {
     my ($self,$class_val,$x,$x_val,$y,$y_val) = @_;
+
+    if ($x==$y) {
+      die "Durin::CountTable::getCountXYClass \$x equal \$y\n";
+    }
+    if ($x < $y) {
+      my $tmp = $x;
+      $x = $y;
+      $y = $tmp;
+      $tmp = $x_val;
+      $x_val = $y_val;
+      $y_val = $tmp;
+    }
     
     my $class_attno = $self->{CLASS_ATT_NUMBER};
     my $class_val_index = $self->{INDEXES}->[$class_attno]->{$class_val};
     my $x_val_index = $self->{INDEXES}->[$x]->{$x_val};
     my $y_val_index = $self->{INDEXES}->[$y]->{$y_val};
     
+    #print "Class val: $class_val, x val: $x_val, y val:$y_val\n";
+    #print "Class_val_index: $class_val_index, x val index: $x_val_index, y val index:$y_val_index\n";
+
+    #if (!defined  $self->{COUNTXYCLASS}->[$x][$y]) {
+    #  print "undefined for x=$x y=$y\n";
+    #} else {
+    #  print "defined for x=$x y=$y\n";
+    #}
+
     my $temp = $self->{COUNTXYCLASS}->[$x][$y]->at($x_val_index,$y_val_index,$class_val_index);  
     #print $temp;
     return $temp;

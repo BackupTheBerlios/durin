@@ -5,7 +5,7 @@ use Durin::Classification::Registry;
 
 sub BEGIN
 {
-  my @INDUCER_MODULES = qw(Durin::NB::MAPNBInducer Durin::NB::IndifferentNBInducer Durin::NB::BIBLInducer Durin::NB::NBInducer Durin::BMATAN::BMAFGGTANInducer Durin::BMATAN::BMACoherentCoherentTANInducer Durin::TAN::FGGTANInducer Durin::TAN::CoherentCoherentTANInducer );
+  my @INDUCER_MODULES = qw(Durin::NB::MAPNBInducer Durin::NB::IndifferentNBInducer Durin::NB::BIBLInducer Durin::NB::NBInducer Durin::BMATAN::BMAFGGTANInducer Durin::BMATAN::BMACoherentCoherentTANInducer Durin::TAN::FGGTANInducer Durin::TAN::CoherentCoherentTANInducer Durin::TBMATAN::TBMATANInducer);
   my ($module);
   print "Loading Inducer system\n";
   foreach $module (@INDUCER_MODULES)
